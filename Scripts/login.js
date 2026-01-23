@@ -243,7 +243,11 @@ function handleLogin() {
 
             // Redirect to dashboard after 2 seconds
             setTimeout(() => {
+<<<<<<< HEAD
                 window.location.href = 'home.php';
+=======
+                window.location.href = 'home.html';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
             }, 2000);
         } else {
             // Show error message

@@ -656,12 +656,16 @@ function monitorIntegration(id) {
 
 // View log details
 function viewLogDetails(message, timestamp) {
+<<<<<<< HEAD
     alert(`Log Details:
 
 Time: ${timestamp}
 Message: ${message}
 
 Click OK to copy to clipboard.`);
+=======
+    alert(`Log Details:\n\nTime: ${timestamp}\nMessage: ${message}\n\nClick OK to copy to clipboard.`);
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     navigator.clipboard.writeText(`${timestamp} - ${message}`);
     showNotification('Log details copied to clipboard', 'info');
 }
@@ -748,7 +752,11 @@ function logout() {
     if (confirm('Are you sure you want to logout?')) {
         showNotification('Logging out...', 'info');
         setTimeout(() => {
+<<<<<<< HEAD
             window.location.href = '/LGU4/login.php';
+=======
+            window.location.href = '/login.html';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
         }, 1000);
     }
 }

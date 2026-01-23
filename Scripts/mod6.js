@@ -336,6 +336,7 @@ function deleteCampaign() {
 function viewCampaignDetails(campaignId) {
     const campaign = campaigns.find(c => c.id === campaignId);
     if (campaign) {
+<<<<<<< HEAD
         alert(`Campaign Details:
 
 Name: ${campaign.name}
@@ -344,6 +345,9 @@ Engagement: ${campaign.engagement}%
 ROI: ${campaign.roi}x
 Progress: ${campaign.progress}%
 Last Updated: ${campaign.lastUpdated}`);
+=======
+        alert(`Campaign Details:\n\nName: ${campaign.name}\nReach: ${campaign.reach.toLocaleString()}\nEngagement: ${campaign.engagement}%\nROI: ${campaign.roi}x\nProgress: ${campaign.progress}%\nLast Updated: ${campaign.lastUpdated}`);
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 }
 
@@ -593,12 +597,16 @@ function previewCustomReport() {
     const selectedCampaigns = document.getElementById('selectedCampaigns').value;
     const metrics = document.getElementById('selectedMetrics').value;
 
+<<<<<<< HEAD
     alert(`Previewing Custom Report:
 
 Type: ${reportType}
 Period: ${timePeriod}
 Campaigns: ${selectedCampaigns}
 Metrics: ${metrics}`);
+=======
+    alert(`Previewing Custom Report:\n\nType: ${reportType}\nPeriod: ${timePeriod}\nCampaigns: ${selectedCampaigns}\nMetrics: ${metrics}`);
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 }
 
 function generateCustomReport() {
@@ -745,7 +753,11 @@ function logout() {
     if (confirm('Are you sure you want to logout?')) {
         showNotification('Logging out...');
         setTimeout(() => {
+<<<<<<< HEAD
             window.location.href = '/LGU4/login.php';
+=======
+            window.location.href = '/login.html';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
         }, 1000);
     }
 }
@@ -1047,6 +1059,7 @@ function loadDashboardData() {
 function viewReport(reportId) {
     const report = reports.find(r => r.id === reportId);
     if (report) {
+<<<<<<< HEAD
         alert(`Viewing Report: ${report.name}
 
 Type: ${report.type}
@@ -1055,6 +1068,9 @@ Status: ${report.status}
 Generated: ${report.generated}
 
 ${report.description}`);
+=======
+        alert(`Viewing Report: ${report.name}\n\nType: ${report.type}\nPeriod: ${report.period}\nStatus: ${report.status}\nGenerated: ${report.generated}\n\n${report.description}`);
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 }
 

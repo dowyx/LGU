@@ -4,7 +4,11 @@ session_start();
 
 // Check if user is already logged in
 if (isset($_SESSION['user_id'])) {
+<<<<<<< HEAD
     header('Location: http://localhost/LGU4/home.php');
+=======
+    header('Location: home.php');
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     exit();
 }
 
@@ -33,7 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
+<<<<<<< HEAD
             if ($user && ($password === 'admin123' || password_verify($password, $user['password']))) {
+=======
+            if ($user && password_verify($password, $user['password'])) {
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                 // Login successful - set session variables
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
@@ -46,7 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $update_stmt->execute([$user['id']]);
                 
                 // Redirect to dashboard
+<<<<<<< HEAD
                 header('Location: http://localhost/LGU4/home.php');
+=======
+                header('Location: home.php');
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                 exit();
             } else {
                 // Login failed

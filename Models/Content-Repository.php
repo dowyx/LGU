@@ -8,7 +8,11 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Include the content repository model
+<<<<<<< HEAD
 require_once 'ContentRepository.php';
+=======
+require_once '../Models/ContentRepository.php';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 
 $contentRepo = new ContentRepository();
 $stats = $contentRepo->getContentStats();
@@ -37,49 +41,89 @@ $categories = $contentRepo->getCategories();
         </div>
         <ul class="nav-menu">
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="/LGU4/home.php" class="nav-link active">
+=======
+                <a href="/home.php" class="nav-link active">
+                    <!-- Changed to root -->
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-home"></i>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="/LGU4/Models/Module-1.php" class="nav-link">
+=======
+                <a href="/Modules/Module-1.php" class="nav-link">
+                    <!-- Added /Modules/ prefix -->
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-calendar-alt"></i>
                     <span class="nav-text">Campaign Planning & Calendar</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="/LGU4/Models/Content-Repository.php" class="nav-link active">
+=======
+                <a href="/Modules/Content-Repository.php" class="nav-link active">
+                    <!-- Added /Modules/ prefix -->
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-database"></i>
                     <span class="nav-text">Content Repository</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="/LGU4/Models/Target-Group-Segmentation.php" class="nav-link">
+=======
+                <a href="/Modules/Target-Group-Segmentation.php" class="nav-link">
+                    <!-- Added /Modules/ prefix -->
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-users"></i>
                     <span class="nav-text">Target Group Segmentation</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="/LGU4/Models/EventSeminarManagement.php" class="nav-link">
+=======
+                <a href="EventSeminarManagement.php" class="nav-link">
+                    <!-- Added /Modules/ prefix -->
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-calendar-check"></i>
                     <span class="nav-text">Event & Seminar Management</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="/LGU4/Models/SurveyFeedbackCollection.php" class="nav-link">
+=======
+                <a href="SurveyFeedbackCollection.php" class="nav-link">
+                    <!-- Added /Modules/ prefix -->
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-clipboard-check"></i>
                     <span class="nav-text">Survey & Feedback Collection</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="/LGU4/Models/CampaignAnalyticsReports.php" class="nav-link">
+=======
+                <a href="CampaignAnalyticsReports.php" class="nav-link">
+                    <!-- Added /Modules/ prefix -->
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-chart-bar"></i>
                     <span class="nav-text">Campaign Analytics & Reports</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="/LGU4/Models/HealthPoliceIntegration.php" class="nav-link">
+=======
+                <a href="HealthPoliceIntegration.php" class="nav-link">
+                    <!-- Added /Modules/ prefix -->
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-link"></i>
                     <span class="nav-text">Community</span>
                 </a>
@@ -98,9 +142,15 @@ $categories = $contentRepo->getCategories();
                         <input type="text" placeholder="Search content, tags, categories..." id="searchInput">
                     </div>
                     <div class="user-profile">
+<<<<<<< HEAD
                         <div class="user-avatar"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'A', 0, 2)); ?></div>
                         <div>
                             <div style="font-weight: 500;"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Administrator'); ?></div>
+=======
+                        <div class="user-avatar"><?php echo substr($_SESSION['username'], 0, 2); ?></div>
+                        <div>
+                            <div style="font-weight: 500;"><?php echo $_SESSION['username']; ?></div>
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                             <div style="font-size: 13px; color: var(--text-gray);">Content Manager</div>
                         </div>
                     </div>

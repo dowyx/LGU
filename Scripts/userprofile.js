@@ -128,7 +128,11 @@ class UserProfile {
                 loginBtn.addEventListener('click', () => {
                     console.log('Redirecting to login page');
                     modal.remove();
+<<<<<<< HEAD
                     window.location.href = 'login.php';
+=======
+                    window.location.href = 'login.html';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                 });
             }
 
@@ -136,7 +140,11 @@ class UserProfile {
             setTimeout(() => {
                 if (document.getElementById('loginRequiredModal')) {
                     console.log('Auto-redirecting to login page');
+<<<<<<< HEAD
                     window.location.href = 'login.php';
+=======
+                    window.location.href = 'login.html';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                 }
             }, 5000);
         }, 10);
@@ -769,7 +777,11 @@ class UserProfile {
             setTimeout(() => {
                 console.log('Redirecting to login page...');
                 document.body.classList.remove('logout-modal-open');
+<<<<<<< HEAD
                 window.location.href = 'login.php';
+=======
+                window.location.href = 'login.html';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
             }, 1000);
         }, 1500);
     }
@@ -778,7 +790,11 @@ class UserProfile {
 // Initialize user profile when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Don't initialize on login page
+<<<<<<< HEAD
     if (window.location.pathname.includes('login.php')) {
+=======
+    if (window.location.pathname.includes('login.html')) {
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
         return;
     }
 
@@ -833,7 +849,11 @@ window.forceLogout = function() {
         // Fallback to simple logout
         localStorage.clear();
         sessionStorage.clear();
+<<<<<<< HEAD
         window.location.href = 'login.php';
+=======
+        window.location.href = 'login.html';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 };
 

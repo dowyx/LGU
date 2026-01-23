@@ -299,49 +299,81 @@ function get_performance_label($score) {
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
+<<<<<<< HEAD
                     <a href="/LGU4/home.php" class="nav-link">
+=======
+                    <a href="../home.php" class="nav-link">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-home"></i>
                         <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
+<<<<<<< HEAD
                     <a href="/LGU4/Models/Module-1.php" class="nav-link">
+=======
+                    <a href="Module-1.php" class="nav-link">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-calendar-alt"></i>
                         <span class="nav-text">Campaign Planning & Calendar</span>
                     </a>
                 </li>
                 <li class="nav-item">
+<<<<<<< HEAD
                     <a href="/LGU4/Models/Content-Repository.php" class="nav-link">
+=======
+                    <a href="ContentRepository.php" class="nav-link">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-database"></i>
                         <span class="nav-text">Content Repository</span>
                     </a>
                 </li>
                 <li class="nav-item">
+<<<<<<< HEAD
                     <a href="/LGU4/Models/Target-Group-Segmentation.php" class="nav-link">
+=======
+                    <a href="TargetGroupSegmentation.php" class="nav-link">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-users"></i>
                         <span class="nav-text">Target Group Segmentation</span>
                     </a>
                 </li>
                 <li class="nav-item">
+<<<<<<< HEAD
                     <a href="/LGU4/Models/EventSeminarManagement.php" class="nav-link">
+=======
+                    <a href="EventSeminarManagement.php" class="nav-link">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-calendar-check"></i>
                         <span class="nav-text">Event & Seminar Management</span>
                     </a>
                 </li>
                 <li class="nav-item">
+<<<<<<< HEAD
                     <a href="/LGU4/Models/SurveyFeedbackCollection.php" class="nav-link">
+=======
+                    <a href="SurveyFeedbackCollection.php" class="nav-link">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-clipboard-check"></i>
                         <span class="nav-text">Survey & Feedback Collection</span>
                     </a>
                 </li>
                 <li class="nav-item">
+<<<<<<< HEAD
                     <a href="/LGU4/Models/CampaignAnalyticsReports.php" class="nav-link active">
+=======
+                    <a href="CampaignAnalyticsReports.php" class="nav-link active">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-chart-bar"></i>
                         <span class="nav-text">Campaign Analytics & Reports</span>
                     </a>
                 </li>
                 <li class="nav-item">
+<<<<<<< HEAD
                     <a href="/LGU4/Models/HealthPoliceIntegration.php" class="nav-link">
+=======
+                    <a href="HealthPoliceIntegration.php" class="nav-link">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-link"></i>
                         <span class="nav-text">Community</span>
                     </a>

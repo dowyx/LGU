@@ -498,8 +498,13 @@ class SessionManager {
     }
 
     static redirectToLogin() {
+<<<<<<< HEAD
         if (!window.location.pathname.includes('login.php')) {
             window.location.href = '/LGU4/login.php';
+=======
+        if (!window.location.pathname.includes('login.html')) {
+            window.location.href = '/login.html';
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
         }
     }
 

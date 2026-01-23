@@ -31,14 +31,22 @@ try {
     // Average response time (in minutes)
     $stmt = $pdo->prepare("SELECT AVG(response_time) as avg_time FROM incident_responses WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
     $stmt->execute();
+<<<<<<< HEAD
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $avg_response_time = $result && $result['avg_time'] !== null ? round($result['avg_time'] / 60, 1) : 8.2;
+=======
+    $avg_response_time = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_time'] / 60, 1);
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     
     // Public satisfaction percentage
     $stmt = $pdo->prepare("SELECT AVG(satisfaction_score) as avg_score FROM feedback WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
     $stmt->execute();
+<<<<<<< HEAD
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $public_satisfaction = $result && $result['avg_score'] !== null ? round($result['avg_score'], 0) : 92;
+=======
+    $public_satisfaction = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_score'], 0);
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     
     // Incident types data
     $stmt = $pdo->prepare("
@@ -160,7 +168,11 @@ function getTrendClass($trend) {
                 <li class="nav-item">
                     <a href="Models/HealthPoliceIntegration.php" class="nav-link">
                         <i class="fas fa-link"></i>
+<<<<<<< HEAD
                         <span class="nav-text">Community Integration</span>
+=======
+                        <span class="nav-text">Community</span>
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     </a>
                 </li>
                 <li class="nav-item">
@@ -219,7 +231,11 @@ function getTrendClass($trend) {
 
                     <!-- AI Chatbot Icon -->
                     <div class="ai-chatbot-icon">
+<<<<<<< HEAD
                         <a href="#" class="chatbot-link" title="AI Assistant" onclick="chatbot.open(); return false;">
+=======
+                        <a href="#" class="chatbot-link" title="AI Assistant">
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                             <i class="fas fa-robot"></i>
                             <span class="chatbot-text">AI Assistant</span>
                         </a>
@@ -605,6 +621,7 @@ function getTrendClass($trend) {
         </main>
     </div>
 
+<<<<<<< HEAD
     <!-- Enhanced Chatbot Modal -->
     <div class="chatbot-modal" id="chatbotModal">
         <div class="chatbot-header">
@@ -695,5 +712,31 @@ function getTrendClass($trend) {
     });
     </script>
 
+=======
+    <!-- Chatbot Container -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <i class="fas fa-robot"></i>
+            <span>AI Assistant</span>
+            <button class="chatbot-close" onclick="toggleChatbot()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="message bot-message">
+                Hello! I'm your AI assistant. How can I help you today?
+            </div>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbotInput" placeholder="Type your message..." onkeypress="handleChatbotKeyPress(event)">
+            <button onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="Scripts/utils.js"></script>
+    <script src="Scripts/home.js"></script>
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 </body>
 </html>
