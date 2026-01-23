@@ -94,14 +94,5 @@ function log_login_attempt($pdo, $email, $success) {
     $stmt->execute([$email, $_SERVER['REMOTE_ADDR'], $success ? 1 : 0]);
 }
 
-// Initialize session settings
-ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_samesite', 'Strict');
 
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 ?>
