@@ -17,9 +17,9 @@ $modelsDir = __DIR__;
 // Define all model files that have class structures
 $modelFiles = [
     'TargetGroupSegmentation' => $modelsDir . '/TargetGroupSegmentation.php',
-    'HealthPoliceIntegration' => $modelsDir . '/HealthPoliceIntegration.php'
-    // Note: Other files (CampaignAnalyticsReports.php, EventSeminarManagement.php) are procedural,
-    // so their cross-module functionality is integrated directly into TargetGroupSegmentation model
+    'HealthPoliceIntegration' => $modelsDir . '/HealthPoliceIntegration.php',
+    'ContentRepository' => $modelsDir . '/ContentRepository.php'
+    // Note: EventSeminarManagement.php is procedural, so we access events directly via database
 ];
 
 // Load available models
@@ -159,11 +159,15 @@ try {
     if (isset($models['TargetGroupSegmentation'])) {
         $mainModel = $models['TargetGroupSegmentation'];
         
-        // Add content-related data to segments
-        if (method_exists($mainModel, 'getContentBySegment') && !empty($segments)) {
+        // Add content-related data to segments using ContentRepository model
+        if (isset($models['ContentRepository']) && method_exists($models['ContentRepository'], 'getContentItems') && !empty($segments)) {
+            $contentRepo = $models['ContentRepository'];
             foreach ($segments as &$segment) {
                 if (isset($segment['id'])) {
-                    $segment['related_content'] = $mainModel->getContentBySegment($segment['id']);
+                    // Get content items relevant to this segment
+                    $segment['related_content'] = $contentRepo->getContentItems([
+                        'search' => $segment['name']
+                    ]);
                 }
             }
         }
@@ -177,12 +181,28 @@ try {
             }
         }
         
-        // Add event data to segments
-        if (method_exists($mainModel, 'getEventsBySegment') && !empty($segments)) {
-            foreach ($segments as &$segment) {
-                if (isset($segment['id'])) {
-                    $segment['related_events'] = $mainModel->getEventsBySegment($segment['id']);
+        // Add event data to segments (using direct database query since EventSeminarManagement is procedural)
+        if (!empty($segments)) {
+            try {
+                global $pdo;
+                $eventQuery = "SELECT id, title, description, event_type, start_date, end_date, location 
+                              FROM events 
+                              WHERE status = 'published' 
+                              ORDER BY start_date ASC 
+                              LIMIT 5";
+                $eventStmt = $pdo->prepare($eventQuery);
+                $eventStmt->execute();
+                $allEvents = $eventStmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($segments as &$segment) {
+                    if (isset($segment['id'])) {
+                        // For now, assign all events to all segments
+                        // In a real implementation, you'd have segment-event linking logic
+                        $segment['related_events'] = $allEvents;
+                    }
                 }
+            } catch (Exception $e) {
+                error_log("Error fetching events: " . $e->getMessage());
             }
         }
     }
