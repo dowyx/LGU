@@ -15,7 +15,7 @@ class Chatbot {
         
         // Check if utils are available
         if (!window.Utils) {
-            console.error('Utils not loaded. Chatbot may not function properly.');
+            console.warn('Utils not loaded. Chatbot may have limited functionality.');
         }
 
         this.init();
@@ -32,12 +32,12 @@ class Chatbot {
     }
 
     setupElements() {
-        this.modal = document.getElementById('chatbotModal');
-        this.chatIcon = document.querySelector('.ai-chatbot-icon .chatbot-link');
-        this.closeBtn = document.getElementById('closeChatbotBtn');
-        this.messages = document.getElementById('chatMessages');
-        this.input = document.getElementById('chatInput');
-        this.sendBtn = document.getElementById('sendChatBtn');
+        this.modal = document.getElementById('chatbotModal') || document.querySelector('#chatbotModal');
+        this.chatIcon = document.querySelector('.ai-chatbot-icon .chatbot-link') || document.querySelector('[onclick*="chatbot.open"]');
+        this.closeBtn = document.getElementById('closeChatbotBtn') || document.querySelector('#closeChatbotBtn');
+        this.messages = document.getElementById('chatMessages') || document.querySelector('#chatMessages');
+        this.input = document.getElementById('chatInput') || document.querySelector('#chatInput');
+        this.sendBtn = document.getElementById('sendChatBtn') || document.querySelector('#sendChatBtn');
 
         // Add ID if missing
         if (this.chatIcon && !this.chatIcon.id) {
@@ -45,7 +45,7 @@ class Chatbot {
         }
 
         // Create typing indicator if it doesn't exist
-        if (!document.getElementById('typingIndicator')) {
+        if (this.messages && !document.getElementById('typingIndicator')) {
             this.createTypingIndicator();
         }
         
@@ -56,6 +56,10 @@ class Chatbot {
     }
 
     createTypingIndicator() {
+        if (!this.messages) {
+            console.error('Messages container not found for typing indicator');
+            return;
+        }
         const indicator = document.createElement('div');
         indicator.id = 'typingIndicator';
         indicator.className = 'typing-indicator';
@@ -68,9 +72,7 @@ class Chatbot {
             <span class="typing-text">AI is typing...</span>
         `;
         
-        if (this.messages) {
-            this.messages.appendChild(indicator);
-        }
+        this.messages.appendChild(indicator);
     }
 
     createSendButton() {
@@ -80,8 +82,8 @@ class Chatbot {
         sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
         sendBtn.setAttribute('aria-label', 'Send message');
         
-        const inputContainer = this.input.parentElement;
-        if (inputContainer) {
+        if (this.input && this.input.parentElement) {
+            const inputContainer = this.input.parentElement;
             inputContainer.appendChild(sendBtn);
         }
         
@@ -91,17 +93,19 @@ class Chatbot {
     setupEventListeners() {
         if (!this.chatIcon || !this.modal) {
             console.error('Chatbot elements not found');
-            if (window.Utils) {
-                Utils.UIHelper.showToast('Chatbot unavailable. Please refresh the page.', 'error');
+            if (window.Utils && window.Utils.UIHelper && window.Utils.UIHelper.showToast) {
+                window.Utils.UIHelper.showToast('Chatbot unavailable. Please refresh the page.', 'error');
             }
             return;
         }
 
         // Open chatbot
-        this.chatIcon.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.open();
-        });
+        if (this.chatIcon) {
+            this.chatIcon.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.open();
+            });
+        }
 
         // Close chatbot
         if (this.closeBtn) {
@@ -158,11 +162,15 @@ class Chatbot {
                 switch(e.key) {
                     case 'k':
                         e.preventDefault();
-                        this.open();
+                        if (this.modal) {
+                            this.open();
+                        }
                         break;
                     case 'Escape':
                         e.preventDefault();
-                        this.close();
+                        if (this.modal) {
+                            this.close();
+                        }
                         break;
                 }
             }
@@ -170,6 +178,10 @@ class Chatbot {
     }
 
     loadMessageHistory() {
+        if (typeof(Storage) === 'undefined') {
+            console.error('LocalStorage is not supported in this browser');
+            return;
+        }
         const savedHistory = localStorage.getItem('chatbotHistory');
         if (savedHistory) {
             try {
@@ -183,6 +195,10 @@ class Chatbot {
     }
 
     saveMessageHistory() {
+        if (typeof(Storage) === 'undefined') {
+            console.error('LocalStorage is not supported in this browser');
+            return;
+        }
         try {
             localStorage.setItem('chatbotHistory', JSON.stringify(this.messageHistory));
         } catch (error) {
@@ -193,19 +209,25 @@ class Chatbot {
     displayHistory() {
         if (!this.messages) return;
         
-        this.messageHistory.forEach(msg => {
-            this.addMessageToUI(msg.text, msg.sender, msg.timestamp, false);
-        });
+        if (this.messageHistory && Array.isArray(this.messageHistory)) {
+            this.messageHistory.forEach(msg => {
+                this.addMessageToUI(msg.text, msg.sender, msg.timestamp, false);
+            });
+        }
     }
 
     addMessageToUI(text, sender, timestamp = Date.now(), save = true) {
+        if (!this.messages) {
+            console.error('Chatbot messages container not found!');
+            return;
+        }
         const messageDiv = document.createElement('div');
         messageDiv.className = `message message-${sender}`;
         
         const timeString = new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
         messageDiv.innerHTML = `
-            <div class="message-content">${Utils.UIHelper?.sanitizeHTML(text) || text}</div>
+            <div class="message-content">${(window.Utils && window.Utils.UIHelper && window.Utils.UIHelper.sanitizeHTML) ? window.Utils.UIHelper.sanitizeHTML(text) : text}</div>
             <div class="message-time">${timeString}</div>
         `;
         
@@ -229,15 +251,17 @@ class Chatbot {
         
         // Update character count display if it exists
         let charCount = document.getElementById('charCount');
-        if (!charCount) {
+        if (!charCount && this.input.parentElement) {
             charCount = document.createElement('div');
             charCount.id = 'charCount';
             charCount.className = 'char-count';
             this.input.parentElement.appendChild(charCount);
         }
         
-        charCount.textContent = `${currentLength}/${maxLength}`;
-        charCount.style.color = currentLength > maxLength * 0.9 ? 'var(--danger)' : 'var(--text-gray)';
+        if (charCount) {
+            charCount.textContent = `${currentLength}/${maxLength}`;
+            charCount.style.color = currentLength > maxLength * 0.9 ? 'var(--danger)' : 'var(--text-gray)';
+        }
     }
 
     toggleSendButton() {
@@ -245,7 +269,9 @@ class Chatbot {
         
         const hasText = this.input.value.trim().length > 0;
         this.sendBtn.disabled = !hasText;
-        this.sendBtn.style.opacity = hasText ? '1' : '0.5';
+        if (this.sendBtn.style) {
+            this.sendBtn.style.opacity = hasText ? '1' : '0.5';
+        }
     }
 
     adjustChatHeight() {
@@ -254,34 +280,34 @@ class Chatbot {
         const maxHeight = window.innerHeight * 0.8;
         const currentHeight = this.modal.offsetHeight;
         
-        if (currentHeight > maxHeight) {
+        if (currentHeight > maxHeight && this.modal.style) {
             this.modal.style.height = `${maxHeight}px`;
         }
     }
 
     showTypingIndicator() {
-        const indicator = document.getElementById('typingIndicator');
-        if (indicator) {
-            indicator.style.display = 'flex';
-            this.messages.scrollTop = this.messages.scrollHeight;
+        if (this.typingIndicator && this.typingIndicator.style) {
+            this.typingIndicator.style.display = 'flex';
+            if (this.messages) {
+                this.messages.scrollTop = this.messages.scrollHeight;
+            }
         }
     }
 
     hideTypingIndicator() {
-        const indicator = document.getElementById('typingIndicator');
-        if (indicator) {
-            indicator.style.display = 'none';
+        if (this.typingIndicator && this.typingIndicator.style) {
+            this.typingIndicator.style.display = 'none';
         }
     }
 
     open() {
         console.log('Opening chatbot...');
+        console.log('Modal element:', this.modal);
         if (this.modal) {
             this.modal.classList.add('open');
-            this.modal.style.display = 'flex';
             this.isOpen = true;
-            console.log('Chatbot opened');
-            if (this.input) this.input.focus();
+            console.log('Chatbot opened, class added:', this.modal.classList.contains('open'));
+            if (this.input && this.input.focus) this.input.focus();
         } else {
             console.error('Modal element not found!');
         }
@@ -291,13 +317,18 @@ class Chatbot {
         console.log('Closing chatbot...');
         if (this.modal) {
             this.modal.classList.remove('open');
-            this.modal.style.display = 'none';
             this.isOpen = false;
-            console.log('Chatbot closed');
+            console.log('Chatbot closed, class removed:', this.modal.classList.contains('open'));
+        } else {
+            console.error('Modal element not found for closing!');
         }
     }
 
     addMessage(text, sender) {
+        if (!this.messages) {
+            console.error('Chatbot messages container not found!');
+            return;
+        }
         const messageDiv = document.createElement('div');
         messageDiv.className = `message message-${sender}`;
 
@@ -305,7 +336,7 @@ class Chatbot {
         const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
         messageDiv.innerHTML = `
-            <div class="message-content">${text}</div>
+            ${text}
             <div class="message-time">${timeString}</div>
         `;
 
@@ -416,40 +447,32 @@ class Chatbot {
     }
 
     sendMessage() {
+        if (!this.input) {
+            console.error('Chatbot input element not found!');
+            return;
+        }
         const message = this.input.value.trim();
         if (!message) return;
         
         // Validate message content
         if (!this.validateMessage(message)) {
-            if (window.Utils) {
-                Utils.UIHelper.showToast('Invalid message content', 'error');
+            if (window.Utils && window.Utils.UIHelper && window.Utils.UIHelper.showToast) {
+                window.Utils.UIHelper.showToast('Invalid message content', 'error');
             }
             return;
         }
         
         // Sanitize message before processing
-        const sanitizedMessage = Utils.UIHelper?.sanitizeHTML ? Utils.UIHelper.sanitizeHTML(message) : message;
+        const sanitizedMessage = (window.Utils && window.Utils.UIHelper && window.Utils.UIHelper.sanitizeHTML) ? window.Utils.UIHelper.sanitizeHTML(message) : message;
         
         // Add user message
         this.addMessage(sanitizedMessage, 'user');
         this.input.value = '';
 
-        // Show typing indicator
-        this.showTypingIndicator();
-
         // Simulate AI thinking
         setTimeout(() => {
-            this.hideTypingIndicator();
             const aiResponse = this.processMessage(sanitizedMessage);
             this.addMessage(aiResponse, 'ai');
-            
-            // Save to history
-            this.messageHistory.push({ text: sanitizedMessage, sender: 'user', timestamp: Date.now() });
-            this.messageHistory.push({ text: aiResponse, sender: 'ai', timestamp: Date.now() });
-            if (this.messageHistory.length > this.maxHistoryLength) {
-                this.messageHistory.splice(0, 2); // Remove oldest two messages (user+ai pair)
-            }
-            this.saveMessageHistory();
         }, 600);
     }
     
@@ -493,6 +516,3 @@ class Chatbot {
 // Create chatbot instance immediately and make it globally available
 window.chatbot = new Chatbot();
 console.log('Chatbot instance created:', window.chatbot);
-
-// Initialize chatbot when script loads
-const chatbot = new Chatbot();
