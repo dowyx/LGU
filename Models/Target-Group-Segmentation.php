@@ -37,14 +37,6 @@ foreach ($modelFiles as $className => $filePath) {
     }
 }
 
-// Include EventSeminarManagement for cross-module functions
-$eventManagementFile = $modelsDir . '/EventSeminarManagement.php';
-if (file_exists($eventManagementFile)) {
-    // We'll include it conditionally to avoid session issues
-    // Since it's procedural, we'll only include functions
-    include_once $eventManagementFile;
-}
-
 // Set primary model for segmentation
 $segModel = null;
 if (isset($models['TargetGroupSegmentation'])) {
