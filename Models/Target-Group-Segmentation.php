@@ -40,13 +40,11 @@ foreach ($modelFiles as $className => $filePath) {
 $segModel = null;
 if (isset($models['TargetGroupSegmentation'])) {
     $segModel = $models['TargetGroupSegmentation'];
-} elseif (isset($models['HealthPoliceIntegration'])) {
-    $segModel = $models['HealthPoliceIntegration'];
 }
 
 // Validate that we have at least one segmentation model
 if (!$segModel) {
-    die("Error: No segmentation model found. Please ensure TargetGroupSegmentation.php or HealthPoliceIntegration.php exists.");
+    die("Error: No segmentation model found. Please ensure TargetGroupSegmentation.php exists.");
 }
 
 try {
