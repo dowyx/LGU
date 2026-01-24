@@ -23,11 +23,7 @@ $modelFiles = [
     'ContentRepository' => $modelsDir . '/ContentRepository.php'
 ];
 
-// Include EventSeminarManagement separately as it's procedural
-$eventSeminarFile = $modelsDir . '/EventSeminarManagement.php';
-if (file_exists($eventSeminarFile)) {
-    require_once $eventSeminarFile;
-}
+
 // Load available models
 foreach ($modelFiles as $className => $filePath) {
     if (file_exists($filePath)) {
@@ -445,6 +441,12 @@ try {
                 </a>
             </li>
             <li class="nav-item">
+                <a href="CampaignAnalyticsReports.php" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="nav-text">Campaign Analytics & Reports</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="EventSeminarManagement.php" class="nav-link">
                     <i class="fas fa-calendar-check"></i>
                     <span class="nav-text">Event & Seminar Management</span>
@@ -454,12 +456,6 @@ try {
                 <a href="SurveyFeedbackCollection.php" class="nav-link">
                     <i class="fas fa-clipboard-check"></i>
                     <span class="nav-text">Survey & Feedback Collection</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="CampaignAnalyticsReports.php" class="nav-link">
-                    <i class="fas fa-chart-bar"></i>
-                    <span class="nav-text">Campaign Analytics & Reports</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -508,6 +504,9 @@ try {
         <button class="btn" onclick="openCreateModal()">
             <i class="fas fa-plus"></i> Create Segment
         </button>
+        <a href="CampaignAnalyticsReports.php" class="btn">
+            <i class="fas fa-chart-bar"></i> View Campaign Analytics
+        </a>
     </div>
 </div>
 
