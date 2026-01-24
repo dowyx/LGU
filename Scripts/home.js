@@ -1,7 +1,6 @@
 // Enhanced JavaScript for interactive dashboard
 // Refactored to use shared utilities for better maintainability
 
-
 // Global error handling
 window.addEventListener('error', function(e) {
     console.error('JavaScript Error:', e.error);
@@ -12,76 +11,6 @@ window.addEventListener('unhandledrejection', function(e) {
     console.error('Unhandled Promise Rejection:', e.reason);
     // Don't let errors break the page
     e.preventDefault();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    try {
-        // Check if utils are loaded
-        if (!window.Utils) {
-            console.error('Utils not loaded. Please include utils.js before home.js');
-            // Still render the basic page even if JS fails
-            return;
-        }
-
-        // Initialize session management
-        if (Utils.SessionManager && typeof Utils.SessionManager.init === 'function') {
-            Utils.SessionManager.init();
-        }
-
-        // Initialize shared components
-        const navigationManager = new Utils.NavigationManager();
-        const apiHandler = new Utils.APIHandler();
-        
-        // Initialize dashboard components
-        initializeDashboard(apiHandler);
-        initializeSearch();
-        initializeNotifications();
-        // initializeThemeToggle(); - REMOVED as per requirement
-        initializeExport();
-        initializeQuickActions();
-        initializeActivityFeed();
-        initializeUserProfile();
-
-        // Setup global error handling
-        setupErrorHandling();
-        
-        // Initialize additional functionality
-        initializeUserData();
-    } catch (error) {
-        console.error('Error initializing dashboard:', error);
-        // Page will still render even if JS initialization fails
-    }
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if utils are loaded
-    if (!window.Utils) {
-        console.error('Utils not loaded. Please include utils.js before home.js');
-        return;
-    }
-
-    // Initialize session management
-    Utils.SessionManager.init();
-
-    // Initialize shared components
-    const navigationManager = new Utils.NavigationManager();
-    const apiHandler = new Utils.APIHandler();
-    
-    // Initialize dashboard components
-    initializeDashboard(apiHandler);
-    initializeSearch();
-    initializeNotifications();
-    // initializeThemeToggle(); - REMOVED as per requirement
-    initializeExport();
-    initializeQuickActions();
-    initializeActivityFeed();
-    initializeUserProfile();
-
-    // Setup global error handling
-    setupErrorHandling();
-    
-    // Initialize additional functionality
-    initializeUserData();
-
 });
 
 // Define missing functions to prevent errors
@@ -172,30 +101,44 @@ function setupErrorHandling() {
 // Dashboard Initialization
 function initializeDashboard(apiHandler) {
     // Initialize widgets with proper cleanup
-    const widgetManager = new Utils.WidgetManager();
-    
-    // Override widget update method for dashboard-specific logic
-    widgetManager.updateWidgetData = function(widget) {
-        const widgetType = widget.querySelector('.widget-title')?.textContent;
+    if (window.Utils && window.Utils.WidgetManager) {
+        const widgetManager = new Utils.WidgetManager();
         
-        // Simulate data update with API call
-        apiHandler.get(`/dashboard/widgets/${widgetType.toLowerCase().replace(/\s+/g, '-')}`)
-            .then(data => {
-                updateWidgetDisplay(widget, data);
-            })
-            .catch(() => {
-                // Fallback to simulated data
-                updateWidgetDisplay(widget, generateMockWidgetData(widgetType));
-            });
-    };
-    
-    widgetManager.openWidgetDetails = function(widgetType) {
-        Utils.UIHelper.showToast(`Opening details for ${widgetType}`, 'info');
-        // Navigate to detailed view
-        setTimeout(() => {
-            window.location.href = `/dashboard/widgets/${widgetType.toLowerCase().replace(/\s+/g, '-')}`;
-        }, 1000);
-    };
+        // Override widget update method for dashboard-specific logic
+        if (widgetManager.updateWidgetData) {
+            const originalUpdateWidgetData = widgetManager.updateWidgetData;
+            widgetManager.updateWidgetData = function(widget) {
+                const widgetType = widget.querySelector('.widget-title')?.textContent;
+                
+                // Simulate data update with API call
+                if (apiHandler && apiHandler.get) {
+                    apiHandler.get(`/dashboard/widgets/${widgetType.toLowerCase().replace(/\s+/g, '-')}`)
+                        .then(data => {
+                            updateWidgetDisplay(widget, data);
+                        })
+                        .catch(() => {
+                            // Fallback to simulated data
+                            updateWidgetDisplay(widget, generateMockWidgetData(widgetType));
+                        });
+                } else {
+                    // Fallback to simulated data
+                    updateWidgetDisplay(widget, generateMockWidgetData(widgetType));
+                }
+            };
+        }
+        
+        if (widgetManager.openWidgetDetails) {
+            widgetManager.openWidgetDetails = function(widgetType) {
+                if (Utils.UIHelper && Utils.UIHelper.showToast) {
+                    Utils.UIHelper.showToast(`Opening details for ${widgetType}`, 'info');
+                }
+                // Navigate to detailed view
+                setTimeout(() => {
+                    window.location.href = `/dashboard/widgets/${widgetType.toLowerCase().replace(/\s+/g, '-')}`;
+                }, 1000);
+            };
+        }
+    }
 }
 
 // Update widget display with new data
@@ -209,7 +152,7 @@ function updateWidgetDisplay(widget, data) {
     
     if (changeElement && data.change) {
         changeElement.textContent = data.change;
-        changeElement.className = `widget-change ${data.trend}`;
+        changeElement.className = `widget-change ${data.trend || 'neutral'}`;
     }
 }
 
@@ -260,29 +203,6 @@ function initializeSearch() {
     }
 }
 
-function performSearch(query) {
-    // Validate and sanitize the query
-    if (!validateSearchQuery(query)) {
-        Utils.UIHelper.showToast('Invalid search query provided', 'error');
-        return;
-    }
-    
-    const sanitizedQuery = Utils.UIHelper.sanitizeHTML(query);
-    
-    Utils.UIHelper.showToast(`Searching for: "${sanitizedQuery}"`, 'info');
-    
-    // Perform actual search
-    const apiHandler = new Utils.APIHandler();
-    apiHandler.get(`/search?q=${encodeURIComponent(sanitizedQuery)}`)
-        .then(results => {
-            displaySearchResults(results);
-        })
-        .catch(() => {
-            // Fallback to mock results
-            displaySearchResults(getMockSearchResults(sanitizedQuery));
-        });
-}
-
 // Validate search query
 function validateSearchQuery(query) {
     if (typeof query !== 'string') {
@@ -307,7 +227,10 @@ function displaySearchResults(results) {
     if (!resultsContainer) {
         resultsContainer = document.createElement('div');
         resultsContainer.className = 'search-results';
-        document.querySelector('.search-box').appendChild(resultsContainer);
+        const searchBox = document.querySelector('.search-box');
+        if (searchBox) {
+            searchBox.appendChild(resultsContainer);
+        }
     }
     
     if (results.length === 0) {
@@ -316,18 +239,18 @@ function displaySearchResults(results) {
         // Sanitize results to prevent XSS
         const sanitizedResults = results.map(result => {
             return {
-                id: Utils.ValidationUtils.required(result.id) ? result.id : '',
-                title: Utils.UIHelper.sanitizeHTML(result.title || ''),
-                type: Utils.UIHelper.sanitizeHTML(result.type || '')
+                id: result.id ? result.id : '',
+                title: result.title || '',
+                type: result.type || ''
             };
         });
         
         resultsContainer.innerHTML = sanitizedResults.map(result => `
-            <div class="search-result-item" onclick="navigateToResult('${Utils.UIHelper.sanitizeHTML(result.type)}', '${Utils.UIHelper.sanitizeHTML(result.id)}')">
+            <div class="search-result-item" onclick="navigateToResult('${result.type}', '${result.id}')">
                 <i class="fas fa-${getResultIcon(result.type)}"></i>
                 <div class="result-content">
-                    <div class="result-title">${Utils.UIHelper.sanitizeHTML(result.title)}</div>
-                    <div class="result-type">${Utils.UIHelper.sanitizeHTML(result.type)}</div>
+                    <div class="result-title">${result.title}</div>
+                    <div class="result-type">${result.type}</div>
                 </div>
             </div>
         `).join('');
@@ -355,9 +278,17 @@ function getMockSearchResults(query) {
 }
 
 function navigateToResult(type, id) {
-    Utils.UIHelper.showToast(`Opening ${type} #${id}`, 'info');
-    document.querySelector('.search-results').style.display = 'none';
-    document.querySelector('.search-box input').value = '';
+    if (Utils.UIHelper && Utils.UIHelper.showToast) {
+        Utils.UIHelper.showToast(`Opening ${type} #${id}`, 'info');
+    }
+    const resultsContainer = document.querySelector('.search-results');
+    if (resultsContainer) {
+        resultsContainer.style.display = 'none';
+    }
+    const searchInput = document.querySelector('.search-box input');
+    if (searchInput) {
+        searchInput.value = '';
+    }
 }
 
 // 5. Notification System
@@ -407,7 +338,8 @@ function initializeExport() {
 function initializeQuickActions() {
     document.querySelectorAll('.action-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
-            if (!confirm(`Proceed with "${this.querySelector('.action-text').textContent}"?`)) {
+            const actionText = this.querySelector('.action-text');
+            if (actionText && !confirm(`Proceed with "${actionText.textContent}"?`)) {
                 e.preventDefault();
             }
         });
@@ -425,8 +357,10 @@ function initializeActivityFeed() {
     document.querySelectorAll('.activity-item').forEach(item => {
         item.style.cursor = 'pointer';
         item.addEventListener('click', function() {
-            const activityText = this.querySelector('.activity-text').textContent;
-            openActivityDetails(activityText);
+            const activityText = this.querySelector('.activity-text');
+            if (activityText) {
+                openActivityDetails(activityText.textContent);
+            }
         });
     });
 }
@@ -469,41 +403,14 @@ function updateWidgetData(widget) {
     }, 300);
 }
 
-function performSearch(query) {
-    // Simulate API call
-    const results = [
-        { type: 'Incident', title: 'Downtown Safety Incident', match: '85%' },
-        { type: 'Campaign', title: 'Summer Safety Campaign', match: '72%' },
-        { type: 'Report', title: 'Monthly Safety Report', match: '68%' }
-    ];
-
-    displaySearchResults(results);
-}
-
 function performAdvancedSearch(query) {
     alert(`Advanced search for: "${query}"\nOpening search results page...`);
-}
-
-function displaySearchResults(results) {
-    const container = document.querySelector('.search-results');
-    if (!container) return;
-
-    container.innerHTML = results.map(result => `
-        <div class="search-result-item">
-            <div class="result-type">${result.type}</div>
-            <div class="result-title">${result.title}</div>
-            <div class="result-match">${result.match} match</div>
-        </div>
-    `).join('');
-    container.style.display = 'block';
 }
 
 function hideSearchResults() {
     const container = document.querySelector('.search-results');
     if (container) container.style.display = 'none';
 }
-
-
 
 function exportToPDF() {
     alert('Generating PDF report...\nThis would generate a comprehensive report in a real application.');
@@ -638,233 +545,6 @@ function dismissAlert(alertDiv) {
     }, 300);
 }
 
-// Update the initializeCharts function with enhanced features:
-function initializeCharts() {
-    // Check if chart elements exist
-    if (document.getElementById('incidentsChart')) {
-        // Incidents by Type Chart (Interactive Doughnut)
-        const incidentsCtx = document.getElementById('incidentsChart').getContext('2d');
-        const incidentsChart = new Chart(incidentsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Emergency', 'Health', 'Safety', 'Fire', 'Police'],
-                datasets: [{
-                    data: [25, 18, 32, 12, 13],
-                    backgroundColor: [
-                        '#F44336', // danger - Emergency
-                        '#FFA726', // warning - Health
-                        '#4A90E2', // accent - Safety
-                        '#FF5722', // fire orange - Fire
-                        '#2196F3'  // police blue - Police
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#121212',
-                    hoverOffset: 15, // Makes segments pop out on hover
-                    hoverBackgroundColor: [
-                        '#FF5252', // Lighter red for hover
-                        '#FFB74D', // Lighter orange for hover
-                        '#64B5F6', // Lighter blue for hover
-                        '#FF8A65', // Lighter fire orange for hover
-                        '#42A5F5'  // Lighter police blue for hover
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#4A90E2',
-                        borderWidth: 1,
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${label}: ${value} incidents (${percentage}%)`;
-                            }
-                        }
-                    }
-                },
-                onClick: function(evt, elements) {
-                    if (elements.length > 0) {
-                        const index = elements[0].index;
-                        const labels = this.data.labels;
-                        const values = this.data.datasets[0].data;
-                        alert(`Clicked on: ${labels[index]}\nIncidents: ${values[index]}\n\nWould open detailed view for ${labels[index]} incidents.`);
-                    }
-                },
-                animation: {
-                    animateScale: true,
-                    animateRotate: true,
-                    duration: 1000
-                }
-            }
-        });
-
-        // Add click event to chart container for reset
-        const incidentsContainer = document.querySelector('#incidentsChart').parentElement;
-        incidentsContainer.addEventListener('dblclick', function() {
-            incidentsChart.reset();
-        });
-    }
-
-    if (document.getElementById('campaignChart')) {
-        // Campaign Reach Chart (Interactive Line Chart)
-        const campaignCtx = document.getElementById('campaignChart').getContext('2d');
-        const campaignChart = new Chart(campaignCtx, {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-                datasets: [
-                    {
-                        label: 'Current Month',
-                        data: [1200, 1900, 3000, 5000, 7500],
-                        borderColor: '#4CAF50', // success
-                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#4CAF50',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointHoverBackgroundColor: '#66BB6A',
-                        pointHoverBorderColor: '#fff',
-                        pointHoverBorderWidth: 3
-                    },
-                    {
-                        label: 'Previous Month',
-                        data: [1000, 1700, 2500, 4000, 6000],
-                        borderColor: '#4A90E2', // accent
-                        backgroundColor: 'rgba(74, 144, 226, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#4A90E2',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointHoverBackgroundColor: '#64B5F6',
-                        pointHoverBorderColor: '#fff',
-                        pointHoverBorderWidth: 3
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 12
-                            }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#4A90E2',
-                        borderWidth: 1,
-                        usePointStyle: true,
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} reach`;
-                            }
-                        }
-                    }
-                },
-                onClick: function(evt, elements) {
-                    if (elements.length > 0) {
-                        const datasetIndex = elements[0].datasetIndex;
-                        const index = elements[0].index;
-                        const dataset = this.data.datasets[datasetIndex];
-                        const label = this.data.labels[index];
-                        const value = dataset.data[index];
-                        alert(`Clicked on: ${label}\n${dataset.label}: ${value.toLocaleString()} reach`);
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return value.toLocaleString() + ' reach';
-                            },
-                            font: {
-                                size: 11
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Campaign Reach',
-                            color: 'var(--text-gray)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            font: {
-                                size: 11
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Week',
-                            color: 'var(--text-gray)'
-                        }
-                    }
-                },
-                animation: {
-                    duration: 1500,
-                    easing: 'easeInOutQuart'
-                },
-                elements: {
-                    line: {
-                        tension: 0.4
-                    }
-                }
-            }
-        });
-
-        // Add hover effect to chart container
-        const campaignContainer = document.querySelector('#campaignChart').parentElement;
-        campaignContainer.addEventListener('mouseenter', function() {
-            campaignChart.options.plugins.tooltip.enabled = true;
-            campaignChart.update('none');
-        });
-
-        campaignContainer.addEventListener('mouseleave', function() {
-            campaignChart.options.plugins.tooltip.enabled = false;
-            campaignChart.update('none');
-        });
-    }
-}
-
-
 // Debug function to check chart loading
 function checkChartLoading() {
     console.log('Checking chart elements...');
@@ -894,48 +574,81 @@ function checkChartLoading() {
     }
 }
 
-// Call the debug function after page loads
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(checkChartLoading, 1000);
-});
-
-// ===== INTERACTIVE CHART FUNCTIONS =====
-
-// Initialize Interactive Charts
+// Interactive Chart Functions
 function initializeInteractiveCharts() {
+    console.log('Initializing interactive charts...');
+
     // Initialize heat map
     generateHeatMap();
 
     // Add click events to incident cards
-    document.querySelectorAll('.incident-type-card').forEach(card => {
-        card.addEventListener('click', function() {
+    const incidentCards = document.querySelectorAll('.incident-type-card');
+    console.log(`Found ${incidentCards.length} incident cards`);
+    
+    incidentCards.forEach((incidentCard, index) => {
+        // Remove existing listeners to prevent duplicates
+        const newCard = incidentCard.cloneNode(true);
+        incidentCard.parentNode.replaceChild(newCard, incidentCard);
+        
+        newCard.addEventListener('click', function() {
             const type = this.dataset.type;
             const count = this.dataset.count;
+            console.log(`Incident card clicked: ${type} (${count})`);
             openIncidentDashboard(type, count);
         });
+        
+        console.log(`Added listener to card ${index + 1}: ${newCard.dataset.type}`);
     });
 
     // Add click events to campaign cards
-    document.querySelectorAll('.campaign-card').forEach(card => {
-        card.addEventListener('click', function(e) {
+    const campaignCards = document.querySelectorAll('.campaign-card');
+    console.log(`Found ${campaignCards.length} campaign cards`);
+    
+    campaignCards.forEach((campaignCard, index) => {
+        // Remove existing listeners to prevent duplicates
+        const newCard = campaignCard.cloneNode(true);
+        campaignCard.parentNode.replaceChild(newCard, campaignCard);
+        
+        newCard.addEventListener('click', function(e) {
             // Only trigger if not clicking on action buttons
             if (!e.target.closest('.campaign-actions')) {
                 const campaignId = this.dataset.id;
+                console.log(`Campaign card clicked: ${campaignId}`);
                 viewCampaignDetails(campaignId);
             }
         });
+        
+        console.log(`Added listener to campaign card ${index + 1}: ${newCard.dataset.id}`);
     });
 
     // Initialize time filter
-    document.getElementById('timeFilter')?.addEventListener('change', function() {
-        filterIncidentsByTime(this.value);
-    });
+    const timeFilter = document.getElementById('timeFilter');
+    if (timeFilter) {
+        // Remove existing listener
+        const newTimeFilter = timeFilter.cloneNode(true);
+        timeFilter.parentNode.replaceChild(newTimeFilter, timeFilter);
+        
+        newTimeFilter.addEventListener('change', function() {
+            console.log(`Time filter changed to: ${this.value}`);
+            filterIncidentsByTime(this.value);
+        });
+        console.log('✓ Time filter initialized');
+    } else {
+        console.log('✗ Time filter element not found');
+    }
+    
+    console.log('✓ Interactive charts initialized');
 }
 
 // Generate Heat Map
 function generateHeatMap() {
-    const grid = document.querySelector('.heat-map-grid');
-    if (!grid) return;
+    const grid = document.querySelector('.heat-map-grid') || document.getElementById('heatMapGrid');
+    if (!grid) {
+        console.log('✗ Heat map grid element not found (.heat-map-grid or #heatMapGrid)');
+        return;
+    }
+
+    console.log('✓ Generating heat map');
 
     grid.innerHTML = '';
 
@@ -959,13 +672,16 @@ function generateHeatMap() {
 
         // Add click event
         cell.addEventListener('click', function() {
-            const day = Math.floor(i / 7) + 1;
-            const week = i % 7 + 1;
-            showDayDetails(day, week, intensity);
+            const week = Math.floor(i / 7) + 1;
+            const day = (i % 7) + 1;
+            console.log(`Heat map cell clicked: Week ${week}, Day ${day} (${intensity} incidents)`);
+            showDayDetails(week, day, intensity);
         });
 
         grid.appendChild(cell);
     }
+    
+    console.log('✓ Heat map generated with 28 cells');
 }
 
 // Incident Type Functions
@@ -976,17 +692,13 @@ function viewIncidentDetails(type) {
     • Resolution status
     • Time analytics`);
 
-    // In a real app, this would navigate to incident details page
     console.log(`Viewing ${type} incident details`);
 }
 
 function assignTeam(type) {
     const teamName = prompt(`Assign team to ${type} incidents:`);
     if (teamName) {
-        alert(`Team "${teamName}" assigned to ${type} incidents`);
-
-        // Show success notification
-        showNotification(`Team assigned to ${type} incidents`, 'success');
+        showNotification(`Team "${teamName}" assigned to ${type} incidents`, 'success');
     }
 }
 
@@ -994,18 +706,20 @@ function openIncidentDashboard(type, count) {
     console.log(`Opening dashboard for ${type} (${count} incidents)`);
 
     // Highlight selected card
-    document.querySelectorAll('.incident-type-card').forEach(card => {
-        card.style.transform = 'none';
-        card.style.boxShadow = 'none';
+    document.querySelectorAll('.incident-type-card').forEach(dashboardCard => {
+        dashboardCard.style.transform = 'none';
+        dashboardCard.style.boxShadow = 'none';
     });
 
-    const selectedCard = document.querySelector(`.incident-type-card.${type}`);
+    const selectedCard = document.querySelector(`.incident-type-card[data-type="${type}"]`);
     if (selectedCard) {
         selectedCard.style.transform = 'scale(1.02)';
         selectedCard.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
+        console.log(`✓ Highlighted ${type} card`);
+    } else {
+        console.log(`✗ Could not find card for type: ${type}`);
     }
 
-    // In a real app, this would filter data and update other components
     showNotification(`Showing ${type} incidents (${count} total)`, 'info');
 }
 
@@ -1036,13 +750,12 @@ function filterIncidentsByTime(timeRange) {
 
         // Update UI
         Object.keys(incidents).forEach(type => {
-
             const card = document.querySelector(`.incident-type-card[data-type="${type}"]`);
-
-            const card = document.querySelector(`.incident-type-card.${type}`);
-
             if (card) {
-                card.querySelector('.incident-count').textContent = incidents[type];
+                const countElement = card.querySelector('.incident-count');
+                if (countElement) {
+                    countElement.textContent = incidents[type];
+                }
                 card.dataset.count = incidents[type];
 
                 // Update trend randomly
@@ -1051,16 +764,15 @@ function filterIncidentsByTime(timeRange) {
                 const change = Math.floor(Math.random() * 20);
 
                 const trendElement = card.querySelector('.incident-trend');
-                trendElement.textContent = trend === 'up' ? `↑ ${change}%` :
-                                          trend === 'down' ? `↓ ${change}%` : '↔ 0%';
-                trendElement.className = `incident-trend ${trend}`;
+                if (trendElement) {
+                    trendElement.textContent = trend === 'up' ? `↑ ${change}%` :
+                                            trend === 'down' ? `↓ ${change}%` : '↔ 0%';
+                    trendElement.className = `incident-trend ${trend}`;
+                }
 
-                
                 console.log(`✓ Updated ${type} card: ${incidents[type]} incidents`);
             } else {
                 console.log(`✗ Could not find card for type: ${type}`);
-
-
             }
         });
 
@@ -1108,24 +820,171 @@ function showDayDetails(week, day, incidents) {
             </div>
         </div>
         <div class="modal-footer">
-            <button onclick="closeModal()" class="btn-secondary">Close</button>
-            <button onclick="exportDayReport(${week}, ${day})" class="btn-primary">Export Report</button>
+            <button onclick="closeModal()" class="action-btn-small" style="background: var(--dark-gray);">Close</button>
+            <button onclick="exportDayReport(${week}, ${day})" class="action-btn-small">Export Report</button>
         </div>
     `;
 
     showModal('Day Details', modalContent);
 }
 
-// Campaign Functions
+// Enhanced Campaign Functions
+function addNewCampaign() {
+    showNotification('Opening new campaign creation wizard...', 'info', 2000);
+    
+    // Simulate API call to create new campaign
+    const newCampaignData = {
+        id: Date.now(), // Unique ID
+        name: '',
+        status: 'draft',
+        createdDate: new Date().toISOString(),
+        progress: 0
+    };
+    
+    // Store in local storage temporarily
+    try {
+        let campaigns = JSON.parse(localStorage.getItem('campaigns')) || [];
+        campaigns.push(newCampaignData);
+        localStorage.setItem('campaigns', JSON.stringify(campaigns));
+        
+        // Show success notification
+        showNotification('New campaign created successfully!', 'success', 3000);
+        
+        // Redirect to campaign planning module
+        window.location.href = '../Modules/Module-1.php';
+    } catch (error) {
+        console.error('Error creating campaign:', error);
+        showNotification('Failed to create campaign. Please try again.', 'error', 4000);
+    }
+}
 
+// Open campaign creation modal
+function openCampaignCreationModal(campaignId) {
+    const modalContent = `
+        <div class="campaign-wizard">
+            <h3>Create New Campaign</h3>
+            <div class="wizard-steps">
+                <div class="step active" data-step="1">Basic Info</div>
+                <div class="step" data-step="2">Audience</div>
+                <div class="step" data-step="3">Timeline</div>
+                <div class="step" data-step="4">Review</div>
+            </div>
+            <div class="wizard-content">
+                <div class="step-form active" data-step="1">
+                    <div class="form-group">
+                        <label for="campaignName">Campaign Name</label>
+                        <input type="text" id="campaignName" placeholder="Enter campaign name">
+                    </div>
+                    <div class="form-group">
+                        <label for="campaignGoal">Goal</label>
+                        <textarea id="campaignGoal" placeholder="Describe the campaign goal"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="wizard-actions">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="nextWizardStep(2)">Next</button>
+            </div>
+        </div>
+    `;
+    
+    showModal('New Campaign', modalContent);
+}
 
+// Navigate wizard steps
+function nextWizardStep(step) {
+    // Update UI to show next step
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.step-form').forEach(el => el.classList.remove('active'));
+    
+    const stepElement = document.querySelector(`.step[data-step="${step}"]`);
+    const stepFormElement = document.querySelector(`.step-form[data-step="${step}"]`);
+    
+    if (stepElement) stepElement.classList.add('active');
+    if (stepFormElement) stepFormElement.classList.add('active');
+    
+    // Update button actions based on step
+    const actionsDiv = document.querySelector('.wizard-actions');
+    if (actionsDiv) {
+        if (step < 4) {
+            actionsDiv.innerHTML = `
+                <button class="btn-secondary" onclick="prevWizardStep(${step - 1})">Back</button>
+                <button class="btn-primary" onclick="nextWizardStep(${step + 1})">Next</button>
+            `;
+        } else {
+            actionsDiv.innerHTML = `
+                <button class="btn-secondary" onclick="prevWizardStep(${step - 1})">Back</button>
+                <button class="btn-primary" onclick="finishCampaignCreation()">Finish</button>
+            `;
+        }
+    }
+}
 
+function prevWizardStep(step) {
+    if (step > 0) {
+        nextWizardStep(step);
+    }
+}
 
+function finishCampaignCreation() {
+    showNotification('Campaign created successfully!', 'success', 3000);
+    closeModal();
+    
+    // Redirect to campaign planning module after a short delay
+    setTimeout(() => {
+        window.location.href = '../Modules/Module-1.php';
+    }, 1500);
+}
 
+function viewCampaign(id) {
+    const campaigns = {
+        1: { name: 'Summer Safety', status: 'active', progress: 75, reach: 7500, engagement: 92, costPerReach: 0.42, completion: 78 },
+        2: { name: 'School Zone Safety', status: 'active', progress: 60, reach: 5200, engagement: 88, costPerReach: 0.38, completion: 78 },
+        3: { name: 'Home Safety Week', status: 'planned', progress: 10, reach: 10000, startDate: 'Oct 15', daysLeft: 5 },
+        4: { name: 'Road Safety Month', status: 'completed', progress: 100, reach: 12500, engagement: 95, costPerReach: 0.35, completion: 100 }
+    };
 
-
-
-
+    const campaign = campaigns[id];
+    if (campaign) {
+        let extraInfo = '';
+        if (campaign.status === 'planned') {
+            extraInfo = `<div class="detail-item">
+                <strong>Starts:</strong> ${campaign.startDate}<br>
+                <strong>Days Left:</strong> ${campaign.daysLeft}
+            </div>`;
+        }
+        
+        showModal(
+            `Campaign: ${campaign.name}`,
+            `<div class="campaign-details">
+                <div class="detail-item">
+                    <strong>Status:</strong> ${campaign.status.toUpperCase()}
+                </div>
+                <div class="detail-item">
+                    <strong>Progress:</strong> ${campaign.progress}% Complete
+                </div>
+                <div class="detail-item">
+                    <strong>Reach:</strong> ${campaign.reach.toLocaleString()}
+                </div>
+                <div class="detail-item">
+                    <strong>Engagement:</strong> ${campaign.engagement}%
+                </div>
+                ${extraInfo}
+                ${campaign.status !== 'planned' ? `
+                <div class="detail-item">
+                    <strong>Cost per Reach:</strong> $${campaign.costPerReach.toFixed(2)}
+                </div>
+                <div class="detail-item">
+                    <strong>Avg Completion:</strong> ${campaign.completion}%
+                </div>` : ''}
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button onclick="openAnalytics(${id})" class="action-btn-small">View Analytics</button>
+                    <button onclick="editCampaign(${id})" class="action-btn-small" style="background: var(--dark-gray);">Edit</button>
+                </div>
+            </div>`
+        );
+    }
+}
 
 function remindMe(campaign) {
     const time = prompt('Set reminder for when? (e.g., "1 hour", "tomorrow 9am")');
@@ -1134,7 +993,77 @@ function remindMe(campaign) {
     }
 }
 
+function viewLiveStats(campaign) {
+    showModal(
+        'Live Campaign Stats',
+        `<div class="live-stats">
+            <h3>${campaign} Campaign</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div class="stat">
+                    <div class="stat-value">${Math.floor(Math.random() * 1000) + 7000}</div>
+                    <div class="stat-label">Live Reach</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${(Math.random() * 8 + 2).toFixed(1)}%</div>
+                    <div class="stat-label">Engagement</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${Math.floor(Math.random() * 500) + 200}</div>
+                    <div class="stat-label">Shares</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${Math.floor(Math.random() * 1000) + 500}</div>
+                    <div class="stat-label">Comments</div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-gray); margin-top: 20px;">
+                <p>Last updated: Just now</p>
+                <p>Next update in: 30 seconds</p>
+            </div>
+        </div>`,
+        true // Auto-refresh
+    );
 
+    // Auto-refresh stats every 5 seconds
+    if (typeof window.statsInterval !== 'undefined') {
+        clearInterval(window.statsInterval);
+    }
+
+    window.statsInterval = setInterval(() => {
+        console.log('Refreshing live stats...');
+        // In a real app, this would fetch new data
+    }, 5000);
+}
+
+function editCampaign(id) {
+    // Redirect to the campaign planning module to edit
+    window.location.href = '../Modules/Module-1.php?campaignId=' + id + '&action=edit';
+    console.log('Editing campaign: ' + id);
+}
+
+function viewReport(id) {
+    // Redirect to the campaign analytics reports
+    window.location.href = '../Modules/CampaignAnalyticsReports.php?campaignId=' + id + '&view=report';
+    console.log('Viewing report for campaign: ' + id);
+}
+
+function viewAllCampaigns() {
+    // Redirect to the campaign analytics reports module
+    window.location.href = '../Modules/CampaignAnalyticsReports.php';
+    console.log('Viewing all campaigns');
+}
+
+function openAnalytics(id) {
+    // Redirect to the analytics module for the specific campaign
+    window.location.href = '../Modules/CampaignAnalyticsReports.php?campaignId=' + id;
+    console.log('Opening analytics for campaign: ' + id);
+}
+
+function viewCampaignDetails(id) {
+    // Redirect to the campaign analytics for detailed view
+    window.location.href = '../Modules/CampaignAnalyticsReports.php?campaignId=' + id;
+    console.log('Viewing details for campaign: ' + id);
+}
 
 // Modal Functions
 function showModal(title, content, autoRefresh = false) {
@@ -1148,7 +1077,6 @@ function showModal(title, content, autoRefresh = false) {
     modal.id = 'customModal';
     modal.className = 'custom-modal';
     modal.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()"></div>
         <div class="modal-content">
             <div class="modal-header">
                 <h2>${title}</h2>
@@ -1237,28 +1165,15 @@ function getNotificationIcon(type) {
     return icons[type] || 'info-circle';
 }
 
-// Initialize everything
-document.addEventListener('DOMContentLoaded', function() {
-    // Original initialization
-    initializeNavigation();
-    initializeWidgets();
-    initializeSearch();
-    initializeNotifications();
-    // initializeThemeToggle(); - REMOVED as per requirement
-    initializeExport();
-    initializeQuickActions();
-    initializeActivityFeed();
-    initializeRealTimeUpdates();
-
-    // NEW: Initialize interactive charts
-    initializeInteractiveCharts();
-    
-    // Initialize notification system
-    initializeNotificationSystem();
-    
-    // Add CSS for modals and notifications
-    addCustomStyles();
-});
+// Export Day Report
+function exportDayReport(week, day) {
+    alert(`Exporting report for Week ${week}, Day ${day}...\n\nReport would include:
+    • Incident breakdown
+    • Response times
+    • Team assignments
+    • Resolution rates
+    • Recommendations`);
+}
 
 // Add custom styles for new components
 function addCustomStyles() {
@@ -1274,16 +1189,7 @@ function addCustomStyles() {
             align-items: center;
             justify-content: center;
             z-index: 10000;
-        }
-
-        .modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
             background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
         }
 
         .modal-content {
@@ -1437,909 +1343,79 @@ function addCustomStyles() {
             cursor: pointer;
             padding: 0;
         }
-        
-        /* Campaign wizard styles */
-        .campaign-wizard {
-            width: 100%;
-        }
-        
-        .wizard-steps {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .step {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            background: var(--dark-gray);
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .step.active {
-            background: var(--accent);
-            color: white;
-        }
-        
-        .step-form {
-            display: none;
-        }
-        
-        .step-form.active {
-            display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--medium-gray);
-            border-radius: 4px;
-            background: var(--secondary-black);
-            color: var(--white);
-        }
-        
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        .wizard-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--dark-gray);
-        }
     `;
     document.head.appendChild(style);
 }
 
-
-// Interactive Chart Functions
-function initializeInteractiveCharts() {
-
-    console.log('Initializing interactive charts...');
-    
-
-
-    // Initialize heat map
-    generateHeatMap();
-
-    // Add click events to incident cards
-
-    const incidentCards = document.querySelectorAll('.incident-type-card');
-    console.log(`Found ${incidentCards.length} incident cards`);
-    
-    incidentCards.forEach((card, index) => {
-        // Remove existing listeners to prevent duplicates
-        const newCard = card.cloneNode(true);
-        card.parentNode.replaceChild(newCard, card);
-        
-        newCard.addEventListener('click', function() {
-            const type = this.dataset.type;
-            const count = this.dataset.count;
-            console.log(`Incident card clicked: ${type} (${count})`);
-            openIncidentDashboard(type, count);
-        });
-        
-        console.log(`Added listener to card ${index + 1}: ${newCard.dataset.type}`);
-    });
-
-    // Add click events to campaign cards
-    const campaignCards = document.querySelectorAll('.campaign-card');
-    console.log(`Found ${campaignCards.length} campaign cards`);
-    
-    campaignCards.forEach((card, index) => {
-        // Remove existing listeners to prevent duplicates
-        const newCard = card.cloneNode(true);
-        card.parentNode.replaceChild(newCard, card);
-        
-        newCard.addEventListener('click', function(e) {
-            // Only trigger if not clicking on action buttons
-            if (!e.target.closest('.campaign-actions')) {
-                const campaignId = this.dataset.id;
-                console.log(`Campaign card clicked: ${campaignId}`);
-                viewCampaignDetails(campaignId);
-            }
-        });
-        
-        console.log(`Added listener to campaign card ${index + 1}: ${newCard.dataset.id}`);
-
-    document.querySelectorAll('.incident-type-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const type = this.dataset.type;
-            const count = this.dataset.count;
-            openIncidentDashboard(type, count);
-        });
-    });
-
-    // Add click events to campaign cards
-    document.querySelectorAll('.campaign-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-            // Only trigger if not clicking on action buttons
-            if (!e.target.closest('.campaign-actions')) {
-                const campaignId = this.dataset.id;
-                viewCampaignDetails(campaignId);
-            }
-        });
-
-    });
-
-    // Initialize time filter
-    const timeFilter = document.getElementById('timeFilter');
-    if (timeFilter) {
-
-        // Remove existing listener
-        timeFilter.removeEventListener('change', filterIncidentsByTime);
-        timeFilter.addEventListener('change', function() {
-            console.log(`Time filter changed to: ${this.value}`);
-            filterIncidentsByTime(this.value);
-        });
-        console.log('✓ Time filter initialized');
-    } else {
-        console.log('✗ Time filter element not found');
-    }
-    
-    console.log('✓ Interactive charts initialized');
-
-        timeFilter.addEventListener('change', function() {
-            filterIncidentsByTime(this.value);
-        });
-    }
-
-}
-
-// Generate Heat Map
-function generateHeatMap() {
-
-    const grid = document.querySelector('.heat-map-grid') || document.getElementById('heatMapGrid');
-    if (!grid) {
-        console.log('✗ Heat map grid element not found (.heat-map-grid or #heatMapGrid)');
-        return;
-    }
-
-    console.log('✓ Generating heat map');
-
-    const grid = document.getElementById('heatMapGrid');
-    if (!grid) return;
-
-
-    grid.innerHTML = '';
-
-    // Generate 28 cells (4 weeks x 7 days)
-    for (let i = 0; i < 28; i++) {
-        const cell = document.createElement('div');
-
-        // Random intensity for demo
-        const intensity = Math.floor(Math.random() * 20);
-
-        if (intensity <= 5) {
-            cell.className = 'heat-map-cell low';
-            cell.title = `${intensity} incidents`;
-        } else if (intensity <= 15) {
-            cell.className = 'heat-map-cell medium';
-            cell.title = `${intensity} incidents`;
-        } else {
-            cell.className = 'heat-map-cell high';
-            cell.title = `${intensity} incidents`;
-        }
-
-        // Add click event
-        cell.addEventListener('click', function() {
-            const day = Math.floor(i / 7) + 1;
-
-            const week = (i % 7) + 1;
-            console.log(`Heat map cell clicked: Week ${week}, Day ${day} (${intensity} incidents)`);
-
-            const week = i % 7 + 1;
-
-            showDayDetails(day, week, intensity);
-        });
-
-        grid.appendChild(cell);
-    }
-
-    
-    console.log('✓ Heat map generated with 28 cells');
-
-
-}
-
-// Incident Type Functions
-function viewIncidentDetails(type) {
-    alert(`Opening detailed view for ${type} incidents\n\nThis would show:
-    • Recent ${type} incidents
-    • Response teams assigned
-    • Resolution status
-    • Time analytics`);
-
-    console.log(`Viewing ${type} incident details`);
-}
-
-function assignTeam(type) {
-    const teamName = prompt(`Assign team to ${type} incidents:`);
-    if (teamName) {
-        showNotification(`Team "${teamName}" assigned to ${type} incidents`, 'success');
-    }
-}
-
-function openIncidentDashboard(type, count) {
-    console.log(`Opening dashboard for ${type} (${count} incidents)`);
-
-    // Highlight selected card
-    document.querySelectorAll('.incident-type-card').forEach(card => {
-        card.style.transform = 'none';
-        card.style.boxShadow = 'none';
-    });
-
-
-    const selectedCard = document.querySelector(`.incident-type-card[data-type="${type}"]`);
-    if (selectedCard) {
-        selectedCard.style.transform = 'scale(1.02)';
-        selectedCard.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
-        console.log(`✓ Highlighted ${type} card`);
-    } else {
-        console.log(`✗ Could not find card for type: ${type}`);
-
-    const selectedCard = document.querySelector(`.incident-type-card.${type}`);
-    if (selectedCard) {
-        selectedCard.style.transform = 'scale(1.02)';
-        selectedCard.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
-
-    }
-
-    showNotification(`Showing ${type} incidents (${count} total)`, 'info');
-}
-
-// Time Filter Function
-function filterIncidentsByTime(timeRange) {
-    const ranges = {
-        'today': 'Last 24 hours',
-        'week': 'Last 7 days',
-        'month': 'Last 30 days',
-        'quarter': 'Last 90 days'
-    };
-
-    console.log(`Filtering incidents for: ${ranges[timeRange]}`);
-
-    // Simulate loading
-    showNotification(`Loading incidents for ${ranges[timeRange].toLowerCase()}...`, 'info');
-
-    // Simulate API call
-    setTimeout(() => {
-        // Update incident counts (random for demo)
-        const incidents = {
-            emergency: Math.floor(Math.random() * 30) + 10,
-            health: Math.floor(Math.random() * 25) + 5,
-            safety: Math.floor(Math.random() * 40) + 10,
-            fire: Math.floor(Math.random() * 20) + 5,
-            police: Math.floor(Math.random() * 25) + 8
-        };
-
-        // Update UI
-        Object.keys(incidents).forEach(type => {
-
-            const card = document.querySelector(`.incident-type-card[data-type="${type}"]`);
-
-            const card = document.querySelector(`.incident-type-card.${type}`);
-
-            if (card) {
-                card.querySelector('.incident-count').textContent = incidents[type];
-                card.dataset.count = incidents[type];
-
-                // Update trend randomly
-                const trends = ['up', 'down', 'neutral'];
-                const trend = trends[Math.floor(Math.random() * 3)];
-                const change = Math.floor(Math.random() * 20);
-
-                const trendElement = card.querySelector('.incident-trend');
-                trendElement.textContent = trend === 'up' ? `↑ ${change}%` :
-                                          trend === 'down' ? `↓ ${change}%` : '↔ 0%';
-                trendElement.className = `incident-trend ${trend}`;
-
-                
-                console.log(`✓ Updated ${type} card: ${incidents[type]} incidents`);
-            } else {
-                console.log(`✗ Could not find card for type: ${type}`);
-
-
-            }
-        });
-
-        // Regenerate heat map with new data
-        generateHeatMap();
-
-        showNotification(`Incidents filtered for ${ranges[timeRange].toLowerCase()}`, 'success');
-    }, 800);
-}
-
-// Day Details Function
-function showDayDetails(week, day, incidents) {
-    const modalContent = `
-        <div class="modal-header">
-            <h3>Week ${week}, Day ${day}</h3>
-        </div>
-        <div class="modal-body">
-            <div class="incident-breakdown">
-                <h4>Incident Breakdown</h4>
-                <div class="breakdown-item">
-                    <span>Emergency:</span>
-                    <span>${Math.floor(incidents * 0.3)}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>Health:</span>
-                    <span>${Math.floor(incidents * 0.2)}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>Safety:</span>
-                    <span>${Math.floor(incidents * 0.25)}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>Fire:</span>
-                    <span>${Math.floor(incidents * 0.1)}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>Police:</span>
-                    <span>${Math.floor(incidents * 0.15)}</span>
-                </div>
-            </div>
-            <div class="response-info">
-                <h4>Response Information</h4>
-                <p>Average response time: ${(Math.random() * 15 + 5).toFixed(1)} minutes</p>
-                <p>Resolution rate: ${(Math.random() * 30 + 70).toFixed(0)}%</p>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button onclick="closeModal()" class="action-btn-small" style="background: var(--dark-gray);">Close</button>
-            <button onclick="exportDayReport(${week}, ${day})" class="action-btn-small">Export Report</button>
-        </div>
-    `;
-
-    showModal('Day Details', modalContent);
-}
-
-// Enhanced Campaign Functions
-function addNewCampaign() {
-    showNotification('Opening new campaign creation wizard...', 'info', 2000);
-    
-    // Simulate API call to create new campaign
-    const newCampaignData = {
-        id: Date.now(), // Unique ID
-        name: '',
-        status: 'draft',
-        createdDate: new Date().toISOString(),
-        progress: 0
-    };
-    
-    // Store in local storage temporarily
-    try {
-        let campaigns = JSON.parse(localStorage.getItem('campaigns')) || [];
-        campaigns.push(newCampaignData);
-        localStorage.setItem('campaigns', JSON.stringify(campaigns));
-        
-        // Show success notification
-        showNotification('New campaign created successfully!', 'success', 3000);
-        
-        // Redirect to campaign planning module
-
-        window.location.href = '../Modules/Module-1.html';
-
-        window.location.href = '../Models/Module-1.php';
-
-    } catch (error) {
-        console.error('Error creating campaign:', error);
-        showNotification('Failed to create campaign. Please try again.', 'error', 4000);
-    }
-}
-
-// Open campaign creation modal
-function openCampaignCreationModal(campaignId) {
-    const modalContent = `
-        <div class="campaign-wizard">
-            <h3>Create New Campaign</h3>
-            <div class="wizard-steps">
-                <div class="step active" data-step="1">Basic Info</div>
-                <div class="step" data-step="2">Audience</div>
-                <div class="step" data-step="3">Timeline</div>
-                <div class="step" data-step="4">Review</div>
-            </div>
-            <div class="wizard-content">
-                <div class="step-form active" data-step="1">
-                    <div class="form-group">
-                        <label for="campaignName">Campaign Name</label>
-                        <input type="text" id="campaignName" placeholder="Enter campaign name">
-                    </div>
-                    <div class="form-group">
-                        <label for="campaignGoal">Goal</label>
-                        <textarea id="campaignGoal" placeholder="Describe the campaign goal"></textarea>
-                    </div>
-                </div>
-            </div>
-            <div class="wizard-actions">
-                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn-primary" onclick="nextWizardStep(2)">Next</button>
-            </div>
-        </div>
-    `;
-    
-    showModal('New Campaign', modalContent);
-}
-
-// Navigate wizard steps
-function nextWizardStep(step) {
-    // Update UI to show next step
-    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    document.querySelector(`[data-step="${step}"]`).classList.add('active');
-    
-    document.querySelectorAll('.step-form').forEach(el => el.classList.remove('active'));
-    document.querySelector(`[data-step="${step}"]`).classList.add('active');
-    
-    // Update button actions based on step
-    const actionsDiv = document.querySelector('.wizard-actions');
-    if (step < 4) {
-        actionsDiv.innerHTML = `
-            <button class="btn-secondary" onclick="prevWizardStep(${step - 1})">Back</button>
-            <button class="btn-primary" onclick="nextWizardStep(${step + 1})">Next</button>
-        `;
-    } else {
-        actionsDiv.innerHTML = `
-            <button class="btn-secondary" onclick="prevWizardStep(${step - 1})">Back</button>
-            <button class="btn-primary" onclick="finishCampaignCreation()">Finish</button>
-        `;
-    }
-}
-
-function prevWizardStep(step) {
-    if (step > 0) {
-        nextWizardStep(step); // Reuse the same function
-    }
-}
-
-function finishCampaignCreation() {
-    showNotification('Campaign created successfully!', 'success', 3000);
-    closeModal();
-    
-    // Redirect to campaign planning module after a short delay
-    setTimeout(() => {
-
-        window.location.href = '../Modules/Module-1.html';
-
-        window.location.href = '../Models/Module-1.php';
-
-    }, 1500);
-}
-
-function viewCampaign(id) {
-    const campaigns = {
-        1: { name: 'Summer Safety', status: 'active', progress: 75, reach: 7500, engagement: 92, costPerReach: 0.42, completion: 78 },
-        2: { name: 'School Zone Safety', status: 'active', progress: 60, reach: 5200, engagement: 88, costPerReach: 0.38, completion: 78 },
-        3: { name: 'Home Safety Week', status: 'planned', progress: 10, reach: 10000, startDate: 'Oct 15', daysLeft: 5 },
-        4: { name: 'Road Safety Month', status: 'completed', progress: 100, reach: 12500, engagement: 95, costPerReach: 0.35, completion: 100 }
-    };
-
-    const campaign = campaigns[id];
-    if (campaign) {
-        let extraInfo = '';
-        if (campaign.status === 'planned') {
-            extraInfo = `<div class="detail-item">
-                <strong>Starts:</strong> ${campaign.startDate}<br>
-                <strong>Days Left:</strong> ${campaign.daysLeft}
-            </div>`;
-        }
-        
-        showModal(
-            `Campaign: ${campaign.name}`,
-            `<div class="campaign-details">
-                <div class="detail-item">
-                    <strong>Status:</strong> ${campaign.status.toUpperCase()}
-                </div>
-                <div class="detail-item">
-                    <strong>Progress:</strong> ${campaign.progress}% Complete
-                </div>
-                <div class="detail-item">
-                    <strong>Reach:</strong> ${campaign.reach.toLocaleString()}
-                </div>
-                <div class="detail-item">
-                    <strong>Engagement:</strong> ${campaign.engagement}%
-                </div>
-                ${extraInfo}
-                ${campaign.status !== 'planned' ? `
-                <div class="detail-item">
-                    <strong>Cost per Reach:</strong> $${campaign.costPerReach.toFixed(2)}
-                </div>
-                <div class="detail-item">
-                    <strong>Avg Completion:</strong> ${campaign.completion}%
-                </div>` : ''}
-                <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button onclick="openAnalytics(${id})" class="action-btn-small">View Analytics</button>
-                    <button onclick="editCampaign(${id})" class="action-btn-small" style="background: var(--dark-gray);">Edit</button>
-                </div>
-            </div>`
-        );
-    }
-}
-
-
-
-
-
-
-
-function remindMe(campaign) {
-    const time = prompt('Set reminder for when? (e.g., "1 hour", "tomorrow 9am")');
-    if (time) {
-        showNotification(`Reminder set for ${campaign} campaign in ${time}`, 'success');
-    }
-}
-
-function viewLiveStats(campaign) {
-    showModal(
-        'Live Campaign Stats',
-        `<div class="live-stats">
-            <h3>${campaign} Campaign</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-                <div class="stat">
-                    <div class="stat-value">${Math.floor(Math.random() * 1000) + 7000}</div>
-                    <div class="stat-label">Live Reach</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${(Math.random() * 8 + 2).toFixed(1)}%</div>
-                    <div class="stat-label">Engagement</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${Math.floor(Math.random() * 500) + 200}</div>
-                    <div class="stat-label">Shares</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${Math.floor(Math.random() * 1000) + 500}</div>
-                    <div class="stat-label">Comments</div>
-                </div>
-            </div>
-            <div style="font-size: 12px; color: var(--text-gray); margin-top: 20px;">
-                <p>Last updated: Just now</p>
-                <p>Next update in: 30 seconds</p>
-            </div>
-        </div>`,
-        true // Auto-refresh
-    );
-
-    // Auto-refresh stats every 5 seconds
-    if (typeof window.statsInterval !== 'undefined') {
-        clearInterval(window.statsInterval);
-    }
-
-    window.statsInterval = setInterval(() => {
-        console.log('Refreshing live stats...');
-        // In a real app, this would fetch new data
-    }, 5000);
-}
-
-function editCampaign(id) {
-    // Redirect to the campaign planning module to edit
-
-    window.location.href = '../Modules/Module-1.html?campaignId=' + id + '&action=edit';
-
-    window.location.href = '../Models/Module-1.php?campaignId=' + id + '&action=edit';
-
-    console.log('Editing campaign: ' + id);
-}
-
-function viewReport(id) {
-    // Redirect to the campaign analytics reports
-
-    window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id + '&view=report';
-
-    window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id + '&view=report';
-
-    console.log('Viewing report for campaign: ' + id);
-}
-
-function viewAllCampaigns() {
-    // Redirect to the campaign analytics reports module
-
-    window.location.href = '../Modules/Campaign-Analytics-Reports.html';
-
-    window.location.href = '../Models/CampaignAnalyticsReports.php';
-
-    console.log('Viewing all campaigns');
-}
-
-function openAnalytics(id) {
-    // Redirect to the analytics module for the specific campaign
-
-    window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id;
-
-    window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id;
-
-    console.log('Opening analytics for campaign: ' + id);
-}
-
-function viewCampaignDetails(id) {
-    // Redirect to the campaign analytics for detailed view
-
-    window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id;
-
-    window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id;
-
-    console.log('Viewing details for campaign: ' + id);
-}
-
-// Modal Functions
-function showModal(title, content, autoRefresh = false) {
-    // Remove existing modal if present
-    const existingModal = document.getElementById('customModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    const modal = document.createElement('div');
-    modal.id = 'customModal';
-    modal.className = 'custom-modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>${title}</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                ${content}
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-
-    // Store auto-refresh flag
-    modal.dataset.autoRefresh = autoRefresh;
-}
-
-function closeModal() {
-    const modal = document.getElementById('customModal');
-    if (modal) {
-        // Clear auto-refresh interval
-        if (modal.dataset.autoRefresh === 'true' && window.statsInterval) {
-            clearInterval(window.statsInterval);
-        }
-        modal.remove();
-        document.body.style.overflow = 'auto';
-    }
-}
-
-// Enhanced Notification Function
-function showNotification(message, type = 'info', duration = 3000) {
-    // Remove any existing notifications of the same type to prevent stacking
-    document.querySelectorAll(`.custom-notification.${type}`).forEach(n => n.remove());
-    
-    const notification = document.createElement('div');
-    notification.className = `custom-notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${getNotificationIcon(type)}"></i>
-        <span>${message}</span>
-        <button class="notification-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
-
-    // Add to notification container or body if no container exists
-    const notificationContainer = document.getElementById('notification-container') || document.body;
-    notificationContainer.appendChild(notification);
-    
-    // Trigger reflow to enable animation
-    void notification.offsetWidth;
-    
-    // Add show class for animation
-    notification.classList.add('show');
-
-    // Auto-remove after specified duration
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.classList.add('fade-out');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 300);
-        }
-    }, duration);
-    
-    // Add click to dismiss
-    notification.addEventListener('click', function(e) {
-        if (e.target !== this.querySelector('.notification-close')) {
-            this.classList.add('fade-out');
-            setTimeout(() => {
-                if (this.parentNode) {
-                    this.remove();
-                }
-            }, 300);
-        }
-    });
-}
-
-function getNotificationIcon(type) {
-    const icons = {
-        'success': 'check-circle',
-        'error': 'exclamation-circle',
-        'warning': 'exclamation-triangle',
-        'info': 'info-circle'
-    };
-    return icons[type] || 'info-circle';
-}
-
-// Export Day Report
-function exportDayReport(week, day) {
-    alert(`Exporting report for Week ${week}, Day ${day}...\n\nReport would include:
-    • Incident breakdown
-    • Response times
-    • Team assignments
-    • Resolution rates
-    • Recommendations`);
-}
-
-
-
 // Initialize everything
 document.addEventListener('DOMContentLoaded', function() {
-    // Original initialization
-    initializeNavigation();
-    initializeWidgets();
-    initializeSearch();
-    initializeNotifications();
-    // initializeThemeToggle(); - REMOVED as per requirement
-    initializeExport();
-    initializeQuickActions();
-    initializeActivityFeed();
-    initializeRealTimeUpdates();
+    try {
+        // Check if utils are loaded
+        if (!window.Utils) {
+            console.error('Utils not loaded. Please include utils.js before home.js');
+            // Still render the basic page even if JS fails
+        } else {
+            // Initialize session management
+            if (Utils.SessionManager && typeof Utils.SessionManager.init === 'function') {
+                Utils.SessionManager.init();
+            }
+        }
 
-    // NEW: Initialize interactive charts
-    initializeInteractiveCharts();
-    
-    // Initialize notification system
-    initializeNotificationSystem();
-    
-    // Initialize user data
-    initializeUserData();
+        // Original initialization
+        initializeNavigation();
+        initializeWidgets();
+        initializeSearch();
+        initializeNotifications();
+        initializeExport();
+        initializeQuickActions();
+        initializeActivityFeed();
+        initializeRealTimeUpdates();
+
+        // NEW: Initialize interactive charts
+        initializeInteractiveCharts();
+        
+        // Initialize notification system
+        initializeNotificationSystem();
+        
+        // Initialize user data
+        initializeUserData();
+        
+        // Add CSS for modals and notifications
+        addCustomStyles();
+        
+        // Check chart loading after a delay
+        setTimeout(checkChartLoading, 1000);
+    } catch (error) {
+        console.error('Error initializing dashboard:', error);
+        // Page will still render even if JS initialization fails
+    }
 });
 
 // Export modal functions
 function openExportModal() {
-    document.getElementById('exportModal').classList.add('active');
+    const exportModal = document.getElementById('exportModal');
+    if (exportModal) {
+        exportModal.classList.add('active');
+    }
 }
 
 function closeExportModal() {
-    document.getElementById('exportModal').classList.remove('active');
+    const exportModal = document.getElementById('exportModal');
+    if (exportModal) {
+        exportModal.classList.remove('active');
+    }
 }
 
 function exportReport() {
     alert('Report exported successfully!');
     closeExportModal();
-
-}
-
-// Chatbot Functions
-// Legacy chatbot function - kept for backward compatibility
-function toggleLegacyChatbot() {
-    const chatbot = document.getElementById('chatbotContainer');
-    if (chatbot) {
-        chatbot.classList.toggle('open');
-        if (chatbot.classList.contains('open')) {
-            document.getElementById('chatbotInput')?.focus();
-        }
-    }
-}
-
-// Legacy chatbot functions - kept for backward compatibility
-function handleLegacyChatbotKeyPress(event) {
-    if (event.key === 'Enter') {
-        sendLegacyMessage();
-    }
-}
-
-function sendLegacyMessage() {
-    const input = document.getElementById('chatbotInput');
-    const messages = document.getElementById('chatbotMessages');
-    
-    if (!input || !messages) return;
-    
-    const message = input.value.trim();
-    if (!message) return;
-    
-    // Add user message
-    const userMessage = document.createElement('div');
-    userMessage.className = 'message user-message';
-    userMessage.textContent = message;
-    messages.appendChild(userMessage);
-    
-    // Clear input
-    input.value = '';
-    
-    // Simulate bot response
-    setTimeout(() => {
-        const botMessage = document.createElement('div');
-        botMessage.className = 'message bot-message';
-        botMessage.textContent = 'I understand you need help with the Public Safety system. How can I assist you today?';
-        messages.appendChild(botMessage);
-        messages.scrollTop = messages.scrollHeight;
-    }, 1000);
-    
-    // Scroll to bottom
-    messages.scrollTop = messages.scrollHeight;
 }
 
 // Additional helper functions
-function viewIncidentDetails(type) {
-    showNotification(`Viewing details for ${type} incidents`, 'info');
-}
-
-function assignTeam(type) {
-    showNotification(`Assigning team for ${type} incidents`, 'success');
-}
-
-function addNewCampaign() {
-    showNotification('Opening new campaign creation wizard...', 'info');
-}
-
-function viewCampaign(id) {
-    showNotification(`Viewing campaign details for ID: ${id}`, 'info');
-}
-
-function editCampaign(id) {
-    showNotification(`Editing campaign ID: ${id}`, 'info');
-}
-
-function remindMe(campaign) {
-    showNotification(`Reminder set for ${campaign}`, 'success');
-}
-
-function viewLiveStats(campaign) {
-    showNotification(`Viewing live stats for ${campaign}`, 'info');
-}
-
-function viewAllCampaigns() {
-    showNotification('Viewing all campaigns', 'info');
-}
-
 function markAllAsRead() {
     const notifications = document.querySelectorAll('.notification-item.unread');
     notifications.forEach(notification => {
         notification.classList.remove('unread');
     });
     showNotification('All notifications marked as read', 'success');
-}
-
-// Show notification function
-function showNotification(message, type = 'info', duration = 3000) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    // Add to body
-    document.body.appendChild(notification);
-    
-    // Remove after duration
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, duration);
-
-
 }
