@@ -1,5 +1,4 @@
-[file name]: home.php
-[file content begin]
+
 <?php
 // Start session for user management
 session_start();
