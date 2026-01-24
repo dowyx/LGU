@@ -650,6 +650,7 @@ function generateHeatMap() {
 
     console.log('✓ Generating heat map');
 
+    // Clear the grid to remove any existing cells
     grid.innerHTML = '';
 
     // Generate 28 cells (4 weeks x 7 days)
@@ -670,10 +671,12 @@ function generateHeatMap() {
             cell.title = `${intensity} incidents`;
         }
 
+        // Store week and day data in the element for easier access
+        const week = Math.floor(i / 7) + 1;
+        const day = (i % 7) + 1;
+        
         // Add click event
         cell.addEventListener('click', function() {
-            const week = Math.floor(i / 7) + 1;
-            const day = (i % 7) + 1;
             console.log(`Heat map cell clicked: Week ${week}, Day ${day} (${intensity} incidents)`);
             showDayDetails(week, day, intensity);
         });
