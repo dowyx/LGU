@@ -970,6 +970,11 @@ body {
     background: #3a7bc8;
 }
 
+.action-btn-small-link {
+    text-decoration: none;
+    display: inline-block;
+}
+
 /* Badge */
 .badge {
     background: rgba(255, 255, 255, 0.1);

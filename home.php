@@ -428,9 +428,11 @@ function getTrendClass($trend) {
                             </div>
                         </div>
                         <div class="chart-actions">
-                            <button class="action-btn-small" onclick="addNewCampaign()">
-                                <i class="fas fa-plus"></i> New Campaign
-                            </button>
+                            <a href="Models/Module-1.php" class="action-btn-small-link">
+                                <button class="action-btn-small" type="button">
+                                    <i class="fas fa-plus"></i> New Campaign
+                                </button>
+                            </a>
                             <button class="action-btn-small" onclick="openExportModal()" style="margin-left: 10px;">
                                 <i class="fas fa-download"></i> Export Report
                             </button>
