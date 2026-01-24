@@ -24,9 +24,7 @@ try {
     $active_incidents = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Active campaigns count
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM campaigns WHERE status = 'active'");git add .
-   git commit -m "Describe what you changed"
-   git push
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM campaigns WHERE status = 'active'");
     $stmt->execute();
     $active_campaigns = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
