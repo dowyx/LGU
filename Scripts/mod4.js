@@ -86,7 +86,7 @@ function updateUpcomingEvents() {
 
     eventList.innerHTML = upcomingEvents.map(event => {
         const date = new Date(event.date);
-        const percentage = Math.round((event.registrations / event.capacity) * 100);
+        const percentage = event.capacity > 0 ? Math.round((event.registrations / event.capacity) * 100) : 0;
 
         return `
             <div class="event-item" onclick="viewEventDetails(${event.id})">
@@ -95,8 +95,8 @@ function updateUpcomingEvents() {
                     <div class="date-month">${date.toLocaleString('en-US', { month: 'short' }).toUpperCase()}</div>
                 </div>
                 <div class="event-details">
-                    <div class="event-title">${event.title}</div>
-                    <div class="event-location">${event.location}</div>
+                    <div class="event-title">${escapeHtml(event.title)}</div>
+                    <div class="event-location">${escapeHtml(event.location)}</div>
                     <div class="event-attendees">${event.registrations} registered • Capacity: ${event.capacity}</div>
                     <div class="progress-container">
                         <div class="progress-bar" style="width: ${percentage}%"></div>
@@ -133,15 +133,15 @@ function updateEventsTable() {
         return `
             <tr data-event-id="${event.id}">
                 <td>
-                    <div style="font-weight: 600; cursor: pointer;" onclick="viewEventDetails(${event.id})">${event.title}</div>
-                    <div style="font-size: 12px; color: var(--text-gray);">${event.description}</div>
+                    <div style="font-weight: 600; cursor: pointer;" onclick="viewEventDetails(${event.id})">${escapeHtml(event.title)}</div>
+                    <div style="font-size: 12px; color: var(--text-gray);">${escapeHtml(event.description || '')}</div>
                 </td>
                 <td><span class="event-type ${typeClass}">${event.type.charAt(0).toUpperCase() + event.type.slice(1)}</span></td>
                 <td>
                     <div>${formattedDate}</div>
                     <div style="font-size: 12px; color: var(--text-gray);">${formattedTime}</div>
                 </td>
-                <td>${event.location}</td>
+                <td>${escapeHtml(event.location)}</td>
                 <td>
                     <div>${event.registrations}/${event.capacity}</div>
                     <div class="progress-container" style="height: 4px; margin-top: 5px;">
@@ -182,7 +182,7 @@ function updateStatistics() {
     const upcomingEvents = eventsData.filter(e => e.status === 'upcoming').length;
     const totalRegistrations = eventsData.reduce((sum, event) => sum + event.registrations, 0);
     const totalCapacity = eventsData.reduce((sum, event) => sum + event.capacity, 0);
-    const avgAttendance = totalEvents > 0 ? Math.round((totalRegistrations / totalCapacity) * 100) : 0;
+    const avgAttendance = totalCapacity > 0 ? Math.round((totalRegistrations / totalCapacity) * 100) : 0;
     const avgRegistrationsPerEvent = totalEvents > 0 ? Math.round(totalRegistrations / totalEvents) : 0;
 
     const statElements = document.querySelectorAll('.stat-item .stat-value');
@@ -205,14 +205,15 @@ function updateCalendarView() {
         .slice(0, 3);
 
     const calendarItems = document.querySelector('.calendar-view .calendar-event-items') ||
-        document.querySelector('.calendar-view');
+        document.querySelector('.calendar-view .calendar-items') ||
+        document.querySelector('.calendar-view .calendar-content');
 
     if (calendarItems) {
         calendarItems.innerHTML = upcomingEvents.map(event => {
             const date = new Date(event.date);
             const now = new Date();
             const isToday = date.toDateString() === now.toDateString();
-            const percentage = Math.round((event.registrations / event.capacity) * 100);
+            const percentage = event.capacity > 0 ? Math.round((event.registrations / event.capacity) * 100) : 0;
 
             let timeText = isToday ? 'Today' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             timeText += ` • ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
@@ -237,9 +238,9 @@ function updateCalendarView() {
                         <i class="fas ${icon}"></i>
                     </div>
                     <div class="calendar-event-details">
-                        <div class="calendar-event-title">${event.title}</div>
+                        <div class="calendar-event-title">${escapeHtml(event.title)}</div>
                         <div class="calendar-event-time">${timeText}</div>
-                        <div class="calendar-event-location">${event.location}</div>
+                        <div class="calendar-event-location">${escapeHtml(event.location)}</div>
                     </div>
                     <span class="badge ${badgeClass}">${percentage}% Full</span>
                 </div>
@@ -264,6 +265,9 @@ function initializeFilters() {
 
 // Apply event filter
 function applyEventFilter(filterType) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     switch (filterType) {
         case 'All Events':
             filteredEvents = [...eventsData];
@@ -271,16 +275,12 @@ function applyEventFilter(filterType) {
         case 'Upcoming':
             filteredEvents = eventsData.filter(e => {
                 const eventDate = new Date(e.date);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
                 return eventDate >= today && e.status !== 'cancelled';
             });
             break;
         case 'Completed':
             filteredEvents = eventsData.filter(e => {
                 const eventDate = new Date(e.date);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
                 return eventDate < today || e.status === 'completed';
             });
             break;
@@ -369,6 +369,13 @@ function setupEventListeners() {
             }
         });
     });
+
+    // Close modals when clicking outside
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.style.display = 'none';
+        }
+    });
 }
 
 // Search Events
@@ -382,7 +389,7 @@ function searchEvents(query) {
     filteredEvents = eventsData.filter(event =>
         event.title.toLowerCase().includes(query.toLowerCase()) ||
         event.location.toLowerCase().includes(query.toLowerCase()) ||
-        event.description.toLowerCase().includes(query.toLowerCase())
+        (event.description && event.description.toLowerCase().includes(query.toLowerCase()))
     );
 
     updateEventsTable();
@@ -419,7 +426,13 @@ function clearEventForm(mode) {
     if (typeEl) typeEl.value = 'seminar';
     
     const dateTimeEl = document.getElementById(prefix + 'DateTime');
-    if (dateTimeEl) dateTimeEl.value = '';
+    if (dateTimeEl) {
+        // Set default to tomorrow 10:00 AM
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(10, 0, 0);
+        dateTimeEl.value = tomorrow.toISOString().slice(0, 16);
+    }
     
     const locationEl = document.getElementById(prefix + 'Location');
     if (locationEl) locationEl.value = '';
@@ -473,6 +486,7 @@ function saveNewEvent() {
     updateAllViews();
     closeModal('createEventModal');
     showNotification(`Event "${title}" created successfully!`, 'success');
+    saveToLocalStorage();
 }
 
 // Edit Event
@@ -490,7 +504,7 @@ function editEvent(id) {
     document.getElementById('editType').value = event.type;
     document.getElementById('editDateTime').value = event.date.substring(0, 16);
     document.getElementById('editLocation').value = event.location;
-    document.getElementById('editDescription').value = event.description;
+    document.getElementById('editDescription').value = event.description || '';
     document.getElementById('editCapacity').value = event.capacity;
 
     openModal('editEventModal');
@@ -535,6 +549,7 @@ function saveEventChanges() {
     updateAllViews();
     closeModal('editEventModal');
     showNotification(`Event "${event.title}" updated!`, 'success');
+    saveToLocalStorage();
 }
 
 // Delete Event
@@ -561,7 +576,7 @@ function showDeleteConfirmation(event) {
                     <span class="close-modal" onclick="closeConfirmDeleteModal()">&times;</span>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete the event <strong id="deleteEventTitle"></strong>?</p>
+                    <p>Are you sure you want to delete the event <strong id="deleteEventTitle">${escapeHtml(event.title)}</strong>?</p>
                     <p>This action cannot be undone and will remove all associated data.</p>
                     <div class="form-group" style="margin-top: 15px;">
                         <label>
@@ -590,15 +605,19 @@ function showDeleteConfirmation(event) {
     const checkbox = document.getElementById('confirmDeleteCheckbox');
     if (checkbox) {
         checkbox.checked = false;
-        document.getElementById('confirmDeleteBtn').disabled = true;
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        if (confirmBtn) confirmBtn.disabled = true;
     }
     
     confirmModal.style.display = 'flex';
     
-    document.getElementById('confirmDeleteBtn').onclick = function() {
-        performEventDeletion(event.id);
-        closeConfirmDeleteModal();
-    };
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.onclick = function() {
+            performEventDeletion(event.id);
+            closeConfirmDeleteModal();
+        };
+    }
 }
 
 function closeConfirmDeleteModal() {
@@ -615,6 +634,7 @@ function performEventDeletion(id) {
         eventsData.splice(eventIndex, 1);
         updateAllViews();
         showNotification(`Event "${event.title}" deleted!`, 'warning');
+        saveToLocalStorage();
     }
 }
 
@@ -668,6 +688,9 @@ function viewEventDetails(id) {
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button class="btn" onclick="editEvent(${event.id})" style="margin-right: 10px;">
+                        <i class="fas fa-edit"></i> Edit Event
+                    </button>
                     <button class="btn btn-secondary" onclick="closeEventDetailsModal()">Close</button>
                 </div>
             </div>
@@ -687,6 +710,12 @@ function viewEventDetails(id) {
     document.getElementById('detailEventRegistrations').textContent = `${event.registrations} registered`;
     document.getElementById('detailEventStatus').innerHTML = `<span class="event-status status-${event.status}">${event.status.charAt(0).toUpperCase() + event.status.slice(1)}</span>`;
     document.getElementById('detailEventDescription').textContent = event.description || 'No description provided.';
+    
+    // Update the edit button with correct event ID
+    const editBtn = detailsModal.querySelector('button[onclick*="editEvent"]');
+    if (editBtn) {
+        editBtn.setAttribute('onclick', `editEvent(${event.id})`);
+    }
     
     detailsModal.style.display = 'flex';
 }
@@ -787,8 +816,8 @@ function populateAttendeesTable(eventId, attendees) {
         const statusClass = `status-${attendee.status.replace('-', '')}`;
         return `
             <tr>
-                <td style="padding: 10px; border-bottom: 1px solid var(--medium-gray);">${attendee.name}</td>
-                <td style="padding: 10px; border-bottom: 1px solid var(--medium-gray);">${attendee.email}</td>
+                <td style="padding: 10px; border-bottom: 1px solid var(--medium-gray);">${escapeHtml(attendee.name)}</td>
+                <td style="padding: 10px; border-bottom: 1px solid var(--medium-gray);">${escapeHtml(attendee.email)}</td>
                 <td style="padding: 10px; border-bottom: 1px solid var(--medium-gray);">${attendee.phone}</td>
                 <td style="padding: 10px; border-bottom: 1px solid var(--medium-gray);">
                     <span class="event-status ${statusClass}">${attendee.status}</span>
@@ -806,15 +835,15 @@ function addNewAttendee(eventId) {
     const name = prompt("Enter attendee name:");
     if (!name) return;
     
-    const email = prompt("Enter email address:");
-    const phone = prompt("Enter phone number:");
+    const email = prompt("Enter email address:") || '';
+    const phone = prompt("Enter phone number:") || '';
     
     const newAttendee = {
         id: Date.now(),
         eventId: eventId,
         name: name,
-        email: email || '',
-        phone: phone || '',
+        email: email,
+        phone: phone,
         status: 'pending',
         registrationDate: new Date().toISOString()
     };
@@ -831,6 +860,7 @@ function addNewAttendee(eventId) {
     populateAttendeesTable(eventId, eventAttendees);
     updateAllViews();
     showNotification(`Added attendee: ${name}`, 'success');
+    saveToLocalStorage();
 }
 
 function filterAttendeesByStatus(eventId, status) {
@@ -884,6 +914,7 @@ function checkInAttendee(attendeeId) {
     populateAttendeesTable(attendee.eventId, eventAttendees);
     
     showNotification(`Checked in: ${attendee.name}`, 'success');
+    saveToLocalStorage();
 }
 
 function deleteAttendee(attendeeId, eventId) {
@@ -907,6 +938,7 @@ function deleteAttendee(attendeeId, eventId) {
         updateAllViews();
         
         showNotification(`Removed attendee: ${attendee.name}`, 'warning');
+        saveToLocalStorage();
     }
 }
 
@@ -962,22 +994,49 @@ function generateReports() {
 }
 
 // Notification System
-function showNotification(message, type) {
+function showNotification(message, type = 'info') {
+    // Remove existing notification
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) existingNotification.remove();
+
+    const iconMap = {
+        'success': 'fa-check-circle',
+        'error': 'fa-exclamation-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle'
+    };
+
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-        <i class="fas fa-times" style="margin-left: auto; cursor: pointer;" onclick="this.parentNode.remove()"></i>
+        <div class="notification-content">
+            <i class="fas ${iconMap[type] || 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close">&times;</button>
     `;
 
     document.body.appendChild(notification);
 
+    setTimeout(() => notification.classList.add('show'), 10);
+
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
     }, 5000);
+
+    notification.querySelector('.notification-close').addEventListener('click', () => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    });
 }
 
 // File upload functionality
@@ -1037,6 +1096,7 @@ function importEventsData(importedEvents) {
     eventsData = [...eventsData, ...importedEvents];
     updateAllViews();
     showNotification(`Successfully imported ${importedEvents.length} events`, 'success');
+    saveToLocalStorage();
 }
 
 // Export events data
@@ -1052,175 +1112,6 @@ function exportEventsData() {
     linkElement.click();
     
     showNotification('Events data exported successfully', 'success');
-}
-
-// Bulk operations
-function showBulkOperations() {
-    let bulkModal = document.getElementById('bulkOperationsModal');
-    if (!bulkModal) {
-        bulkModal = document.createElement('div');
-        bulkModal.id = 'bulkOperationsModal';
-        bulkModal.className = 'modal-overlay';
-        bulkModal.innerHTML = `
-            <div class="modal-content" style="max-width: 600px;">
-                <div class="modal-header">
-                    <h3>Bulk Operations</h3>
-                    <span class="close-modal" onclick="closeBulkOperationsModal()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <div class="bulk-options">
-                        <h4>Select operation:</h4>
-                        <div class="bulk-option" onclick="performBulkOperation('updateStatus')">
-                            <i class="fas fa-exchange-alt"></i>
-                            <div>
-                                <strong>Update Status</strong>
-                                <p>Update status for selected events</p>
-                            </div>
-                        </div>
-                        <div class="bulk-option" onclick="performBulkOperation('sendNotifications')">
-                            <i class="fas fa-envelope"></i>
-                            <div>
-                                <strong>Send Notifications</strong>
-                                <p>Send notifications to all attendees</p>
-                            </div>
-                        </div>
-                        <div class="bulk-option" onclick="performBulkOperation('exportSelected')">
-                            <i class="fas fa-download"></i>
-                            <div>
-                                <strong>Export Selected</strong>
-                                <p>Export selected events data</p>
-                            </div>
-                        </div>
-                        <div class="bulk-option" onclick="performBulkOperation('deleteSelected')" style="color: var(--danger);">
-                            <i class="fas fa-trash"></i>
-                            <div>
-                                <strong>Delete Selected</strong>
-                                <p>Delete selected events</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="closeBulkOperationsModal()">Cancel</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(bulkModal);
-    }
-    
-    bulkModal.style.display = 'flex';
-}
-
-function closeBulkOperationsModal() {
-    const modal = document.getElementById('bulkOperationsModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-function performBulkOperation(operation) {
-    const selectedEvents = getSelectedEvents();
-    
-    if (selectedEvents.length === 0) {
-        showNotification('Please select events first', 'error');
-        return;
-    }
-
-    switch (operation) {
-        case 'updateStatus':
-            showStatusUpdateModal(selectedEvents);
-            break;
-        case 'sendNotifications':
-            sendBulkNotifications(selectedEvents);
-            break;
-        case 'exportSelected':
-            exportSelectedEvents(selectedEvents);
-            break;
-        case 'deleteSelected':
-            confirmBulkDelete(selectedEvents);
-            break;
-    }
-    
-    closeBulkOperationsModal();
-}
-
-function getSelectedEvents() {
-    // This would need to be implemented based on your selection mechanism
-    // For now, returning empty array - you can implement checkboxes in your table
-    return [];
-}
-
-// Event status management
-function updateEventStatus(eventId, newStatus) {
-    const event = eventsData.find(e => e.id === eventId);
-    if (!event) return;
-
-    const oldStatus = event.status;
-    event.status = newStatus;
-    event.updatedAt = new Date().toISOString();
-
-    updateAllViews();
-    showNotification(`Event "${event.title}" status changed from ${oldStatus} to ${newStatus}`, 'info');
-}
-
-// Date utilities
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(date - now);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-        return 'Today';
-    } else if (diffDays === 1) {
-        return 'Tomorrow';
-    } else if (diffDays <= 7) {
-        return `${diffDays} days`;
-    } else {
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-    }
-}
-
-// Sort events
-function sortEvents(criteria) {
-    switch (criteria) {
-        case 'date':
-            eventsData.sort((a, b) => new Date(a.date) - new Date(b.date));
-            break;
-        case 'title':
-            eventsData.sort((a, b) => a.title.localeCompare(b.title));
-            break;
-        case 'registrations':
-            eventsData.sort((a, b) => b.registrations - a.registrations);
-            break;
-        case 'capacity':
-            eventsData.sort((a, b) => b.capacity - a.capacity);
-            break;
-    }
-    updateEventsTable();
-}
-
-// Duplicate event
-function duplicateEvent(eventId) {
-    const originalEvent = eventsData.find(e => e.id === eventId);
-    if (!originalEvent) return;
-
-    const duplicatedEvent = {
-        ...originalEvent,
-        id: Date.now(),
-        title: `${originalEvent.title} (Copy)`,
-        registrations: 0,
-        status: 'upcoming',
-        createdAt: new Date().toISOString()
-    };
-
-    eventsData.push(duplicatedEvent);
-    updateAllViews();
-    showNotification(`Event "${originalEvent.title}" duplicated`, 'success');
 }
 
 // Data persistence
@@ -1291,6 +1182,89 @@ function cleanup() {
     }
 }
 
+// Helper functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Event status management
+function updateEventStatus(eventId, newStatus) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (!event) return;
+
+    const oldStatus = event.status;
+    event.status = newStatus;
+    event.updatedAt = new Date().toISOString();
+
+    updateAllViews();
+    showNotification(`Event "${event.title}" status changed from ${oldStatus} to ${newStatus}`, 'info');
+    saveToLocalStorage();
+}
+
+// Date utilities
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(date - now);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+        return 'Today';
+    } else if (diffDays === 1) {
+        return 'Tomorrow';
+    } else if (diffDays <= 7) {
+        return `${diffDays} days`;
+    } else {
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    }
+}
+
+// Sort events
+function sortEvents(criteria) {
+    switch (criteria) {
+        case 'date':
+            eventsData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            break;
+        case 'title':
+            eventsData.sort((a, b) => a.title.localeCompare(b.title));
+            break;
+        case 'registrations':
+            eventsData.sort((a, b) => b.registrations - a.registrations);
+            break;
+        case 'capacity':
+            eventsData.sort((a, b) => b.capacity - a.capacity);
+            break;
+    }
+    updateEventsTable();
+}
+
+// Duplicate event
+function duplicateEvent(eventId) {
+    const originalEvent = eventsData.find(e => e.id === eventId);
+    if (!originalEvent) return;
+
+    const duplicatedEvent = {
+        ...originalEvent,
+        id: Date.now(),
+        title: `${originalEvent.title} (Copy)`,
+        registrations: 0,
+        status: 'upcoming',
+        createdAt: new Date().toISOString()
+    };
+
+    eventsData.push(duplicatedEvent);
+    updateAllViews();
+    showNotification(`Event "${originalEvent.title}" duplicated`, 'success');
+    saveToLocalStorage();
+}
+
 // Add CSS for additional components
 function addAdditionalStyles() {
     const styles = `
@@ -1353,6 +1327,177 @@ function addAdditionalStyles() {
         .attendees-table tr:hover {
             background-color: var(--light-gray);
         }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-left: 4px solid var(--accent);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-success {
+            border-left-color: var(--success);
+        }
+
+        .notification-error {
+            border-left-color: var(--danger);
+        }
+
+        .notification-warning {
+            border-left-color: var(--warning);
+        }
+
+        .notification-info {
+            border-left-color: var(--info);
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-gray);
+            padding: 0;
+            margin-left: 10px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--medium-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-gray);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--medium-gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        .event-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .type-seminar { background: #e3f2fd; color: #1565c0; }
+        .type-workshop { background: #f3e5f5; color: #7b1fa2; }
+        .type-training { background: #e8f5e9; color: #2e7d32; }
+        .type-conference { background: #fff3e0; color: #ef6c00; }
+        .type-fair { background: #fce4ec; color: #c2185b; }
+
+        .event-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-upcoming { background: #e3f2fd; color: #1565c0; }
+        .status-active { background: #e8f5e9; color: #2e7d32; }
+        .status-completed { background: #f5f5f5; color: #616161; }
+        .status-cancelled { background: #ffebee; color: #c62828; }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-info { background: #e3f2fd; color: #1565c0; }
+        .badge-warning { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
     `;
     
     const styleSheet = document.createElement('style');
@@ -1396,7 +1541,7 @@ function addModalsToPage() {
                     </div>
                     <div class="form-group">
                         <label>Capacity</label>
-                        <input type="number" id="eventCapacity" placeholder="Enter capacity" value="50">
+                        <input type="number" id="eventCapacity" placeholder="Enter capacity" value="50" min="1">
                     </div>
                     <div class="form-group">
                         <label>Description</label>
@@ -1443,7 +1588,7 @@ function addModalsToPage() {
                     </div>
                     <div class="form-group">
                         <label>Capacity</label>
-                        <input type="number" id="editCapacity">
+                        <input type="number" id="editCapacity" min="1">
                     </div>
                     <div class="form-group">
                         <label>Description</label>
@@ -1459,44 +1604,6 @@ function addModalsToPage() {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modals);
-}
-
-// Utility functions for table selection
-function selectAllEvents(selectAll) {
-    const checkboxes = document.querySelectorAll('.event-checkbox');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll;
-    });
-}
-
-function getSelectedEventIds() {
-    const checkboxes = document.querySelectorAll('.event-checkbox:checked');
-    return Array.from(checkboxes).map(cb => parseInt(cb.value));
-}
-
-// Print functionality
-function printEventList() {
-    const printContent = document.querySelector('.events-table').outerHTML;
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html>
-            <head>
-                <title>Event List - ${new Date().toLocaleDateString()}</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    table { border-collapse: collapse; width: 100%; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    th { background-color: #f2f2f2; }
-                </style>
-            </head>
-            <body>
-                <h2>Event List - ${new Date().toLocaleDateString()}</h2>
-                ${printContent}
-            </body>
-        </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
 }
 
 // Export to CSV
@@ -1535,30 +1642,33 @@ function exportToCSV() {
 }
 
 // Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    // Ctrl/Cmd + N for new event
-    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        createNewEvent();
-    }
-    
-    // Ctrl/Cmd + F for focus search
-    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault();
-        const searchInput = document.querySelector('.search-box input');
-        if (searchInput) {
-            searchInput.focus();
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + N for new event
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            createNewEvent();
         }
-    }
-    
-    // Escape to close modals
-    if (e.key === 'Escape') {
-        const modals = document.querySelectorAll('.modal-overlay[style*="display: flex"]');
-        modals.forEach(modal => {
-            modal.style.display = 'none';
-        });
-    }
-});
+        
+        // Ctrl/Cmd + F for focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+            e.preventDefault();
+            const searchInput = document.querySelector('.search-box input');
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+            }
+        }
+        
+        // Escape to close modals
+        if (e.key === 'Escape') {
+            const modals = document.querySelectorAll('.modal-overlay[style*="display: flex"]');
+            modals.forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+    });
+}
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function () {
@@ -1571,6 +1681,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateAllViews();
     initializeFilters();
     addModalsToPage();
+    setupKeyboardShortcuts();
     
     // Add file upload listener
     const fileUpload = document.querySelector('input[type="file"]');
@@ -1583,3 +1694,19 @@ document.addEventListener('DOMContentLoaded', function () {
     
     console.log('Event Management System initialized successfully');
 });
+
+// Make functions globally available
+window.createNewEvent = createNewEvent;
+window.editEvent = editEvent;
+window.deleteEvent = deleteEvent;
+window.viewEventDetails = viewEventDetails;
+window.viewAttendees = viewAttendees;
+window.generateCheckInQR = generateCheckInQR;
+window.saveNewEvent = saveNewEvent;
+window.saveEventChanges = saveEventChanges;
+window.closeModal = closeModal;
+window.closeEventDetailsModal = closeEventDetailsModal;
+window.closeAttendeesModal = closeAttendeesModal;
+window.closeConfirmDeleteModal = closeConfirmDeleteModal;
+window.showNotification = showNotification;
+window.escapeHtml = escapeHtml;
