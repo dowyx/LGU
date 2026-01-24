@@ -41,11 +41,11 @@ try {
     $public_satisfaction = $result && $result['avg_score'] !== null ? round($result['avg_score'], 0) : 92;
     
     // Incident types data
-    $stmt = $pdo->prepare("
+    $stmt = $pdo->prepare(" 
         SELECT type, COUNT(*) as count,
-               (SELECT COUNT(*) FROM incidents WHERE type = i.type AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) -
-               (SELECT COUNT(*) FROM incidents WHERE type = i.type AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)) as trend
-        FROM incidents i 
+               (SELECT COUNT(*) FROM incidents WHERE type = inc.type AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) -
+               (SELECT COUNT(*) FROM incidents WHERE type = inc.type AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)) as trend
+        FROM incidents inc 
         WHERE status = 'active' 
         GROUP BY type
     ");
