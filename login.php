@@ -111,8 +111,8 @@ if (isset($_GET['demo']) && $_GET['demo'] === '1') {
                                id="email"
                                name="email"
                                class="form-input"
-                               placeholder="john.doe@safety.gov"
-                               value="<?php echo htmlspecialchars($email ?: 'john.doe@safety.gov'); ?>"
+                               placeholder="dricxterrosano0@gmail.com"
+                               value="<?php echo htmlspecialchars($email ?: 'dricxterrosano0@gmail.com'); ?>"
                                required>
                     </div>
                     <div class="error-message" id="email-error">Please enter a valid email address</div>
@@ -130,7 +130,7 @@ if (isset($_GET['demo']) && $_GET['demo'] === '1') {
                                name="password"
                                class="form-input"
                                placeholder="Enter your password"
-                               value="<?php echo htmlspecialchars($password ?: ($demo_mode ? 'demo123' : '')); ?>"
+                               value="<?php echo htmlspecialchars($password ?: ($demo_mode ? 'password' : '')); ?>"
                                required>
                         <button type="button" class="toggle-password" id="togglePassword">
                             <i class="fas fa-eye"></i>
@@ -152,8 +152,13 @@ if (isset($_GET['demo']) && $_GET['demo'] === '1') {
                     Demo Credentials
                 </h4>
                 <p>
-                    <span class="highlight">Email:</span> john.doe@safety.gov<br>
-                    <span class="highlight">Password:</span> demo123
+                    <strong>Administrator:</strong><br>
+                    <span class="highlight">Email:</span> dricxterrosano0@gmail.com<br>
+                    <span class="highlight">Password:</span> password<br><br>
+                    
+                    <strong>Staff User:</strong><br>
+                    <span class="highlight">Email:</span> jane.smith@safety.gov<br>
+                    <span class="highlight">Password:</span> password
                 </p>
             </div>
             <?php endif; ?>
