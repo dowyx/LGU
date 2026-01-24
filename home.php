@@ -1,5 +1,3 @@
-[file name]: home.php
-[file content begin]
 <?php
 // Start session for user management
 session_start();
@@ -756,4 +754,3 @@ function getTrendClass($trend) {
 
 </body>
 </html>
-[file content end]
