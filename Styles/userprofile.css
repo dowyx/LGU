@@ -1,0 +1,495 @@
+/* User Profile Dropdown Styles - DARK THEME */
+:root {
+    --primary-black: #121212;
+    --secondary-black: #1E1E1E;
+    --dark-gray: #2D2D2D;
+    --medium-gray: #3C3C3C;
+    --light-gray: #E0E0E0;
+    --text-gray: #B0B0B0;
+    --white: #FFFFFF;
+    --accent: #4A90E2;
+    --warning: #FFA726;
+    --success: #4CAF50;
+    --danger: #F44336;
+}
+
+.user-profile {
+    position: relative;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 100;
+    background: var(--secondary-black);
+}
+
+.user-profile:hover {
+    background: var(--dark-gray);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent), #3a7bc8);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Profile Dropdown Positioning */
+.header-actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    background: var(--secondary-black);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--dark-gray);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.profile-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--dark-gray);
+    border-bottom: 1px solid var(--medium-gray);
+}
+
+.dropdown-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--accent), #3a7bc8);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.dropdown-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dropdown-user-name {
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--white);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-user-role {
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-bottom: 2px;
+}
+
+.dropdown-user-email {
+    font-size: 13px;
+    color: var(--text-gray);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.8;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--medium-gray);
+    margin: 8px 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: var(--white);
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    position: relative;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: var(--dark-gray);
+}
+
+.dropdown-item i {
+    width: 20px;
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.dropdown-item.logout-btn {
+    color: var(--danger);
+}
+
+.dropdown-item.logout-btn i {
+    color: var(--danger);
+}
+
+.notification-badge {
+    position: absolute;
+    right: 20px;
+    background-color: var(--danger);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* ===== LOGOUT CONFIRMATION MODAL - CENTERED POSITIONING ===== */
+.logout-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 20000; /* Very high z-index to ensure it's on top */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.logout-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.logout-modal-content {
+    background: var(--secondary-black);
+    padding: 40px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 450px;
+    text-align: center;
+    border: 1px solid var(--medium-gray);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7);
+    transform: translateY(20px);
+    opacity: 0;
+    animation: modalSlideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;
+}
+
+@keyframes modalSlideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.logout-modal-icon {
+    font-size: 56px;
+    color: var(--warning);
+    margin-bottom: 25px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.logout-modal-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--white);
+}
+
+.logout-modal-text {
+    color: var(--text-gray);
+    margin-bottom: 35px;
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+.logout-modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.logout-modal-btn {
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.logout-modal-btn.cancel {
+    background: var(--dark-gray);
+    color: var(--white);
+    border: 1px solid var(--medium-gray);
+}
+
+.logout-modal-btn.cancel:hover {
+    background: var(--medium-gray);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.logout-modal-btn.confirm {
+    background: linear-gradient(135deg, var(--danger), #d32f2f);
+    color: white;
+    border: none;
+}
+
+.logout-modal-btn.confirm:hover {
+    background: linear-gradient(135deg, #d32f2f, var(--danger));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(244, 67, 54, 0.3);
+}
+
+.logout-modal-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== LOADING SCREEN FOR LOGIN ===== */
+.login-loading {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--primary-black);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+}
+
+.login-loading.active {
+    display: flex;
+}
+
+.login-loading-spinner {
+    width: 80px;
+    height: 80px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: loginSpin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+    margin-bottom: 30px;
+}
+
+@keyframes loginSpin {
+    to { transform: rotate(360deg); }
+}
+
+.login-loading-text {
+    color: var(--white);
+    font-size: 18px;
+    font-weight: 500;
+    text-align: center;
+    animation: fadeInOut 2s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.login-loading-progress {
+    width: 200px;
+    height: 4px;
+    background: var(--dark-gray);
+    border-radius: 2px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+.login-loading-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--success));
+    width: 0%;
+    animation: progressLoad 3s ease-in-out infinite;
+    border-radius: 2px;
+}
+
+@keyframes progressLoad {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .profile-dropdown {
+        width: 280px;
+        right: 10px;
+    }
+
+    .user-profile {
+        padding: 6px 10px;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .logout-modal-content {
+        padding: 30px 20px;
+        max-width: 320px;
+    }
+
+    .logout-modal-title {
+        font-size: 20px;
+    }
+
+    .logout-modal-text {
+        font-size: 15px;
+        margin-bottom: 25px;
+    }
+
+    .logout-modal-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .logout-modal-btn {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .logout-modal-icon {
+        font-size: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-dropdown {
+        width: 250px;
+    }
+
+    .dropdown-header {
+        padding: 15px;
+    }
+
+    .dropdown-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .dropdown-user-name {
+        font-size: 16px;
+    }
+
+    .logout-modal-content {
+        max-width: 280px;
+        padding: 25px 15px;
+    }
+
+    .logout-modal-title {
+        font-size: 18px;
+    }
+
+    .logout-modal-text {
+        font-size: 14px;
+    }
+}
+
+/* Ensure the logout modal is always on top */
+body.logout-modal-open {
+    overflow: hidden;
+}
+
+body.logout-modal-open .header-actions,
+body.logout-modal-open .main-content,
+body.logout-modal-open .sidebar,
+body.logout-modal-open .user-profile {
+    filter: blur(5px);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Add spinner for loading state */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Hide cursor during loading */
+body.login-loading-active {
+    cursor: wait !important;
+}
+
+body.login-loading-active * {
+    cursor: wait !important;
+}
