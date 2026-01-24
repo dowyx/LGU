@@ -1856,6 +1856,18 @@ body {
     border-radius: 3px;
 }
 
+.heat-map-legend .legend-color.low {
+    background: rgba(76, 175, 80, 0.2); /* Same as .heat-map-cell.low */
+}
+
+.heat-map-legend .legend-color.medium {
+    background: rgba(255, 167, 38, 0.3); /* Same as .heat-map-cell.medium */
+}
+
+.heat-map-legend .legend-color.high {
+    background: rgba(244, 67, 54, 0.4); /* Same as .heat-map-cell.high */
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .heat-map-grid {
@@ -2046,79 +2058,3 @@ body {
             font-weight: 600;
         }
 
-        .heat-map-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            margin-bottom: 20px;
-            min-height: 150px;
-        }
-
-        .heat-map-cell {
-            aspect-ratio: 1;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s;
-            min-height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .heat-map-cell:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 0 2px #4A90E2;
-            z-index: 1;
-        }
-
-        .heat-map-cell.low {
-            background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.5));
-        }
-
-        .heat-map-cell.medium {
-            background: linear-gradient(135deg, rgba(255, 167, 38, 0.4), rgba(255, 167, 38, 0.6));
-        }
-
-        .heat-map-cell.high {
-            background: linear-gradient(135deg, rgba(244, 67, 54, 0.5), rgba(244, 67, 54, 0.7));
-        }
-
-        .heat-map-legend {
-            display: flex;
-            gap: 20px;
-            font-size: 12px;
-            color: #B0B0B0;
-            justify-content: center;
-            flex-wrap: wrap;
-            padding-top: 15px;
-            border-top: 1px solid #3C3C3C;
-        }
-
-        .heat-map-legend .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: none;
-            padding: 0;
-        }
-
-        .heat-map-legend .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-
-        .heat-map-legend .low {
-            background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.5));
-        }
-
-        .heat-map-legend .medium {
-            background: linear-gradient(135deg, rgba(255, 167, 38, 0.4), rgba(255, 167, 38, 0.6));
-        }
-
-        .heat-map-legend .high {
-            background: linear-gradient(135deg, rgba(244, 67, 54, 0.5), rgba(244, 67, 54, 0.7));
-        }

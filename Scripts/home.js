@@ -642,7 +642,11 @@ function initializeInteractiveCharts() {
 
 // Generate Heat Map
 function generateHeatMap() {
+    console.log('generateHeatMap() function called');
     const grid = document.querySelector('.heat-map-grid') || document.getElementById('heatMapGrid');
+    console.log('Looking for heat map grid element...');
+    console.log('Found .heat-map-grid:', document.querySelector('.heat-map-grid'));
+    console.log('Found #heatMapGrid:', document.getElementById('heatMapGrid'));
     if (!grid) {
         console.log('✗ Heat map grid element not found (.heat-map-grid or #heatMapGrid)');
         return;
@@ -1388,6 +1392,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check chart loading after a delay
         setTimeout(checkChartLoading, 1000);
+        
+        // Ensure heat map is generated
+        setTimeout(generateHeatMap, 500);
     } catch (error) {
         console.error('Error initializing dashboard:', error);
         // Page will still render even if JS initialization fails
