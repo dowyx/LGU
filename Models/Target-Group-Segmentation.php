@@ -20,7 +20,6 @@ $modelFiles = [
     'ContentRepository' => $modelsDir . '/ContentRepository.php'
     // Note: EventSeminarManagement.php is procedural, so we access events directly via database
 ];
-
 // Load available models
 foreach ($modelFiles as $className => $filePath) {
     if (file_exists($filePath)) {
@@ -33,6 +32,14 @@ foreach ($modelFiles as $className => $filePath) {
             }
         }
     }
+}
+
+// Include EventSeminarManagement for cross-module functions
+$eventManagementFile = $modelsDir . '/EventSeminarManagement.php';
+if (file_exists($eventManagementFile)) {
+    // We'll include it conditionally to avoid session issues
+    // Since it's procedural, we'll only include functions
+    include_once $eventManagementFile;
 }
 
 // Set primary model for segmentation
@@ -156,19 +163,7 @@ try {
     if (isset($models['TargetGroupSegmentation'])) {
         $mainModel = $models['TargetGroupSegmentation'];
         
-        // Add content-related data to segments using ContentRepository model
-        if (isset($models['ContentRepository']) && method_exists($models['ContentRepository'], 'getContentItems') && !empty($segments)) {
-            $contentRepo = $models['ContentRepository'];
-            foreach ($segments as &$segment) {
-                if (isset($segment['id'])) {
-                    // Get content items relevant to this segment
-                    $segment['related_content'] = $contentRepo->getContentItems([
-                        'search' => $segment['name']
-                    ]);
-                }
-            }
-        }
-        
+        // Content and event data will be added via the enhanced cross-module data section below
         // Add campaign performance data to segments
         if (method_exists($mainModel, 'getCampaignPerformanceBySegment') && !empty($segments)) {
             foreach ($segments as &$segment) {
@@ -178,28 +173,131 @@ try {
             }
         }
         
-        // Add event data to segments (using direct database query since EventSeminarManagement is procedural)
+        // Add event data to segments with proper cross-module integration
         if (!empty($segments)) {
             try {
                 global $pdo;
-                $eventQuery = "SELECT id, title, description, event_type, start_date, end_date, location 
-                              FROM events 
-                              WHERE status = 'published' 
-                              ORDER BY start_date ASC 
-                              LIMIT 5";
-                $eventStmt = $pdo->prepare($eventQuery);
-                $eventStmt->execute();
-                $allEvents = $eventStmt->fetchAll(PDO::FETCH_ASSOC);
                 
-                foreach ($segments as &$segment) {
-                    if (isset($segment['id'])) {
-                        // For now, assign all events to all segments
-                        // In a real implementation, you'd have segment-event linking logic
-                        $segment['related_events'] = $allEvents;
+                // Try to use EventSeminarManagement functions if available
+                if (function_exists('getEventsBySegment')) {
+                    foreach ($segments as &$segment) {
+                        if (isset($segment['id'])) {
+                            $segment['related_events'] = getEventsBySegment($segment['id']);
+                        }
+                    }
+                } else {
+                    // Fallback to direct database query
+                    $eventQuery = "SELECT id, title, description, event_type, start_date, end_date, location 
+                                  FROM events 
+                                  WHERE status = 'published' 
+                                  ORDER BY start_date ASC 
+                                  LIMIT 5";
+                    $eventStmt = $pdo->prepare($eventQuery);
+                    $eventStmt->execute();
+                    $allEvents = $eventStmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    foreach ($segments as &$segment) {
+                        if (isset($segment['id'])) {
+                            $segment['related_events'] = $allEvents;
+                        }
                     }
                 }
             } catch (Exception $e) {
                 error_log("Error fetching events: " . $e->getMessage());
+            }
+        }
+        
+        // Add cross-module functions for linking with Event Management and Content Repository
+        if (isset($models['TargetGroupSegmentation'])) {
+            $segModel = $models['TargetGroupSegmentation'];
+            
+            // Add function to link content to segments
+            if (method_exists($segModel, 'linkContentToSegment')) {
+                if (!function_exists('linkContentToSegment')) {
+                    function linkContentToSegment($contentId, $segmentId, $scenario = 'general') {
+                        global $models;
+                        if (isset($models['TargetGroupSegmentation'])) {
+                            return $models['TargetGroupSegmentation']->linkContentToSegment($contentId, $segmentId, $scenario);
+                        }
+                        return false;
+                    }
+                }
+            }
+            
+            // Add function to link campaigns to segments
+            if (method_exists($segModel, 'linkCampaignToSegment')) {
+                if (!function_exists('linkCampaignToSegment')) {
+                    function linkCampaignToSegment($campaignId, $segmentId) {
+                        global $models;
+                        if (isset($models['TargetGroupSegmentation'])) {
+                            return $models['TargetGroupSegmentation']->linkCampaignToSegment($campaignId, $segmentId);
+                        }
+                        return false;
+                    }
+                }
+            }
+            
+            // Add function to link events to segments
+            if (method_exists($segModel, 'linkEventToSegment')) {
+                if (!function_exists('linkEventToSegment')) {
+                    function linkEventToSegment($eventId, $segmentId) {
+                        global $models;
+                        if (isset($models['TargetGroupSegmentation'])) {
+                            return $models['TargetGroupSegmentation']->linkEventToSegment($eventId, $segmentId);
+                        }
+                        return false;
+                    }
+                }
+            }
+            
+            // Add function to get events by segment
+            if (method_exists($segModel, 'getEventsBySegment')) {
+                if (!function_exists('getEventsBySegment')) {
+                    function getEventsBySegment($segmentId) {
+                        global $models;
+                        if (isset($models['TargetGroupSegmentation'])) {
+                            return $models['TargetGroupSegmentation']->getEventsBySegment($segmentId);
+                        }
+                        return [];
+                    }
+                }
+            }
+            
+            // Add function to get content by segment
+            if (method_exists($segModel, 'getContentBySegment')) {
+                if (!function_exists('getContentBySegment')) {
+                    function getContentBySegment($segmentId) {
+                        global $models;
+                        if (isset($models['TargetGroupSegmentation'])) {
+                            return $models['TargetGroupSegmentation']->getContentBySegment($segmentId);
+                        }
+                        return [];
+                    }
+                }
+            }
+        }
+        
+        // Enhance segments with cross-module data
+        if (!empty($segments) && isset($models['TargetGroupSegmentation'])) {
+            $segModel = $models['TargetGroupSegmentation'];
+            
+            foreach ($segments as &$segment) {
+                if (isset($segment['id'])) {
+                    // Get related content for this segment
+                    if (method_exists($segModel, 'getContentBySegment')) {
+                        $segment['related_content'] = $segModel->getContentBySegment($segment['id']);
+                    }
+                    
+                    // Get related events for this segment
+                    if (method_exists($segModel, 'getEventsBySegment')) {
+                        $segment['related_events'] = $segModel->getEventsBySegment($segment['id']);
+                    }
+                    
+                    // Get campaign performance for this segment
+                    if (method_exists($segModel, 'getCampaignPerformanceBySegment')) {
+                        $segment['campaign_performance'] = $segModel->getCampaignPerformanceBySegment($segment['id']);
+                    }
+                }
             }
         }
     }
@@ -496,6 +594,42 @@ try {
                     </div>
                 </div>
 
+                <!-- Related Content -->
+                <div class="module-card">
+                    <div class="card-header">
+                        <div class="card-title">Related Content</div>
+                        <div class="card-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                    </div>
+                    <div class="content-list">
+                        <?php 
+                        if (!empty($segments) && isset($segments[0]['related_content']) && !empty($segments[0]['related_content'])) {
+                            foreach (array_slice($segments[0]['related_content'], 0, 4) as $content): 
+                        ?> 
+                        <div class="content-item">
+                            <div class="content-icon">
+                                <i class="fas fa-file-<?php echo isset($content['file_type']) ? $content['file_type'] : 'alt'; ?>"></i>
+                            </div>
+                            <div class="content-details">
+                                <div class="content-title"><?php echo isset($content['name']) ? htmlspecialchars($content['name']) : 'Content Item'; ?></div>
+                                <div class="content-category">
+                                    <span class="badge badge-secondary"><?php echo isset($content['category']) ? htmlspecialchars($content['category']) : 'General'; ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <?php 
+                            endforeach; 
+                        } else {
+                            echo '<div class="content-item">No related content found</div>';
+                        }
+                        ?>
+                    </div>
+                    <button class="btn btn-secondary" style="width: 100%; margin-top: 15px;" onclick="viewAllContent()">
+                        <i class="fas fa-folder-open"></i> View All Content
+                    </button>
+                </div>
+                
                 <!-- Communication Channels -->
                 <div class="module-card">
                     <div class="card-header">
@@ -540,6 +674,44 @@ try {
                     </button>
                 </div>
 
+                <!-- Related Events -->
+                <div class="module-card">
+                    <div class="card-header">
+                        <div class="card-title">Related Events</div>
+                        <div class="card-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                    </div>
+                    <div class="event-list">
+                        <?php 
+                        if (!empty($segments) && isset($segments[0]['related_events']) && !empty($segments[0]['related_events'])) {
+                            foreach (array_slice($segments[0]['related_events'], 0, 4) as $event): 
+                        ?> 
+                        <div class="event-item">
+                            <div class="event-date">
+                                <div class="date-day"><?php echo isset($event['start_date']) ? date('d', strtotime($event['start_date'])) : '01'; ?></div>
+                                <div class="date-month"><?php echo isset($event['start_date']) ? date('M', strtotime($event['start_date'])) : 'Jan'; ?></div>
+                            </div>
+                            <div class="event-details">
+                                <div class="event-title"><?php echo isset($event['title']) ? htmlspecialchars($event['title']) : 'Event'; ?></div>
+                                <div class="event-location"><?php echo isset($event['location']) ? htmlspecialchars($event['location']) : 'TBD'; ?></div>
+                                <div class="event-type">
+                                    <span class="badge badge-info"><?php echo isset($event['event_type']) ? ucfirst($event['event_type']) : 'General'; ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <?php 
+                            endforeach; 
+                        } else {
+                            echo '<div class="event-item">No related events found</div>';
+                        }
+                        ?>
+                    </div>
+                    <button class="btn btn-secondary" style="width: 100%; margin-top: 15px;" onclick="viewAllEvents()">
+                        <i class="fas fa-calendar-alt"></i> View All Events
+                    </button>
+                </div>
+                
                 <!-- A/B Testing Groups -->
                 <div class="module-card">
                     <div class="card-header">
@@ -782,6 +954,16 @@ try {
                 console.log('Filter selected:', this.textContent);
             });
         });
+        
+        // Add function to view all events
+        function viewAllEvents() {
+            window.location.href = 'EventSeminarManagement.php';
+        }
+        
+        // Add function to view all content
+        function viewAllContent() {
+            window.location.href = 'ContentRepository.php';
+        }
     </script>
 
 </body>
