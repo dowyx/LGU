@@ -307,5 +307,58 @@ class ContentRepository {
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Get content items related to a specific event (cross-module integration)
+     */
+    public function getContentForEvent($eventId) {
+        $query = "SELECT ci.*, ec.relevance_score, e.title as event_title
+                  FROM content_items ci
+                  JOIN event_content ec ON ci.id = ec.content_item_id
+                  JOIN events e ON ec.event_id = e.id
+                  WHERE ec.event_id = :event_id
+                  AND ci.status = 'approved'
+                  ORDER BY ec.relevance_score DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':event_id', $eventId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Link content to an event
+     */
+    public function linkContentToEvent($contentId, $eventId, $relevanceScore = 5) {
+        $query = "INSERT IGNORE INTO event_content 
+                  (content_item_id, event_id, relevance_score, created_at)
+                  VALUES (:content_id, :event_id, :relevance_score, NOW())";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':content_id', $contentId);
+        $stmt->bindParam(':event_id', $eventId);
+        $stmt->bindParam(':relevance_score', $relevanceScore);
+        
+        return $stmt->execute();
+    }
+    
+    /**
+     * Get events associated with specific content
+     */
+    public function getEventsForContent($contentId) {
+        $query = "SELECT e.*, ec.relevance_score, ci.name as content_name
+                  FROM events e
+                  JOIN event_content ec ON e.id = ec.event_id
+                  JOIN content_items ci ON ec.content_item_id = ci.id
+                  WHERE ec.content_item_id = :content_id
+                  ORDER BY ec.relevance_score DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':content_id', $contentId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

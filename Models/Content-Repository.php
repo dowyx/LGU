@@ -14,6 +14,33 @@ $contentRepo = new ContentRepository();
 $stats = $contentRepo->getContentStats();
 $contentItems = $contentRepo->getContentItems();
 $categories = $contentRepo->getCategories();
+
+// Cross-module integration functions for linking with Event Management
+function getContentForEvent($eventId) {
+    global $contentRepo;
+    if ($contentRepo !== null) {
+        return $contentRepo->getContentForEvent($eventId);
+    }
+    return [];
+}
+
+function linkContentToEvent($contentId, $eventId, $relevanceScore = 5) {
+    global $contentRepo;
+    if ($contentRepo !== null) {
+        return $contentRepo->linkContentToEvent($contentId, $eventId, $relevanceScore);
+    }
+    return false;
+}
+
+function getEventsForContent($contentId) {
+    global $contentRepo;
+    if ($contentRepo !== null) {
+        return $contentRepo->getEventsForContent($contentId);
+    }
+    return [];
+}
+
+
 ?>
 
 <!DOCTYPE html>

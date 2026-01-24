@@ -9,6 +9,17 @@ if (!isset($_SESSION['user_id'])) {
 // Include database configuration
 require_once '../config/database.php';
 
+// Include Content Repository model for cross-module integration
+require_once './ContentRepository.php';
+
+// Initialize Content Repository
+$contentRepo = null;
+try {
+    $contentRepo = new ContentRepository();
+} catch (Exception $e) {
+    error_log("Failed to initialize ContentRepository: " . $e->getMessage());
+}
+
 // Get user data
 $user_name = $_SESSION['user_name'] ?? 'User';
 $user_role = $_SESSION['user_role'] ?? 'Event Coordinator';
@@ -209,6 +220,148 @@ function get_event_icon($type) {
         case 'conference': return 'fa-comments';
         case 'fair': return 'fa-hands-helping';
         default: return 'fa-calendar-alt';
+    }
+}
+
+// Cross-module integration functions for linking with Content Repository
+function getEventContent($eventId) {
+    global $contentRepo, $pdo;
+    try {
+        // Try to use ContentRepository model if available
+        if ($contentRepo !== null) {
+            return $contentRepo->getContentForEvent($eventId);
+        } else {
+            // Fallback to direct database query
+            $stmt = $pdo->prepare(
+                "SELECT ec.*, ci.name as content_name, ci.description as content_description, 
+                       ci.file_type, ci.category, ci.status as content_status
+                 FROM event_content ec
+                 JOIN content_items ci ON ec.content_item_id = ci.id
+                 WHERE ec.event_id = ?
+                 ORDER BY ec.relevance_score DESC"
+            );
+            $stmt->execute([$eventId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (Exception $e) {
+        error_log("Error fetching event content: " . $e->getMessage());
+        return [];
+    }
+}
+
+function linkContentToEvent($contentId, $eventId, $relevanceScore = 5) {
+    global $contentRepo, $pdo;
+    try {
+        // Try to use ContentRepository model if available
+        if ($contentRepo !== null) {
+            return $contentRepo->linkContentToEvent($contentId, $eventId, $relevanceScore);
+        } else {
+            // Fallback to direct database query
+            $stmt = $pdo->prepare(
+                "INSERT IGNORE INTO event_content 
+                 (content_item_id, event_id, relevance_score, created_at)
+                 VALUES (?, ?, ?, NOW())"
+            );
+            return $stmt->execute([$contentId, $eventId, $relevanceScore]);
+        }
+    } catch (Exception $e) {
+        error_log("Error linking content to event: " . $e->getMessage());
+        return false;
+    }
+}
+
+function unlinkContentFromEvent($contentId, $eventId) {
+    global $contentRepo, $pdo;
+    try {
+        // Try to use ContentRepository model if available
+        if ($contentRepo !== null) {
+            // For unlinking, we need to use direct SQL since ContentRepository doesn't have this method
+            $stmt = $pdo->prepare(
+                "DELETE FROM event_content 
+                 WHERE content_item_id = ? AND event_id = ?"
+            );
+            return $stmt->execute([$contentId, $eventId]);
+        } else {
+            // Fallback to direct database query
+            $stmt = $pdo->prepare(
+                "DELETE FROM event_content 
+                 WHERE content_item_id = ? AND event_id = ?"
+            );
+            return $stmt->execute([$contentId, $eventId]);
+        }
+    } catch (Exception $e) {
+        error_log("Error unlinking content from event: " . $e->getMessage());
+        return false;
+    }
+}
+
+function getEventRelatedContent($eventId) {
+    global $contentRepo, $pdo;
+    try {
+        // Try to use ContentRepository model if available
+        if ($contentRepo !== null) {
+            return $contentRepo->getContentForEvent($eventId);
+        } else {
+            // Fallback to direct database query
+            $stmt = $pdo->prepare(
+                "SELECT ci.*, ec.relevance_score
+                 FROM content_items ci
+                 JOIN event_content ec ON ci.id = ec.content_item_id
+                 WHERE ec.event_id = ? AND ci.status = 'approved'
+                 ORDER BY ec.relevance_score DESC"
+            );
+            $stmt->execute([$eventId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (Exception $e) {
+        error_log("Error fetching related content for event: " . $e->getMessage());
+        return [];
+    }
+}
+
+function getAvailableContentForEvent($eventId) {
+    global $contentRepo, $pdo;
+    try {
+        // Try to use ContentRepository model if available
+        if ($contentRepo !== null) {
+            // Get all approved content
+            $allContent = $contentRepo->getContentItems(['status' => 'approved']);
+            // Get content already linked to the event
+            $linkedContent = $contentRepo->getContentForEvent($eventId);
+            
+            // Extract IDs of linked content
+            $linkedIds = array_column($linkedContent, 'id');
+            
+            // Filter out linked content
+            $availableContent = array_filter($allContent, function($item) use ($linkedIds) {
+                return !in_array($item['id'], $linkedIds);
+            });
+            
+            // Sort by created_at descending
+            usort($availableContent, function($a, $b) {
+                return strtotime($b['created_at']) - strtotime($a['created_at']);
+            });
+            
+            return array_values($availableContent);
+        } else {
+            // Fallback to direct database query
+            $stmt = $pdo->prepare(
+                "SELECT ci.* 
+                 FROM content_items ci
+                 WHERE ci.status = 'approved'
+                 AND ci.id NOT IN (
+                     SELECT ec.content_item_id 
+                     FROM event_content ec 
+                     WHERE ec.event_id = ?
+                 )
+                 ORDER BY ci.created_at DESC"
+            );
+            $stmt->execute([$eventId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (Exception $e) {
+        error_log("Error fetching available content for event: " . $e->getMessage());
+        return [];
     }
 }
 
