@@ -14,14 +14,12 @@ require_once '../config/database.php';
 $models = [];
 $modelsDir = __DIR__;
 
-// Define all model files
+// Define all model files that have class structures
 $modelFiles = [
-    'HealthPoliceIntegration' => $modelsDir . '/HealthPoliceIntegration.php',
     'TargetGroupSegmentation' => $modelsDir . '/TargetGroupSegmentation.php',
-    'ContentRepository' => $modelsDir . '/ContentRepository.php',
-    'EventSeminarManagement' => $modelsDir . '/EventSeminarManagement.php',
-    'SurveyFeedbackCollection' => $modelsDir . '/SurveyFeedbackCollection.php',
-    'CampaignAnalyticsReports' => $modelsDir . '/CampaignAnalyticsReports.php'
+    'HealthPoliceIntegration' => $modelsDir . '/HealthPoliceIntegration.php'
+    // Note: Other files (CampaignAnalyticsReports.php, EventSeminarManagement.php) are procedural,
+    // so their cross-module functionality is integrated directly into TargetGroupSegmentation model
 ];
 
 // Load available models
@@ -158,25 +156,32 @@ try {
     }
     
     // Enhance data with information from other models if available
-    if (isset($models['ContentRepository'])) {
-        $contentRepo = $models['ContentRepository'];
-        // Add content-related data to segments if methods exist
-        if (method_exists($contentRepo, 'getContentBySegment')) {
+    if (isset($models['TargetGroupSegmentation'])) {
+        $mainModel = $models['TargetGroupSegmentation'];
+        
+        // Add content-related data to segments
+        if (method_exists($mainModel, 'getContentBySegment') && !empty($segments)) {
             foreach ($segments as &$segment) {
                 if (isset($segment['id'])) {
-                    $segment['related_content'] = $contentRepo->getContentBySegment($segment['id']);
+                    $segment['related_content'] = $mainModel->getContentBySegment($segment['id']);
                 }
             }
         }
-    }
-    
-    if (isset($models['CampaignAnalyticsReports'])) {
-        $analyticsModel = $models['CampaignAnalyticsReports'];
-        // Enhance analytics with campaign data if methods exist
-        if (method_exists($analyticsModel, 'getCampaignPerformanceBySegment') && !empty($segments)) {
+        
+        // Add campaign performance data to segments
+        if (method_exists($mainModel, 'getCampaignPerformanceBySegment') && !empty($segments)) {
             foreach ($segments as &$segment) {
                 if (isset($segment['id'])) {
-                    $segment['campaign_performance'] = $analyticsModel->getCampaignPerformanceBySegment($segment['id']);
+                    $segment['campaign_performance'] = $mainModel->getCampaignPerformanceBySegment($segment['id']);
+                }
+            }
+        }
+        
+        // Add event data to segments
+        if (method_exists($mainModel, 'getEventsBySegment') && !empty($segments)) {
+            foreach ($segments as &$segment) {
+                if (isset($segment['id'])) {
+                    $segment['related_events'] = $mainModel->getEventsBySegment($segment['id']);
                 }
             }
         }

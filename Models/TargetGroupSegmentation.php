@@ -375,5 +375,127 @@ class TargetGroupSegmentation {
         
         return $stmt->execute();
     }
+    
+    /**
+     * Get content items related to a specific segment (cross-module integration)
+     */
+    public function getContentBySegment($segmentId) {
+        $query = "SELECT ci.*, cc.name as category_name, cc.icon_class,
+                         scs.segment_id,
+                         s.name as segment_name
+                  FROM content_items ci
+                  LEFT JOIN content_categories cc ON ci.category = cc.name
+                  LEFT JOIN segment_content_scenarios scs ON ci.id = scs.content_item_id
+                  LEFT JOIN segments s ON scs.segment_id = s.id
+                  WHERE scs.segment_id = :segment_id
+                  AND ci.status = 'approved'
+                  ORDER BY ci.created_at DESC
+                  LIMIT 10";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':segment_id', $segmentId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Get campaign performance data by segment (cross-module integration)
+     */
+    public function getCampaignPerformanceBySegment($segmentId) {
+        $query = "SELECT c.id, c.name as campaign_name, c.status,
+                         cm.reach, cm.engagement_rate, cm.roi,
+                         cs.overall_score, cs.engagement_score, cs.roi_score, cs.satisfaction_score,
+                         COUNT(t.id) as total_targets,
+                         SUM(CASE WHEN t.response_status = 'responded' THEN 1 ELSE 0 END) as responded_count
+                  FROM campaigns c
+                  LEFT JOIN campaign_metrics cm ON c.id = cm.campaign_id AND cm.date_recorded = (
+                      SELECT MAX(date_recorded) FROM campaign_metrics WHERE campaign_id = c.id
+                  )
+                  LEFT JOIN campaign_scores cs ON c.id = cs.campaign_id
+                  LEFT JOIN campaign_targets t ON c.id = t.campaign_id
+                  LEFT JOIN segment_campaign_link scl ON c.id = scl.campaign_id
+                  WHERE scl.segment_id = :segment_id
+                  GROUP BY c.id
+                  ORDER BY c.created_at DESC
+                  LIMIT 10";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':segment_id', $segmentId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Get events relevant to a specific segment (cross-module integration)
+     */
+    public function getEventsBySegment($segmentId) {
+        $query = "SELECT e.id, e.title, e.description, e.event_type, e.location,
+                         e.start_date, e.end_date, e.attendee_limit,
+                         COUNT(r.id) as registered_count,
+                         s.name as segment_name
+                  FROM events e
+                  LEFT JOIN registrations r ON e.id = r.event_id
+                  LEFT JOIN segment_event_link sel ON e.id = sel.event_id
+                  LEFT JOIN segments s ON sel.segment_id = s.id
+                  WHERE sel.segment_id = :segment_id
+                  AND e.status = 'published'
+                  GROUP BY e.id
+                  ORDER BY e.start_date ASC
+                  LIMIT 10";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':segment_id', $segmentId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Link content to segment scenario
+     */
+    public function linkContentToSegment($contentId, $segmentId, $scenario = 'general') {
+        $query = "INSERT IGNORE INTO segment_content_scenarios 
+                  (content_item_id, segment_id, scenario_type, created_at)
+                  VALUES (:content_id, :segment_id, :scenario, NOW())";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':content_id', $contentId);
+        $stmt->bindParam(':segment_id', $segmentId);
+        $stmt->bindParam(':scenario', $scenario);
+        
+        return $stmt->execute();
+    }
+    
+    /**
+     * Link campaign to segment
+     */
+    public function linkCampaignToSegment($campaignId, $segmentId) {
+        $query = "INSERT IGNORE INTO segment_campaign_link 
+                  (segment_id, campaign_id, created_at)
+                  VALUES (:segment_id, :campaign_id, NOW())";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':segment_id', $segmentId);
+        $stmt->bindParam(':campaign_id', $campaignId);
+        
+        return $stmt->execute();
+    }
+    
+    /**
+     * Link event to segment
+     */
+    public function linkEventToSegment($eventId, $segmentId) {
+        $query = "INSERT IGNORE INTO segment_event_link 
+                  (segment_id, event_id, created_at)
+                  VALUES (:segment_id, :event_id, NOW())";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':segment_id', $segmentId);
+        $stmt->bindParam(':event_id', $eventId);
+        
+        return $stmt->execute();
+    }
 }
 ?>
