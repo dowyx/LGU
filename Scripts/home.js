@@ -858,7 +858,7 @@ function addNewCampaign() {
         showNotification('New campaign created successfully!', 'success', 3000);
         
         // Redirect to campaign planning module
-        window.location.href = '../Modules/Module-1.php';
+        window.location.href = '../Models/Module-1.php';
     } catch (error) {
         console.error('Error creating campaign:', error);
         showNotification('Failed to create campaign. Please try again.', 'error', 4000);
@@ -939,7 +939,7 @@ function finishCampaignCreation() {
     
     // Redirect to campaign planning module after a short delay
     setTimeout(() => {
-        window.location.href = '../Modules/Module-1.php';
+        window.location.href = '../Models/Module-1.php';
     }, 1500);
 }
 
@@ -1044,31 +1044,31 @@ function viewLiveStats(campaign) {
 
 function editCampaign(id) {
     // Redirect to the campaign planning module to edit
-    window.location.href = '../Modules/Module-1.php?campaignId=' + id + '&action=edit';
+    window.location.href = '../Models/Module-1.php?campaignId=' + id + '&action=edit';
     console.log('Editing campaign: ' + id);
 }
 
 function viewReport(id) {
     // Redirect to the campaign analytics reports
-    window.location.href = '../Modules/CampaignAnalyticsReports.php?campaignId=' + id + '&view=report';
+    window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id + '&view=report';
     console.log('Viewing report for campaign: ' + id);
 }
 
 function viewAllCampaigns() {
     // Redirect to the campaign analytics reports module
-    window.location.href = '../Modules/CampaignAnalyticsReports.php';
+    window.location.href = '../Models/CampaignAnalyticsReports.php';
     console.log('Viewing all campaigns');
 }
 
 function openAnalytics(id) {
     // Redirect to the analytics module for the specific campaign
-    window.location.href = '../Modules/CampaignAnalyticsReports.php?campaignId=' + id;
+    window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id;
     console.log('Opening analytics for campaign: ' + id);
 }
 
 function viewCampaignDetails(id) {
     // Redirect to the campaign analytics for detailed view
-    window.location.href = '../Modules/CampaignAnalyticsReports.php?campaignId=' + id;
+    window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id;
     console.log('Viewing details for campaign: ' + id);
 }
 
