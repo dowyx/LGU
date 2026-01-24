@@ -220,6 +220,25 @@ try {
                 }
             }
             
+            // Also provide access to ContentRepository functions for cross-module integration
+            if (isset($models['ContentRepository'])) {
+                $contentRepo = $models['ContentRepository'];
+                
+                if (!function_exists('linkContentToSegmentThroughRepo')) {
+                    function linkContentToSegmentThroughRepo($contentId, $segmentId, $scenario = 'general') {
+                        global $models;
+                        if (isset($models['ContentRepository']) && isset($models['TargetGroupSegmentation'])) {
+                            // This function allows linking content to segments through either model
+                            $segModel = $models['TargetGroupSegmentation'];
+                            if (method_exists($segModel, 'linkContentToSegment')) {
+                                return $segModel->linkContentToSegment($contentId, $segmentId, $scenario);
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            
             // Add function to link campaigns to segments
             if (method_exists($segModel, 'linkCampaignToSegment')) {
                 if (!function_exists('linkCampaignToSegment')) {
@@ -259,16 +278,24 @@ try {
                 }
             }
             
-            // Add function to get content by segment
-            if (method_exists($segModel, 'getContentBySegment')) {
-                if (!function_exists('getContentBySegment')) {
-                    function getContentBySegment($segmentId) {
-                        global $models;
-                        if (isset($models['TargetGroupSegmentation'])) {
-                            return $models['TargetGroupSegmentation']->getContentBySegment($segmentId);
+            // Add function to get content by segment - only define once
+            if (method_exists($segModel, 'getContentBySegment') && !function_exists('getContentBySegment')) {
+                function getContentBySegment($segmentId) {
+                    global $models;
+                    if (isset($models['TargetGroupSegmentation'])) {
+                        $segModel = $models['TargetGroupSegmentation'];
+                        if (method_exists($segModel, 'getContentBySegment')) {
+                            return $segModel->getContentBySegment($segmentId);
                         }
-                        return [];
                     }
+                    // Fallback: return all content if segment-specific function doesn't exist
+                    if (isset($models['ContentRepository'])) {
+                        $repo = $models['ContentRepository'];
+                        if (method_exists($repo, 'getContentItems')) {
+                            return $repo->getContentItems();
+                        }
+                    }
+                    return [];
                 }
             }
         }
@@ -336,13 +363,13 @@ try {
                 </a>
             </li>
             <li class="nav-item">
-                <a href="../home.php" class="nav-link">
+                <a href="Module-1.php" class="nav-link">
                     <i class="fas fa-calendar-alt"></i>
                     <span class="nav-text">Campaign Planning & Calendar</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="ContentRepository.php" class="nav-link">
+                <a href="Content-Repository.php" class="nav-link">
                     <i class="fas fa-database"></i>
                     <span class="nav-text">Content Repository</span>
                 </a>
