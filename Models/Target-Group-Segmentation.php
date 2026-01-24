@@ -10,20 +10,40 @@ if (!isset($_SESSION['user_id'])) {
 // Include database connection
 require_once '../config/database.php';
 
-// Check if we should use HealthPoliceIntegration model or another model
-// First, try to find the correct model file
-$modelPath = __DIR__ . '/../Models/HealthPoliceIntegration.php';
-$backupModelPath = __DIR__ . '/../Models/TargetGroupSegmentation.php';
+// Load all available models
+$models = [];
+$modelsDir = __DIR__;
 
-if (file_exists($modelPath)) {
-    require_once $modelPath;
-    $modelClass = 'HealthPoliceIntegration';
-} elseif (file_exists($backupModelPath)) {
-    require_once $backupModelPath;
-    $modelClass = 'TargetGroupSegmentation';
-} else {
-    // If no model file exists, create a basic fallback
-    die("Error: Could not find model file. Please check your Models directory.");
+// Define all model files
+$modelFiles = [
+    'HealthPoliceIntegration' => $modelsDir . '/HealthPoliceIntegration.php',
+    'TargetGroupSegmentation' => $modelsDir . '/TargetGroupSegmentation.php',
+    'ContentRepository' => $modelsDir . '/ContentRepository.php',
+    'EventSeminarManagement' => $modelsDir . '/EventSeminarManagement.php',
+    'SurveyFeedbackCollection' => $modelsDir . '/SurveyFeedbackCollection.php',
+    'CampaignAnalyticsReports' => $modelsDir . '/CampaignAnalyticsReports.php'
+];
+
+// Load available models
+foreach ($modelFiles as $className => $filePath) {
+    if (file_exists($filePath)) {
+        require_once $filePath;
+        if (class_exists($className)) {
+            try {
+                $models[$className] = new $className();
+            } catch (Exception $e) {
+                error_log("Failed to instantiate $className: " . $e->getMessage());
+            }
+        }
+    }
+}
+
+// Set primary model for segmentation
+$segModel = null;
+if (isset($models['TargetGroupSegmentation'])) {
+    $segModel = $models['TargetGroupSegmentation'];
+} elseif (isset($models['HealthPoliceIntegration'])) {
+    $segModel = $models['HealthPoliceIntegration'];
 }
 
 // Check if class exists
@@ -32,10 +52,51 @@ if (!class_exists($modelClass)) {
 }
 
 try {
-    $segModel = new $modelClass();
-    $segments = $segModel->getSegments();
-    $analytics = $segModel->getSegmentAnalytics();
-    $channels = $segModel->getCommunicationChannels();
+    // Fetch data from primary segmentation model
+    if ($segModel) {
+        $segments = method_exists($segModel, 'getSegments') ? $segModel->getSegments() : [];
+        $analytics = method_exists($segModel, 'getSegmentAnalytics') ? $segModel->getSegmentAnalytics() : [
+            'total_segments' => 0,
+            'engagement_stats' => ['average' => 0],
+            'total_members' => 0
+        ];
+        $channels = method_exists($segModel, 'getCommunicationChannels') ? $segModel->getCommunicationChannels() : [];
+    } else {
+        // Fallback data if no segmentation model available
+        $segments = [];
+        $analytics = [
+            'total_segments' => 0,
+            'engagement_stats' => ['average' => 0],
+            'total_members' => 0
+        ];
+        $channels = [];
+    }
+    
+    // Enhance data with information from other models if available
+    if (isset($models['ContentRepository'])) {
+        $contentRepo = $models['ContentRepository'];
+        // Add content-related data to segments if methods exist
+        if (method_exists($contentRepo, 'getContentBySegment')) {
+            foreach ($segments as &$segment) {
+                if (isset($segment['id'])) {
+                    $segment['related_content'] = $contentRepo->getContentBySegment($segment['id']);
+                }
+            }
+        }
+    }
+    
+    if (isset($models['CampaignAnalyticsReports'])) {
+        $analyticsModel = $models['CampaignAnalyticsReports'];
+        // Enhance analytics with campaign data if methods exist
+        if (method_exists($analyticsModel, 'getCampaignPerformanceBySegment') && !empty($segments)) {
+            foreach ($segments as &$segment) {
+                if (isset($segment['id'])) {
+                    $segment['campaign_performance'] = $analyticsModel->getCampaignPerformanceBySegment($segment['id']);
+                }
+            }
+        }
+    }
+    
 } catch (Exception $e) {
     // If methods don't exist, use fallback data
     $segments = [];
@@ -74,13 +135,13 @@ try {
                 </a>
             </li>
             <li class="nav-item">
-                <a href="Module-1.php" class="nav-link">
+                <a href="../home.php" class="nav-link">
                     <i class="fas fa-calendar-alt"></i>
                     <span class="nav-text">Campaign Planning & Calendar</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="Content-Repository.php" class="nav-link">
+                <a href="ContentRepository.php" class="nav-link">
                     <i class="fas fa-database"></i>
                     <span class="nav-text">Content Repository</span>
                 </a>
