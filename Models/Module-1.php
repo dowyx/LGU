@@ -111,45 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $campaign_id = $_POST['campaign_id'] ?? 0;
                     if ($campaign_id > 0) {
-                        // Begin transaction to ensure data consistency
-                        $pdo->beginTransaction();
-                        
-                        // Delete related records first to satisfy foreign key constraints
-                        $stmt = $pdo->prepare("DELETE FROM campaign_activities WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        $stmt = $pdo->prepare("DELETE FROM campaign_metrics WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        $stmt = $pdo->prepare("DELETE FROM campaign_milestones WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        $stmt = $pdo->prepare("DELETE FROM campaign_resources WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        $stmt = $pdo->prepare("DELETE FROM campaign_team_members WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        $stmt = $pdo->prepare("DELETE FROM campaign_documents WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        $stmt = $pdo->prepare("DELETE FROM campaign_demographics WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        $stmt = $pdo->prepare("DELETE FROM channel_analytics WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        // Now delete the campaign itself
-                        $stmt = $pdo->prepare("DELETE FROM campaigns 
+                        $stmt = $pdo->prepare("
+                            DELETE FROM campaigns 
                             WHERE id = ? AND created_by = ?
                         ");
                         $stmt->execute([$campaign_id, $user_id]);
-                        
-                        $pdo->commit();
                         $success_message = 'Campaign deleted successfully!';
                     }
                 } catch (Exception $e) {
-                    $pdo->rollback();
                     $error_message = 'Error deleting campaign: ' . $e->getMessage();
                 }
                 break;

@@ -250,7 +250,7 @@ function format_date($date_str) {
                 </a>
             </li>
             <li class="nav-item">
-                <a href="TargetGroupSegmentation.php" class="nav-link">
+                <a href="Target-Group-Segmentation.php" class="nav-link">
                     <i class="fas fa-users"></i>
                     <span class="nav-text">Target Group Segmentation</span>
                 </a>
