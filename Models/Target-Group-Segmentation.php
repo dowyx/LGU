@@ -7,8 +7,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Include the target group segmentation model
-require_once 'TargetGroupSegmentation.php';
+// Include database connection and target group segmentation model
+require_once '../config/database.php';
+require_once __DIR__ . '/TargetGroupSegmentation.php';
 
 $segModel = new TargetGroupSegmentation();
 $segments = $segModel->getSegments();
@@ -59,25 +60,25 @@ $channels = $segModel->getCommunicationChannels();
                 </a>
             </li>
             <li class="nav-item">
-                <a href="EventSeminarManagement.php" class="nav-link">
+                <a href="/Modules/EventSeminarManagement.php" class="nav-link">
                     <i class="fas fa-calendar-check"></i>
                     <span class="nav-text">Event & Seminar Management</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="SurveyFeedbackCollection.php" class="nav-link">
+                <a href="/Modules/SurveyFeedbackCollection.php" class="nav-link">
                     <i class="fas fa-clipboard-check"></i>
                     <span class="nav-text">Survey & Feedback Collection</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="CampaignAnalyticsReports.php" class="nav-link">
+                <a href="/Modules/CampaignAnalyticsReports.php" class="nav-link">
                     <i class="fas fa-chart-bar"></i>
                     <span class="nav-text">Campaign Analytics & Reports</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="HealthPoliceIntegration.php" class="nav-link">
+                <a href="/Modules/HealthPoliceIntegration.php" class="nav-link">
                     <i class="fas fa-link"></i>
                     <span class="nav-text">Community</span>
                 </a>
@@ -401,7 +402,7 @@ $channels = $segModel->getCommunicationChannels();
                             <td>
                                <div><?php echo $segment['engagement_rate'] ?? 0; ?>%</div>
                             </td>
-                            <td><?php echo date('M j, Y', strtotime($segment['updated_at'])); ?></td>
+                            <td><?php echo isset($segment['updated_at']) && $segment['updated_at'] ? date('M j, Y', strtotime($segment['updated_at'])) : 'N/A'; ?></td>
                             <td><span style="color: <?php echo ($segment['status'] ?? 'draft') === 'active' ? 'var(--success)' : 'var(--text-gray)'; ?>"><?php echo ucfirst($segment['status'] ?? 'draft'); ?></span></td>
                             <td>
                                 <div class="segment-actions">
