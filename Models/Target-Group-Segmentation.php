@@ -9,7 +9,8 @@ if (!isset($_SESSION['user_id'])) {
 
 // Include database connection and target group segmentation model
 require_once '../config/database.php';
-require_once __DIR__ . '/TargetGroupSegmentation.php';
+// Correct the path - assuming the model is in the same directory or Models directory
+require_once __DIR__ . '/../Models/TargetGroupSegmentation.php'; // Or your actual path
 
 $segModel = new TargetGroupSegmentation();
 $segments = $segModel->getSegments();
@@ -54,7 +55,7 @@ $channels = $segModel->getCommunicationChannels();
                 </a>
             </li>
             <li class="nav-item">
-                <a href="./Target-Group-Segmentation.php" class="nav-link active">
+                <a href="Target-Group-Segmentation.php" class="nav-link active">
                     <i class="fas fa-users"></i>
                     <span class="nav-text">Target Group Segmentation</span>
                 </a>
@@ -86,7 +87,6 @@ $channels = $segModel->getCommunicationChannels();
         </ul>
     </aside>
 
-
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
@@ -98,9 +98,9 @@ $channels = $segModel->getCommunicationChannels();
                         <input type="text" placeholder="Search segments, criteria, tags..." id="searchInput">
                     </div>
                     <div class="user-profile">
-                        <div class="user-avatar"><?php echo strtoupper(substr($_SESSION['user_name'] ?? 'A', 0, 2)); ?></div>
+                        <div class="user-avatar"><?php echo isset($_SESSION['user_name']) ? strtoupper(substr($_SESSION['user_name'], 0, 2)) : 'AD'; ?></div>
                         <div>
-                            <div style="font-weight: 500;"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Administrator'); ?></div>
+                            <div style="font-weight: 500;"><?php echo isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name']) : 'Administrator'; ?></div>
                             <div style="font-size: 13px; color: var(--text-gray);">Segmentation Analyst</div>
                         </div>
                     </div>
@@ -147,25 +147,37 @@ $channels = $segModel->getCommunicationChannels();
                         </div>
                     </div>
                     <div class="segment-list">
-                        <?php foreach (array_slice($segments, 0, 4) as $segment): ?>
-                        <div class="segment-item <?php echo strtolower(str_replace(' ', '-', explode(' ', $segment['name'])[0] ?? '')); ?>">
-                            <div class="segment-name"><?php echo htmlspecialchars($segment['name']); ?></div>
-                            <div class="segment-count"><?php echo $segment['size_estimate']; ?> individuals</div>
+                        <?php 
+                        if (!empty($segments)) {
+                            foreach (array_slice($segments, 0, 4) as $segment): 
+                        ?>
+                        <div class="segment-item <?php echo isset($segment['name']) ? strtolower(str_replace(' ', '-', explode(' ', $segment['name'])[0] ?? '')) : ''; ?>">
+                            <div class="segment-name"><?php echo isset($segment['name']) ? htmlspecialchars($segment['name']) : 'Unnamed Segment'; ?></div>
+                            <div class="segment-count"><?php echo isset($segment['size_estimate']) ? $segment['size_estimate'] : 0; ?> individuals</div>
                             <div class="progress-container">
-                                <div class="progress-bar" style="width: <?php echo $segment['engagement_rate']; ?>%; background-color: 
+                                <div class="progress-bar" style="width: <?php echo isset($segment['engagement_rate']) ? $segment['engagement_rate'] : 0; ?>%; background-color: 
                                     <?php 
-                                        if ($segment['engagement_rate'] > 80) echo 'var(--success);';
-                                        elseif ($segment['engagement_rate'] > 60) echo 'var(--accent);';
-                                        else echo 'var(--warning);';
+                                        if (isset($segment['engagement_rate'])) {
+                                            if ($segment['engagement_rate'] > 80) echo 'var(--success);';
+                                            elseif ($segment['engagement_rate'] > 60) echo 'var(--accent);';
+                                            else echo 'var(--warning);';
+                                        } else {
+                                            echo 'var(--warning);';
+                                        }
                                     ?>"></div>
                             </div>
                             <div class="segment-tags">
-                                <span class="segment-tag"><?php echo ucfirst($segment['type'] ?? 'demographic'); ?></span>
-                                <span class="segment-tag"><?php echo $segment['status'] ?? 'draft'; ?> Priority</span>
-                                <span class="segment-tag"><?php echo round($segment['engagement_rate'] ?? 0); ?>% Engaged</span>
+                                <span class="segment-tag"><?php echo isset($segment['type']) ? ucfirst($segment['type']) : 'demographic'; ?></span>
+                                <span class="segment-tag"><?php echo isset($segment['status']) ? $segment['status'] : 'draft'; ?> Priority</span>
+                                <span class="segment-tag"><?php echo isset($segment['engagement_rate']) ? round($segment['engagement_rate']) : 0; ?>% Engaged</span>
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                        <?php 
+                            endforeach; 
+                        } else {
+                            echo '<div class="segment-item">No segments found</div>';
+                        }
+                        ?>
                     </div>
                 </div>
 
@@ -254,19 +266,25 @@ $channels = $segModel->getCommunicationChannels();
                     </div>
                     <div class="analytics-dashboard">
                         <div class="metric">
-                            <div class="metric-value"><?php echo $analytics['total_segments']; ?></div>
+                            <div class="metric-value"><?php echo isset($analytics['total_segments']) ? $analytics['total_segments'] : 0; ?></div>
                             <div class="metric-label">Active Segments</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value"><?php echo $analytics['engagement_stats']['average']; ?>%</div>
+                            <div class="metric-value"><?php echo isset($analytics['engagement_stats']['average']) ? $analytics['engagement_stats']['average'] : 0; ?>%</div>
                             <div class="metric-label">Avg. Engagement Rate</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value"><?php echo round($analytics['total_members'] / max($analytics['total_segments'], 1)); ?></div>
+                            <div class="metric-value"><?php 
+                                if (isset($analytics['total_members']) && isset($analytics['total_segments']) && $analytics['total_segments'] > 0) {
+                                    echo round($analytics['total_members'] / $analytics['total_segments']);
+                                } else {
+                                    echo 0;
+                                }
+                            ?></div>
                             <div class="metric-label">Avg. Size per Segment</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value"><?php echo count($channels); ?></div>
+                            <div class="metric-value"><?php echo !empty($channels) ? count($channels) : 0; ?></div>
                             <div class="metric-label">Communication Channels</div>
                         </div>
                     </div>
@@ -288,20 +306,35 @@ $channels = $segModel->getCommunicationChannels();
                         </div>
                     </div>
                     <div class="channel-distribution">
-                        <?php foreach (array_slice($channels, 0, 4) as $channel): ?>
+                        <?php 
+                        if (!empty($channels)) {
+                            foreach (array_slice($channels, 0, 4) as $channel): 
+                        ?>
                         <div class="channel-item">
                             <i class="fas <?php 
-                                if (strpos(strtolower($channel['name']), 'email') !== false) echo 'fa-envelope';
-                                elseif (strpos(strtolower($channel['name']), 'sms') !== false) echo 'fa-mobile-alt';
-                                elseif (strpos(strtolower($channel['name']), 'social') !== false) echo 'fa-hashtag';
-                                else echo 'fa-newspaper';
+                                if (isset($channel['name'])) {
+                                    if (strpos(strtolower($channel['name']), 'email') !== false) echo 'fa-envelope';
+                                    elseif (strpos(strtolower($channel['name']), 'sms') !== false) echo 'fa-mobile-alt';
+                                    elseif (strpos(strtolower($channel['name']), 'social') !== false) echo 'fa-hashtag';
+                                    else echo 'fa-newspaper';
+                                } else {
+                                    echo 'fa-newspaper';
+                                }
                             ?>"></i>
                             <div>
-                                <div style="font-weight: 600;"><?php echo htmlspecialchars($channel['name']); ?></div>
-                                <div class="channel-stats"><?php echo $channel['preference_score']; ?>% prefer • <?php echo $channel['reach_percentage']; ?>% reach</div>
+                                <div style="font-weight: 600;"><?php echo isset($channel['name']) ? htmlspecialchars($channel['name']) : 'Unnamed Channel'; ?></div>
+                                <div class="channel-stats">
+                                    <?php echo isset($channel['preference_score']) ? $channel['preference_score'] : 0; ?>% prefer • 
+                                    <?php echo isset($channel['reach_percentage']) ? $channel['reach_percentage'] : 0; ?>% reach
+                                </div>
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                        <?php 
+                            endforeach; 
+                        } else {
+                            echo '<div class="channel-item">No communication channels found</div>';
+                        }
+                        ?>
                     </div>
                     <button class="btn btn-secondary" style="width: 100%; margin-top: 15px;">
                         <i class="fas fa-sliders-h"></i> Optimize Channels
@@ -391,28 +424,46 @@ $channels = $segModel->getCommunicationChannels();
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($segments as $segment): ?>
+                        <?php 
+                        if (!empty($segments)) {
+                            foreach ($segments as $segment): 
+                        ?>
                         <tr>
                             <td>
-                                <div style="font-weight: 600;"><?php echo htmlspecialchars($segment['name']); ?></div>
-                                <div style="font-size: 12px; color: var(--text-gray);"><?php echo htmlspecialchars($segment['description']); ?></div>
+                                <div style="font-weight: 600;"><?php echo isset($segment['name']) ? htmlspecialchars($segment['name']) : 'Unnamed Segment'; ?></div>
+                                <div style="font-size: 12px; color: var(--text-gray);"><?php echo isset($segment['description']) ? htmlspecialchars($segment['description']) : ''; ?></div>
                             </td>
-                            <td><span class="segment-type type-<?php echo $segment['type'] ?? 'demographic'; ?>"><?php echo ucfirst($segment['type'] ?? 'demographic'); ?></span></td>
-                            <td><?php echo number_format($segment['size_estimate'] ?? 0); ?></td>
+                            <td><span class="segment-type type-<?php echo isset($segment['type']) ? $segment['type'] : 'demographic'; ?>"><?php echo isset($segment['type']) ? ucfirst($segment['type']) : 'Demographic'; ?></span></td>
+                            <td><?php echo isset($segment['size_estimate']) ? number_format($segment['size_estimate']) : 0; ?></td>
                             <td>
-                               <div><?php echo $segment['engagement_rate'] ?? 0; ?>%</div>
+                               <div><?php echo isset($segment['engagement_rate']) ? $segment['engagement_rate'] : 0; ?>%</div>
                             </td>
-                            <td><?php echo isset($segment['updated_at']) && $segment['updated_at'] ? date('M j, Y', strtotime($segment['updated_at'])) : 'N/A'; ?></td>
-                            <td><span style="color: <?php echo ($segment['status'] ?? 'draft') === 'active' ? 'var(--success)' : 'var(--text-gray)'; ?>"><?php echo ucfirst($segment['status'] ?? 'draft'); ?></span></td>
+                            <td><?php 
+                                if (isset($segment['updated_at']) && !empty($segment['updated_at'])) {
+                                    echo date('M j, Y', strtotime($segment['updated_at']));
+                                } else {
+                                    echo 'N/A';
+                                }
+                            ?></td>
+                            <td><span style="color: <?php echo (isset($segment['status']) && $segment['status'] === 'active') ? 'var(--success)' : 'var(--text-gray)'; ?>"><?php echo isset($segment['status']) ? ucfirst($segment['status']) : 'Draft'; ?></span></td>
                             <td>
                                 <div class="segment-actions">
+                                    <?php if (isset($segment['id'])): ?>
                                     <i class="fas fa-edit" title="Edit" onclick="editSegment(<?php echo $segment['id']; ?>)"></i>
                                     <i class="fas fa-chart-line" title="Analytics" onclick="showAnalytics(<?php echo $segment['id']; ?>)"></i>
                                     <i class="fas fa-bullhorn" title="Target" onclick="targetSegment(<?php echo $segment['id']; ?>)"></i>
+                                    <?php else: ?>
+                                    <span style="color: var(--text-gray); font-size: 12px;">No actions</span>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
+                        <?php 
+                            endforeach; 
+                        } else {
+                            echo '<tr><td colspan="7" style="text-align: center; padding: 20px;">No segments found</td></tr>';
+                        }
+                        ?>
                     </tbody>
                 </table>
             </div>
@@ -474,9 +525,8 @@ $channels = $segModel->getCommunicationChannels();
         </main>
     </div>
 
-    <script src="../../Scripts/mod3.js"></script>
+    <script src="../Scripts/mod3.js"></script>
     <!-- <script src="../Scripts/userprofile.js"></script> -->
-
 
     <script>
         // Function to handle segment creation
@@ -513,11 +563,14 @@ $channels = $segModel->getCommunicationChannels();
         }
 
         // Add search functionality
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            // In a real implementation, this would filter the segments dynamically
-            console.log('Searching for:', searchTerm);
-        });
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                // In a real implementation, this would filter the segments dynamically
+                console.log('Searching for:', searchTerm);
+            });
+        }
 
         // Add filter functionality
         document.querySelectorAll('.filter-item').forEach(item => {
