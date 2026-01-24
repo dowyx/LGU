@@ -23,29 +23,12 @@ class Chatbot {
 
     init() {
         document.addEventListener('DOMContentLoaded', () => {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-        this.init();
-    }
-
-    init() {
-        document.addEventListener('DOMContentLoaded', () => {
-=======
-        this.init();
-    }
-
-    init() {
-        document.addEventListener('DOMContentLoaded', () => {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
             this.setupElements();
             this.setupEventListeners();
             this.loadMessageHistory();
             this.setupKeyboardShortcuts();
             console.log('Enhanced Chatbot initialized successfully');
-        }
-    }
-=======
         });
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 
     setupElements() {
@@ -55,11 +38,6 @@ class Chatbot {
         this.messages = document.getElementById('chatMessages');
         this.input = document.getElementById('chatInput');
         this.sendBtn = document.getElementById('sendChatBtn');
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-        this.sendBtn = document.getElementById('sendChatBtn');
-=======
-        this.sendBtn = document.getElementById('sendChatBtn');
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 
         // Add ID if missing
         if (this.chatIcon && !this.chatIcon.id) {
@@ -111,10 +89,6 @@ class Chatbot {
     }
 
     setupEventListeners() {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
         if (!this.chatIcon || !this.modal) {
             console.error('Chatbot elements not found');
             if (window.Utils) {
@@ -132,28 +106,6 @@ class Chatbot {
         // Close chatbot
         if (this.closeBtn) {
             this.closeBtn.addEventListener('click', () => {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-        this.chatIcon.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.open();
-        });
-
-        // Close chatbot
-        if (this.closeBtn) {
-            this.closeBtn.addEventListener('click', () => {
-                this.close();
-            });
-        }
-
-        this.chatIcon.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.open();
-        });
-
-        // Close chatbot
-        if (this.closeBtn) {
-            this.closeBtn.addEventListener('click', () => {
-
                 this.close();
             });
         }
@@ -308,25 +260,27 @@ class Chatbot {
     }
 
     showTypingIndicator() {
-        if (this.typingIndicator) {
-            this.typingIndicator.style.display = 'flex';
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) {
+            indicator.style.display = 'flex';
             this.messages.scrollTop = this.messages.scrollHeight;
         }
     }
 
     hideTypingIndicator() {
-        if (this.typingIndicator) {
-            this.typingIndicator.style.display = 'none';
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) {
+            indicator.style.display = 'none';
         }
     }
 
     open() {
         console.log('Opening chatbot...');
-        console.log('Modal element:', this.modal);
         if (this.modal) {
             this.modal.classList.add('open');
+            this.modal.style.display = 'flex';
             this.isOpen = true;
-            console.log('Chatbot opened, class added:', this.modal.classList.contains('open'));
+            console.log('Chatbot opened');
             if (this.input) this.input.focus();
         } else {
             console.error('Modal element not found!');
@@ -337,18 +291,10 @@ class Chatbot {
         console.log('Closing chatbot...');
         if (this.modal) {
             this.modal.classList.remove('open');
+            this.modal.style.display = 'none';
             this.isOpen = false;
-            console.log('Chatbot closed, class removed:', this.modal.classList.contains('open'));
+            console.log('Chatbot closed');
         }
-
-        this.modal.style.display = 'flex';
-        this.isOpen = true;
-        if (this.input) this.input.focus();
-    }
-
-    close() {
-        this.modal.style.display = 'none';
-        this.isOpen = false;
     }
 
     addMessage(text, sender) {
@@ -359,7 +305,7 @@ class Chatbot {
         const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
         messageDiv.innerHTML = `
-            ${text}
+            <div class="message-content">${text}</div>
             <div class="message-time">${timeString}</div>
         `;
 
@@ -482,16 +428,28 @@ class Chatbot {
         }
         
         // Sanitize message before processing
-        const sanitizedMessage = Utils.UIHelper.sanitizeHTML(message);
+        const sanitizedMessage = Utils.UIHelper?.sanitizeHTML ? Utils.UIHelper.sanitizeHTML(message) : message;
         
         // Add user message
         this.addMessage(sanitizedMessage, 'user');
         this.input.value = '';
 
+        // Show typing indicator
+        this.showTypingIndicator();
+
         // Simulate AI thinking
         setTimeout(() => {
+            this.hideTypingIndicator();
             const aiResponse = this.processMessage(sanitizedMessage);
             this.addMessage(aiResponse, 'ai');
+            
+            // Save to history
+            this.messageHistory.push({ text: sanitizedMessage, sender: 'user', timestamp: Date.now() });
+            this.messageHistory.push({ text: aiResponse, sender: 'ai', timestamp: Date.now() });
+            if (this.messageHistory.length > this.maxHistoryLength) {
+                this.messageHistory.splice(0, 2); // Remove oldest two messages (user+ai pair)
+            }
+            this.saveMessageHistory();
         }, 600);
     }
     
@@ -519,8 +477,10 @@ class Chatbot {
     }
 
     askQuickQuestion(question) {
-        this.input.value = question;
-        this.sendMessage();
+        if (this.input) {
+            this.input.value = question;
+            this.sendMessage();
+        }
     }
 
     handleKeyPress(event) {
