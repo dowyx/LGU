@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 // Include database configuration
 require_once 'config/database.php';
 
-// Get user data
+
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'] ?? 'User';
 $user_role = $_SESSION['user_role'] ?? 'Safety Manager';
