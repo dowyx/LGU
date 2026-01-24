@@ -13,9 +13,11 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 
+
 // Include database configuration
 
 require_once '../config/database.php';
+
 
 
 // Get user data
@@ -27,11 +29,13 @@ $user_role = $_SESSION['user_role'] ?? 'Analytics Manager';
 $user_id = $_SESSION['user_id'];
 
 
+
 // Initialize variables
 
 $success_message = '';
 
 $error_message = '';
+
 
 
 // Handle form submissions
@@ -329,6 +333,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 
+
 // Fetch analytics data
 
 try {
@@ -464,6 +469,7 @@ try {
     $latest_score = $stmt->fetchColumn() ?: 92;
 
 
+
 } catch (PDOException $e) {
 
     $campaigns = [];
@@ -491,6 +497,7 @@ try {
 }
 
 
+
 // Helper functions
 
 function format_report_type($type) {
@@ -512,6 +519,7 @@ function format_report_type($type) {
 }
 
 
+
 function format_date_range($start, $end) {
 
     if (!$start && !$end) return 'All Time';
@@ -523,6 +531,7 @@ function format_date_range($start, $end) {
     return date('M j, Y', strtotime($start)) . ' - ' . date('M j, Y', strtotime($end));
 
 }
+
 
 
 function get_performance_class($score) {
@@ -538,6 +547,7 @@ function get_performance_class($score) {
 }
 
 
+
 function get_performance_label($score) {
 
     if ($score >= 90) return 'Excellent Performance';
@@ -549,6 +559,7 @@ function get_performance_label($score) {
     return 'Needs Improvement';
 
 }
+
 
 
 ?>
@@ -944,6 +955,7 @@ function get_performance_label($score) {
                 </li>
 
 
+
 =======
 
                     <a href="TargetGroupSegmentation.php" class="nav-link">
@@ -1127,6 +1139,7 @@ function get_performance_label($score) {
         </aside>
 
 
+
         <!-- Main Content -->
 
         <main class="main-content">
@@ -1166,6 +1179,7 @@ function get_performance_label($score) {
             </div>
 
 
+
             <?php if ($success_message): ?>
 
             <div class="alert alert-success">
@@ -1193,6 +1207,7 @@ function get_performance_label($score) {
             <?php endif; ?>
 
 
+
             <!-- Module Content -->
 
             <div class="module-header">
@@ -1214,6 +1229,7 @@ function get_performance_label($score) {
             </div>
 
 
+
             <!-- Filter Section -->
 
             <div class="filter-section">
@@ -1231,6 +1247,7 @@ function get_performance_label($score) {
                 <div class="filter-item" onclick="applyFilter('channel')">By Channel</div>
 
             </div>
+
 
 
             <div class="module-grid">
@@ -1328,6 +1345,7 @@ function get_performance_label($score) {
                     </button>
 
                 </div>
+
 
 
                 <!-- KPI Dashboard -->
@@ -1429,6 +1447,7 @@ function get_performance_label($score) {
                 </div>
 
 
+
                 <!-- Channel Analytics -->
 
                 <div class="module-card">
@@ -1500,6 +1519,7 @@ function get_performance_label($score) {
                     </button>
 
                 </div>
+
 
 
                 <!-- ROI Analysis -->
@@ -1593,6 +1613,7 @@ function get_performance_label($score) {
                     </div>
 
                 </div>
+
 
 
                 <!-- Demographic Insights -->
@@ -1704,6 +1725,7 @@ function get_performance_label($score) {
                 </div>
 
 
+
                 <!-- Quick Reports -->
 
                 <div class="module-card">
@@ -1787,6 +1809,7 @@ function get_performance_label($score) {
                 </div>
 
             </div>
+
 
 
             <!-- Generated Reports Table -->
@@ -1898,6 +1921,7 @@ function get_performance_label($score) {
             </div>
 
 
+
             <!-- Advanced Analytics -->
 
             <div class="module-grid" style="margin-top: 30px;">
@@ -1943,6 +1967,7 @@ function get_performance_label($score) {
                     </div>
 
                 </div>
+
 
 
                 <div class="module-card">
@@ -2032,6 +2057,7 @@ function get_performance_label($score) {
                 </div>
 
             </div>
+
 
 
             <!-- Custom Report Builder -->
@@ -2157,6 +2183,7 @@ function get_performance_label($score) {
     </div>
 
 
+
     <!-- Campaign Modal -->
 
     <div id="campaignModal" class="modal-overlay" style="display: none;">
@@ -2248,6 +2275,7 @@ function get_performance_label($score) {
     </div>
 
 
+
     <!-- Report Modal -->
 
     <div id="reportModal" class="modal-overlay" style="display: none;">
@@ -2331,6 +2359,7 @@ function get_performance_label($score) {
     </div>
 
 
+
     <!-- Notification Element -->
 
     <div id="notification" class="notification" style="display: none;">
@@ -2338,6 +2367,7 @@ function get_performance_label($score) {
         <span id="notificationMessage"></span>
 
     </div>
+
 
 
     <script>
@@ -2761,6 +2791,7 @@ function get_performance_label($score) {
         }
 
     </script>
+
 
 
     <script src="../Scripts/utils.js"></script>

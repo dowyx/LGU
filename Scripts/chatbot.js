@@ -18,22 +18,17 @@ class Chatbot {
             console.error('Utils not loaded. Chatbot may not function properly.');
         }
 
-<<<<<<< HEAD
-        // Initialize immediately but defer DOM setup
-        this.deferredInit();
+        this.init();
     }
 
-    deferredInit() {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.setupElements();
-                this.setupEventListeners();
-                this.loadMessageHistory();
-                this.setupKeyboardShortcuts();
-                console.log('Enhanced Chatbot initialized successfully');
-            });
-        } else {
-            // DOM is already loaded
+    init() {
+        document.addEventListener('DOMContentLoaded', () => {
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+        this.init();
+    }
+
+    init() {
+        document.addEventListener('DOMContentLoaded', () => {
 =======
         this.init();
     }
@@ -46,8 +41,8 @@ class Chatbot {
             this.loadMessageHistory();
             this.setupKeyboardShortcuts();
             console.log('Enhanced Chatbot initialized successfully');
-<<<<<<< HEAD
         }
+    }
 =======
         });
 >>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
@@ -59,8 +54,9 @@ class Chatbot {
         this.closeBtn = document.getElementById('closeChatbotBtn');
         this.messages = document.getElementById('chatMessages');
         this.input = document.getElementById('chatInput');
-<<<<<<< HEAD
-        this.sendBtn = document.querySelector('.chatbot-send-btn'); // Changed to match home.php
+        this.sendBtn = document.getElementById('sendChatBtn');
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+        this.sendBtn = document.getElementById('sendChatBtn');
 =======
         this.sendBtn = document.getElementById('sendChatBtn');
 >>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
@@ -115,11 +111,8 @@ class Chatbot {
     }
 
     setupEventListeners() {
-<<<<<<< HEAD
-        console.log('Setting up chatbot event listeners...');
-        console.log('Chat icon found:', this.chatIcon);
-        console.log('Modal found:', this.modal);
-        
+>>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
 =======
 >>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
         if (!this.chatIcon || !this.modal) {
@@ -131,21 +124,6 @@ class Chatbot {
         }
 
         // Open chatbot
-<<<<<<< HEAD
-        if (this.chatIcon) {
-            this.chatIcon.addEventListener('click', (e) => {
-                console.log('Chat icon clicked!');
-                e.preventDefault();
-                this.open();
-            });
-        }
-
-        // Close chatbot
-        if (this.closeBtn) {
-            this.closeBtn.addEventListener('click', (e) => {
-                console.log('Close button clicked!');
-                e.preventDefault();
-=======
         this.chatIcon.addEventListener('click', (e) => {
             e.preventDefault();
             this.open();
@@ -155,19 +133,35 @@ class Chatbot {
         if (this.closeBtn) {
             this.closeBtn.addEventListener('click', () => {
 >>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+        this.chatIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.open();
+        });
+
+        // Close chatbot
+        if (this.closeBtn) {
+            this.closeBtn.addEventListener('click', () => {
+                this.close();
+            });
+        }
+
+        this.chatIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.open();
+        });
+
+        // Close chatbot
+        if (this.closeBtn) {
+            this.closeBtn.addEventListener('click', () => {
+
                 this.close();
             });
         }
 
         // Send message on Enter key
         if (this.input) {
-<<<<<<< HEAD
-            this.input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-=======
             this.input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     e.preventDefault();
                     this.sendMessage();
                 }
@@ -327,7 +321,6 @@ class Chatbot {
     }
 
     open() {
-<<<<<<< HEAD
         console.log('Opening chatbot...');
         console.log('Modal element:', this.modal);
         if (this.modal) {
@@ -347,7 +340,7 @@ class Chatbot {
             this.isOpen = false;
             console.log('Chatbot closed, class removed:', this.modal.classList.contains('open'));
         }
-=======
+
         this.modal.style.display = 'flex';
         this.isOpen = true;
         if (this.input) this.input.focus();
@@ -356,7 +349,6 @@ class Chatbot {
     close() {
         this.modal.style.display = 'none';
         this.isOpen = false;
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 
     addMessage(text, sender) {
@@ -538,11 +530,9 @@ class Chatbot {
     }
 }
 
-<<<<<<< HEAD
 // Create chatbot instance immediately and make it globally available
 window.chatbot = new Chatbot();
 console.log('Chatbot instance created:', window.chatbot);
-=======
+
 // Initialize chatbot when script loads
 const chatbot = new Chatbot();
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
