@@ -46,9 +46,9 @@ if (isset($models['TargetGroupSegmentation'])) {
     $segModel = $models['HealthPoliceIntegration'];
 }
 
-// Check if class exists
-if (!class_exists($modelClass)) {
-    die("Error: $modelClass class not found in the model file.");
+// Validate that we have at least one segmentation model
+if (!$segModel) {
+    die("Error: No segmentation model found. Please ensure TargetGroupSegmentation.php or HealthPoliceIntegration.php exists.");
 }
 
 try {
@@ -61,6 +61,91 @@ try {
             'total_members' => 0
         ];
         $channels = method_exists($segModel, 'getCommunicationChannels') ? $segModel->getCommunicationChannels() : [];
+        
+        // If no segments found, create sample data for demonstration
+        if (empty($segments)) {
+            $segments = [
+                [
+                    'id' => 1,
+                    'name' => 'High-Risk Population',
+                    'description' => 'Individuals with high health risk factors',
+                    'type' => 'demographic',
+                    'size_estimate' => 15420,
+                    'engagement_rate' => 78,
+                    'status' => 'active',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'id' => 2,
+                    'name' => 'Senior Citizens',
+                    'description' => 'Citizens aged 60 and above',
+                    'type' => 'demographic',
+                    'size_estimate' => 8930,
+                    'engagement_rate' => 65,
+                    'status' => 'active',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'id' => 3,
+                    'name' => 'Parents with Children',
+                    'description' => 'Households with children under 18',
+                    'type' => 'demographic',
+                    'size_estimate' => 12750,
+                    'engagement_rate' => 82,
+                    'status' => 'active',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ],
+                [
+                    'id' => 4,
+                    'name' => 'Young Professionals',
+                    'description' => 'Working adults aged 25-40',
+                    'type' => 'behavioral',
+                    'size_estimate' => 9800,
+                    'engagement_rate' => 45,
+                    'status' => 'draft',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]
+            ];
+        }
+        
+        // If no analytics data, create sample analytics
+        if ($analytics['total_segments'] == 0) {
+            $analytics = [
+                'total_segments' => 4,
+                'engagement_stats' => ['average' => 67.5],
+                'total_members' => 46900
+            ];
+        }
+        
+        // If no channels, create sample channels
+        if (empty($channels)) {
+            $channels = [
+                [
+                    'id' => 1,
+                    'name' => 'Email Newsletter',
+                    'preference_score' => 75,
+                    'reach_percentage' => 68
+                ],
+                [
+                    'id' => 2,
+                    'name' => 'SMS Alerts',
+                    'preference_score' => 82,
+                    'reach_percentage' => 92
+                ],
+                [
+                    'id' => 3,
+                    'name' => 'Social Media',
+                    'preference_score' => 65,
+                    'reach_percentage' => 45
+                ],
+                [
+                    'id' => 4,
+                    'name' => 'Community Bulletin',
+                    'preference_score' => 55,
+                    'reach_percentage' => 78
+                ]
+            ];
+        }
     } else {
         // Fallback data if no segmentation model available
         $segments = [];
