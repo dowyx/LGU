@@ -1,7 +1,7 @@
 // Enhanced JavaScript for interactive dashboard
 // Refactored to use shared utilities for better maintainability
 
-<<<<<<< HEAD
+
 // Global error handling
 window.addEventListener('error', function(e) {
     console.error('JavaScript Error:', e.error);
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Error initializing dashboard:', error);
         // Page will still render even if JS initialization fails
     }
-=======
+
 document.addEventListener('DOMContentLoaded', function() {
     // Check if utils are loaded
     if (!window.Utils) {
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize additional functionality
     initializeUserData();
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
 });
 
 // Define missing functions to prevent errors
@@ -1036,11 +1036,11 @@ function filterIncidentsByTime(timeRange) {
 
         // Update UI
         Object.keys(incidents).forEach(type => {
-<<<<<<< HEAD
+
             const card = document.querySelector(`.incident-type-card[data-type="${type}"]`);
-=======
+
             const card = document.querySelector(`.incident-type-card.${type}`);
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
             if (card) {
                 card.querySelector('.incident-count').textContent = incidents[type];
                 card.dataset.count = incidents[type];
@@ -1054,13 +1054,13 @@ function filterIncidentsByTime(timeRange) {
                 trendElement.textContent = trend === 'up' ? `↑ ${change}%` :
                                           trend === 'down' ? `↓ ${change}%` : '↔ 0%';
                 trendElement.className = `incident-trend ${trend}`;
-<<<<<<< HEAD
+
                 
                 console.log(`✓ Updated ${type} card: ${incidents[type]} incidents`);
             } else {
                 console.log(`✗ Could not find card for type: ${type}`);
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
+
             }
         });
 
@@ -1511,16 +1511,16 @@ function addCustomStyles() {
 
 // Interactive Chart Functions
 function initializeInteractiveCharts() {
-<<<<<<< HEAD
+
     console.log('Initializing interactive charts...');
     
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
+
     // Initialize heat map
     generateHeatMap();
 
     // Add click events to incident cards
-<<<<<<< HEAD
+
     const incidentCards = document.querySelectorAll('.incident-type-card');
     console.log(`Found ${incidentCards.length} incident cards`);
     
@@ -1558,7 +1558,7 @@ function initializeInteractiveCharts() {
         });
         
         console.log(`Added listener to campaign card ${index + 1}: ${newCard.dataset.id}`);
-=======
+
     document.querySelectorAll('.incident-type-card').forEach(card => {
         card.addEventListener('click', function() {
             const type = this.dataset.type;
@@ -1576,13 +1576,13 @@ function initializeInteractiveCharts() {
                 viewCampaignDetails(campaignId);
             }
         });
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     });
 
     // Initialize time filter
     const timeFilter = document.getElementById('timeFilter');
     if (timeFilter) {
-<<<<<<< HEAD
+
         // Remove existing listener
         timeFilter.removeEventListener('change', filterIncidentsByTime);
         timeFilter.addEventListener('change', function() {
@@ -1595,17 +1595,17 @@ function initializeInteractiveCharts() {
     }
     
     console.log('✓ Interactive charts initialized');
-=======
+
         timeFilter.addEventListener('change', function() {
             filterIncidentsByTime(this.value);
         });
     }
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
 }
 
 // Generate Heat Map
 function generateHeatMap() {
-<<<<<<< HEAD
+
     const grid = document.querySelector('.heat-map-grid') || document.getElementById('heatMapGrid');
     if (!grid) {
         console.log('✗ Heat map grid element not found (.heat-map-grid or #heatMapGrid)');
@@ -1613,11 +1613,11 @@ function generateHeatMap() {
     }
 
     console.log('✓ Generating heat map');
-=======
+
     const grid = document.getElementById('heatMapGrid');
     if (!grid) return;
 
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     grid.innerHTML = '';
 
     // Generate 28 cells (4 weeks x 7 days)
@@ -1641,22 +1641,22 @@ function generateHeatMap() {
         // Add click event
         cell.addEventListener('click', function() {
             const day = Math.floor(i / 7) + 1;
-<<<<<<< HEAD
+
             const week = (i % 7) + 1;
             console.log(`Heat map cell clicked: Week ${week}, Day ${day} (${intensity} incidents)`);
-=======
+
             const week = i % 7 + 1;
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
             showDayDetails(day, week, intensity);
         });
 
         grid.appendChild(cell);
     }
-<<<<<<< HEAD
+
     
     console.log('✓ Heat map generated with 28 cells');
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
+
 }
 
 // Incident Type Functions
@@ -1686,7 +1686,7 @@ function openIncidentDashboard(type, count) {
         card.style.boxShadow = 'none';
     });
 
-<<<<<<< HEAD
+
     const selectedCard = document.querySelector(`.incident-type-card[data-type="${type}"]`);
     if (selectedCard) {
         selectedCard.style.transform = 'scale(1.02)';
@@ -1694,12 +1694,12 @@ function openIncidentDashboard(type, count) {
         console.log(`✓ Highlighted ${type} card`);
     } else {
         console.log(`✗ Could not find card for type: ${type}`);
-=======
+
     const selectedCard = document.querySelector(`.incident-type-card.${type}`);
     if (selectedCard) {
         selectedCard.style.transform = 'scale(1.02)';
         selectedCard.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     }
 
     showNotification(`Showing ${type} incidents (${count} total)`, 'info');
@@ -1732,11 +1732,11 @@ function filterIncidentsByTime(timeRange) {
 
         // Update UI
         Object.keys(incidents).forEach(type => {
-<<<<<<< HEAD
+
             const card = document.querySelector(`.incident-type-card[data-type="${type}"]`);
-=======
+
             const card = document.querySelector(`.incident-type-card.${type}`);
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
             if (card) {
                 card.querySelector('.incident-count').textContent = incidents[type];
                 card.dataset.count = incidents[type];
@@ -1750,13 +1750,13 @@ function filterIncidentsByTime(timeRange) {
                 trendElement.textContent = trend === 'up' ? `↑ ${change}%` :
                                           trend === 'down' ? `↓ ${change}%` : '↔ 0%';
                 trendElement.className = `incident-trend ${trend}`;
-<<<<<<< HEAD
+
                 
                 console.log(`✓ Updated ${type} card: ${incidents[type]} incidents`);
             } else {
                 console.log(`✗ Could not find card for type: ${type}`);
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
+
             }
         });
 
@@ -1835,11 +1835,11 @@ function addNewCampaign() {
         showNotification('New campaign created successfully!', 'success', 3000);
         
         // Redirect to campaign planning module
-<<<<<<< HEAD
+
         window.location.href = '../Modules/Module-1.html';
-=======
+
         window.location.href = '../Models/Module-1.php';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     } catch (error) {
         console.error('Error creating campaign:', error);
         showNotification('Failed to create campaign. Please try again.', 'error', 4000);
@@ -1915,11 +1915,11 @@ function finishCampaignCreation() {
     
     // Redirect to campaign planning module after a short delay
     setTimeout(() => {
-<<<<<<< HEAD
+
         window.location.href = '../Modules/Module-1.html';
-=======
+
         window.location.href = '../Models/Module-1.php';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     }, 1500);
 }
 
@@ -2030,51 +2030,51 @@ function viewLiveStats(campaign) {
 
 function editCampaign(id) {
     // Redirect to the campaign planning module to edit
-<<<<<<< HEAD
+
     window.location.href = '../Modules/Module-1.html?campaignId=' + id + '&action=edit';
-=======
+
     window.location.href = '../Models/Module-1.php?campaignId=' + id + '&action=edit';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     console.log('Editing campaign: ' + id);
 }
 
 function viewReport(id) {
     // Redirect to the campaign analytics reports
-<<<<<<< HEAD
+
     window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id + '&view=report';
-=======
+
     window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id + '&view=report';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     console.log('Viewing report for campaign: ' + id);
 }
 
 function viewAllCampaigns() {
     // Redirect to the campaign analytics reports module
-<<<<<<< HEAD
+
     window.location.href = '../Modules/Campaign-Analytics-Reports.html';
-=======
+
     window.location.href = '../Models/CampaignAnalyticsReports.php';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     console.log('Viewing all campaigns');
 }
 
 function openAnalytics(id) {
     // Redirect to the analytics module for the specific campaign
-<<<<<<< HEAD
+
     window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id;
-=======
+
     window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id;
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     console.log('Opening analytics for campaign: ' + id);
 }
 
 function viewCampaignDetails(id) {
     // Redirect to the campaign analytics for detailed view
-<<<<<<< HEAD
+
     window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id;
-=======
+
     window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id;
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
     console.log('Viewing details for campaign: ' + id);
 }
 
@@ -2225,7 +2225,7 @@ function closeExportModal() {
 function exportReport() {
     alert('Report exported successfully!');
     closeExportModal();
-<<<<<<< HEAD
+
 }
 
 // Chatbot Functions
@@ -2340,6 +2340,6 @@ function showNotification(message, type = 'info', duration = 3000) {
             notification.parentNode.removeChild(notification);
         }
     }, duration);
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+
+
 }
