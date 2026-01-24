@@ -7,15 +7,46 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Include database connection and target group segmentation model
+// Include database connection
 require_once '../config/database.php';
-// Correct the path - assuming the model is in the same directory or Models directory
-require_once __DIR__ . '/../Models/TargetGroupSegmentation.php'; // Or your actual path
 
-$segModel = new TargetGroupSegmentation();
-$segments = $segModel->getSegments();
-$analytics = $segModel->getSegmentAnalytics();
-$channels = $segModel->getCommunicationChannels();
+// Check if we should use HealthPoliceIntegration model or another model
+// First, try to find the correct model file
+$modelPath = __DIR__ . '/../Models/HealthPoliceIntegration.php';
+$backupModelPath = __DIR__ . '/../Models/TargetGroupSegmentation.php';
+
+if (file_exists($modelPath)) {
+    require_once $modelPath;
+    $modelClass = 'HealthPoliceIntegration';
+} elseif (file_exists($backupModelPath)) {
+    require_once $backupModelPath;
+    $modelClass = 'TargetGroupSegmentation';
+} else {
+    // If no model file exists, create a basic fallback
+    die("Error: Could not find model file. Please check your Models directory.");
+}
+
+// Check if class exists
+if (!class_exists($modelClass)) {
+    die("Error: $modelClass class not found in the model file.");
+}
+
+try {
+    $segModel = new $modelClass();
+    $segments = $segModel->getSegments();
+    $analytics = $segModel->getSegmentAnalytics();
+    $channels = $segModel->getCommunicationChannels();
+} catch (Exception $e) {
+    // If methods don't exist, use fallback data
+    $segments = [];
+    $analytics = [
+        'total_segments' => 0,
+        'engagement_stats' => ['average' => 0],
+        'total_members' => 0
+    ];
+    $channels = [];
+    error_log("Model Error: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -107,7 +138,7 @@ $channels = $segModel->getCommunicationChannels();
                 </div>
             </div>
 
-            <!-- Add these buttons in the module-header div after the Create Segment button -->
+            <!-- Module Header -->
 <div class="module-header">
     <div>
         <h1 class="module-title">Target Group Segmentation</h1>
@@ -526,7 +557,6 @@ $channels = $segModel->getCommunicationChannels();
     </div>
 
     <script src="../Scripts/mod3.js"></script>
-    <!-- <script src="../Scripts/userprofile.js"></script> -->
 
     <script>
         // Function to handle segment creation
