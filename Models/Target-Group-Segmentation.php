@@ -17,7 +17,6 @@ $modelsDir = __DIR__;
 // Define all model files that have class structures
 $modelFiles = [
     'TargetGroupSegmentation' => $modelsDir . '/TargetGroupSegmentation.php',
-    'HealthPoliceIntegration' => $modelsDir . '/HealthPoliceIntegration.php',
     'ContentRepository' => $modelsDir . '/ContentRepository.php'
     // Note: EventSeminarManagement.php is procedural, so we access events directly via database
 ];
