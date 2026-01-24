@@ -443,10 +443,10 @@ function getTrendClass($trend) {
                     <div class="campaign-grid">
                         <?php
                         $default_campaigns = [
-                            ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'progress' => 75, 'reach' => 7500, 'engagement' => 92, 'icon' => 'fa-sun'],
-                            ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'progress' => 60, 'reach' => 5200, 'engagement' => 88, 'icon' => 'fa-school'],
-                            ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'progress' => 10, 'reach' => 10000, 'engagement' => 0, 'icon' => 'fa-home'],
-                            ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'progress' => 100, 'reach' => 12500, 'engagement' => 95, 'icon' => 'fa-car']
+                            ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'target_reach' => 10000, 'engagement' => 92, 'icon' => 'fa-sun'],
+                            ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'target_reach' => 10000, 'engagement' => 88, 'icon' => 'fa-school'],
+                            ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 10000, 'target_reach' => 10000, 'engagement' => 0, 'icon' => 'fa-home'],
+                            ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'target_reach' => 10000, 'engagement' => 95, 'icon' => 'fa-car']
                         ];
                         
                         $display_campaigns = !empty($campaigns) ? $campaigns : $default_campaigns;
@@ -456,9 +456,9 @@ function getTrendClass($trend) {
                                 'id' => $campaign['id'] ?? 1,
                                 'name' => $campaign['name'] ?? 'Campaign',
                                 'status' => $campaign['status'] ?? 'active',
-                                'completion_percentage' => $campaign['completion_percentage'] ?? 75,
-                                'actual_reach' => $campaign['actual_reach'] ?? 5000,
-                                'target_reach' => $campaign['target_reach'] ?? 10000
+                                'completion_percentage' => $campaign['completion_percentage'] ?? $campaign['progress'] ?? 75,
+                                'actual_reach' => $campaign['actual_reach'] ?? $campaign['reach'] ?? 5000,
+                                'target_reach' => $campaign['target_reach'] ?? $campaign['target_reach'] ?? 10000
                             ];
                         ?>
                         <div class="campaign-card <?php echo htmlspecialchars($campaign_data['status']); ?>" data-id="<?php echo $campaign_data['id']; ?>">
