@@ -224,104 +224,68 @@ function get_event_icon($type) {
 </head>
 <body>
     <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h1>Public Safety</h1>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item">
-<<<<<<< HEAD
-                <a href="/LGU4/home.php" class="nav-link">
-=======
-                <a href="../home.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-                    <i class="fas fa-home"></i>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-<<<<<<< HEAD
-                <a href="/LGU4/Models/Module-1.php" class="nav-link">
-=======
-                <a href="Module-1.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="nav-text">Campaign Planning & Calendar</span>
-                </a>
-            </li>
-            <li class="nav-item">
-<<<<<<< HEAD
-                <a href="/LGU4/Models/Content-Repository.php" class="nav-link">
-=======
-                <a href="ContentRepository.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-                    <i class="fas fa-database"></i>
-                    <span class="nav-text">Content Repository</span>
-                </a>
-            </li>
-            <li class="nav-item">
-<<<<<<< HEAD
-                <a href="/LGU4/Models/Target-Group-Segmentation.php" class="nav-link">
-=======
-                <a href="TargetGroupSegmentation.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-                    <i class="fas fa-users"></i>
-                    <span class="nav-text">Target Group Segmentation</span>
-                </a>
-            </li>
-            <li class="nav-item">
-<<<<<<< HEAD
-                <a href="/LGU4/Models/EventSeminarManagement.php" class="nav-link active">
-=======
-                <a href="EventSeminarManagement.php" class="nav-link active">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-                    <i class="fas fa-calendar-check"></i>
-                    <span class="nav-text">Event & Seminar Management</span>
-                </a>
-            </li>
-            <li class="nav-item">
-<<<<<<< HEAD
-                <a href="/LGU4/Models/SurveyFeedbackCollection.php" class="nav-link">
-=======
-                <a href="SurveyFeedbackCollection.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-                    <i class="fas fa-clipboard-check"></i>
-                    <span class="nav-text">Survey & Feedback Collection</span>
-                </a>
-            </li>
-            <li class="nav-item">
-<<<<<<< HEAD
-                <a href="/LGU4/Models/CampaignAnalyticsReports.php" class="nav-link">
-=======
-                <a href="CampaignAnalyticsReports.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-                    <i class="fas fa-chart-bar"></i>
-                    <span class="nav-text">Campaign Analytics & Reports</span>
-                </a>
-            </li>
-            <li class="nav-item">
-<<<<<<< HEAD
-                <a href="/LGU4/Models/HealthPoliceIntegration.php" class="nav-link">
-                    <i class="fas fa-link"></i>
-                    <span class="nav-text">Community</span>
-                </a>
-            </li>
-=======
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Public Safety</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../home.php" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="Module-1.php" class="nav-link">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="nav-text">Campaign Planning & Calendar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="ContentRepository.php" class="nav-link">
+                        <i class="fas fa-database"></i>
+                        <span class="nav-text">Content Repository</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="TargetGroupSegmentation.php" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-text">Target Group Segmentation</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="EventSeminarManagement.php" class="nav-link active">
+                        <i class="fas fa-calendar-check"></i>
+                        <span class="nav-text">Event & Seminar Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="SurveyFeedbackCollection.php" class="nav-link">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span class="nav-text">Survey & Feedback Collection</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="CampaignAnalyticsReports.php" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="nav-text">Campaign Analytics & Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="HealthPoliceIntegration.php" class="nav-link">
                         <i class="fas fa-link"></i>
                         <span class="nav-text">Community</span>
                     </a>
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                 </li>
-            <li class="nav-item">
-                <a href="../logout.php" class="nav-link">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="nav-text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+                <li class="nav-item">
+                    <a href="../logout.php" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="nav-text">Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -653,93 +617,92 @@ function get_event_icon($type) {
             </div>
 
             <!-- Additional Features -->
-<div class="module-grid" style="margin-top: 30px;">
-    <div class="module-card">
-        <div class="card-header">
-            <div class="card-title">Event Calendar</div>
-            <div class="card-icon">
-                <i class="fas fa-calendar-week"></i>
-            </div>
-        </div>
-
-        <div class="calendar-view">
-            <div style="width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="color: var(--white);">Upcoming Schedule</h3>
-                    <button class="btn btn-icon" onclick="updateCalendarView()">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <?php foreach (array_slice(array_filter($events, fn($e) => $e['status'] === 'upcoming'), 0, 3) as $event): ?>
-                    <div class="calendar-event-item">
-                        <div class="calendar-event-icon <?php echo $event['event_type']; ?>">
-                            <i class="fas <?php echo get_event_icon($event['event_type']); ?>"></i>
+            <div class="module-grid" style="margin-top: 30px;">
+                <div class="module-card">
+                    <div class="card-header">
+                        <div class="card-title">Event Calendar</div>
+                        <div class="card-icon">
+                            <i class="fas fa-calendar-week"></i>
                         </div>
-                        <div class="calendar-event-details">
-                            <div class="calendar-event-title"><?php echo htmlspecialchars($event['title']); ?></div>
-                            <div class="calendar-event-time"><?php echo format_event_date_short($event['start_date']); ?> • <?php echo date('g:i A', strtotime($event['start_date'])); ?></div>
-                            <div class="calendar-event-location"><?php echo htmlspecialchars($event['location'] ?? 'TBD'); ?></div>
-                        </div>
-                        <?php $percent = $event['capacity'] > 0 ? round(($event['registration_count'] / $event['capacity']) * 100) : 0; ?>
-                        <span class="badge badge-<?php echo $percent > 80 ? 'success' : ($percent > 60 ? 'warning' : 'info'); ?>"><?php echo $percent; ?>% Full</span>
                     </div>
-                    <?php endforeach; ?>
+
+                    <div class="calendar-view">
+                        <div style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="color: var(--white);">Upcoming Schedule</h3>
+                                <button class="btn btn-icon" onclick="updateCalendarView()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <?php foreach (array_slice(array_filter($events, fn($e) => $e['status'] === 'upcoming'), 0, 3) as $event): ?>
+                                <div class="calendar-event-item">
+                                    <div class="calendar-event-icon <?php echo $event['event_type']; ?>">
+                                        <i class="fas <?php echo get_event_icon($event['event_type']); ?>"></i>
+                                    </div>
+                                    <div class="calendar-event-details">
+                                        <div class="calendar-event-title"><?php echo htmlspecialchars($event['title']); ?></div>
+                                        <div class="calendar-event-time"><?php echo format_event_date_short($event['start_date']); ?> • <?php echo date('g:i A', strtotime($event['start_date'])); ?></div>
+                                        <div class="calendar-event-location"><?php echo htmlspecialchars($event['location'] ?? 'TBD'); ?></div>
+                                    </div>
+                                    <?php $percent = $event['capacity'] > 0 ? round(($event['registration_count'] / $event['capacity']) * 100) : 0; ?>
+                                    <span class="badge badge-<?php echo $percent > 80 ? 'success' : ($percent > 60 ? 'warning' : 'info'); ?>"><?php echo $percent; ?>% Full</span>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="showAllEvents()" style="width: 100%; margin-top: 20px;">
+                                <i class="fas fa-calendar"></i> View All Scheduled Events
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <button class="btn btn-primary" onclick="showAllEvents()" style="width: 100%; margin-top: 20px;">
-                    <i class="fas fa-calendar"></i> View All Scheduled Events
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="module-card">
-        <div class="card-header">
-            <div class="card-title">Quick Actions</div>
-            <div class="card-icon">
-                <i class="fas fa-bolt"></i>
-            </div>
-        </div>
-        <div class="quick-actions-grid">
-            <button class="action-btn" onclick="sendReminders()">
-                <i class="fas fa-bell"></i>
-                <span>Send Reminders</span>
-            </button>
-            <button class="action-btn" onclick="printMaterials()">
-                <i class="fas fa-print"></i>
-                <span>Print Materials</span>
-            </button>
-            <button class="action-btn" onclick="exportAttendees()">
-                <i class="fas fa-file-export"></i>
-                <span>Export Attendees</span>
-            </button>
-            <button class="action-btn" onclick="generateReports()">
-                <i class="fas fa-chart-pie"></i>
-                <span>Generate Reports</span>
-            </button>
-        </div>
-        <div style="margin-top: 20px; padding: 15px; background-color: var(--dark-gray); border-radius: 8px;">
-            <div style="font-weight: 600; margin-bottom: 10px;">Today's Tasks</div>
-            <div style="font-size: 14px; color: var(--text-gray);">
-                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                    <span>Confirm venue for upcoming event</span>
-                    <span style="color: var(--warning);">Pending</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                    <span>Send reminder emails</span>
-                    <span style="color: var(--success);">Completed</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                    <span>Prepare training materials</span>
-                    <span style="color: var(--warning);">In Progress</span>
+                <div class="module-card">
+                    <div class="card-header">
+                        <div class="card-title">Quick Actions</div>
+                        <div class="card-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                    </div>
+                    <div class="quick-actions-grid">
+                        <button class="action-btn" onclick="sendReminders()">
+                            <i class="fas fa-bell"></i>
+                            <span>Send Reminders</span>
+                        </button>
+                        <button class="action-btn" onclick="printMaterials()">
+                            <i class="fas fa-print"></i>
+                            <span>Print Materials</span>
+                        </button>
+                        <button class="action-btn" onclick="exportAttendees()">
+                            <i class="fas fa-file-export"></i>
+                            <span>Export Attendees</span>
+                        </button>
+                        <button class="action-btn" onclick="generateReports()">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Generate Reports</span>
+                        </button>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background-color: var(--dark-gray); border-radius: 8px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">Today's Tasks</div>
+                        <div style="font-size: 14px; color: var(--text-gray);">
+                            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                                <span>Confirm venue for upcoming event</span>
+                                <span style="color: var(--warning);">Pending</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                                <span>Send reminder emails</span>
+                                <span style="color: var(--success);">Completed</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                                <span>Prepare training materials</span>
+                                <span style="color: var(--warning);">In Progress</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
         </main>
     </div>
 

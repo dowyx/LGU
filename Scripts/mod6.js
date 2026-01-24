@@ -1,116 +1,26 @@
- // Campaign Analytics & Reports JavaScript
-        function generateNewReport() {
-            alert('Opening report generation wizard...');
-            // In a real application, this would open a report generation modal
-        }
+// Campaign Analytics & Reports JavaScript
+function generateNewReport() {
+    alert('Opening report generation wizard...');
+    // In a real application, this would open a report generation modal
+}
 
-        function generatePerformanceReport() {
-            alert('Generating performance summary report...');
-        }
+function generatePerformanceReport() {
+    alert('Generating performance summary report...');
+}
 
-        function generateFinancialReport() {
-            alert('Generating financial analysis report...');
-        }
+function generateFinancialReport() {
+    alert('Generating financial analysis report...');
+}
 
-        function generateAudienceReport() {
-            alert('Generating audience insights report...');
-        }
+function generateAudienceReport() {
+    alert('Generating audience insights report...');
+}
 
-        function generateComparativeReport() {
-            alert('Generating comparative analysis report...');
-        }
+function generateComparativeReport() {
+    alert('Generating comparative analysis report...');
+}
 
-        // Set active navigation
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentPage = 'Campaign-Analytics-Reports.html';
-            const navLinks = document.querySelectorAll('.nav-link');
-
-            navLinks.forEach(link => {
-                const linkHref = link.getAttribute('href');
-                if (linkHref === currentPage) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-
-            // Search functionality
-            const searchInput = document.querySelector('.search-box input');
-            searchInput.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') {
-                    alert(`Searching reports for: "${this.value}"`);
-                }
-            });
-
-            // Filter items functionality
-            const filterItems = document.querySelectorAll('.filter-item');
-            filterItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    filterItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    console.log(`Filter applied: ${this.textContent}`);
-                });
-            });
-
-            // Report item clicks
-            const reportItems = document.querySelectorAll('.report-item');
-            reportItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const reportType = this.querySelector('div').textContent;
-                    console.log(`Generating ${reportType} report`);
-                });
-            });
-
-            // Export buttons
-            const exportButtons = document.querySelectorAll('.export-btn');
-            exportButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const format = this.textContent.trim();
-                    alert(`Exporting report in ${format} format...`);
-                });
-            });
-
-            // Action icons functionality
-            const actionIcons = document.querySelectorAll('.report-actions i');
-            actionIcons.forEach(icon => {
-                icon.addEventListener('click', function() {
-                    const action = this.getAttribute('title');
-                    alert(`${action} action triggered`);
-                });
-            });
-
-            // Run forecast button
-            const forecastBtn = document.querySelector('.module-card:nth-child(7) .btn');
-            forecastBtn.addEventListener('click', function() {
-                alert('Running predictive forecast analysis...');
-            });
-
-            // Custom report builder buttons
-            const previewBtn = document.querySelector('.module-card:last-child .btn:nth-child(1)');
-            const generateBtn = document.querySelector('.module-card:last-child .btn-success');
-
-            previewBtn.addEventListener('click', function() {
-                alert('Previewing custom report...');
-            });
-
-            generateBtn.addEventListener('click', function() {
-                const reportType = document.querySelector('.module-card:last-child select:nth-child(1)').value;
-                const timePeriod = document.querySelector('.module-card:last-child select:nth-child(2)').value;
-                alert(`Generating ${reportType} report for ${timePeriod}...`);
-            });
-
-            // Campaign performance item clicks
-            const campaignItems = document.querySelectorAll('.campaign-item');
-            campaignItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const campaignName = this.querySelector('.campaign-name').textContent;
-                    console.log(`Viewing analytics for: ${campaignName}`);
-                });
-            });
-        });
-
-
-        // Campaign Analytics & Reports - Enhanced with Full CRUD Functionality
+// Campaign Analytics & Reports - Enhanced with Full CRUD Functionality
 
 // Data Models
 let campaigns = [
@@ -228,6 +138,102 @@ let selectedCampaignId = null;
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
+    // Original event listeners
+    const currentPage = 'Campaign-Analytics-Reports.html';
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    navLinks.forEach(link => {
+        const linkHref = link.getAttribute('href');
+        if (linkHref === currentPage) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+
+    // Search functionality
+    const searchInput = document.querySelector('.search-box input');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                alert(`Searching reports for: "${this.value}"`);
+            }
+        });
+    }
+
+    // Filter items functionality
+    const filterItems = document.querySelectorAll('.filter-item');
+    filterItems.forEach(item => {
+        item.addEventListener('click', function() {
+            filterItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            console.log(`Filter applied: ${this.textContent}`);
+        });
+    });
+
+    // Report item clicks
+    const reportItems = document.querySelectorAll('.report-item');
+    reportItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const reportType = this.querySelector('div').textContent;
+            console.log(`Generating ${reportType} report`);
+        });
+    });
+
+    // Export buttons
+    const exportButtons = document.querySelectorAll('.export-btn');
+    exportButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const format = this.textContent.trim();
+            alert(`Exporting report in ${format} format...`);
+        });
+    });
+
+    // Action icons functionality
+    const actionIcons = document.querySelectorAll('.report-actions i');
+    actionIcons.forEach(icon => {
+        icon.addEventListener('click', function() {
+            const action = this.getAttribute('title');
+            alert(`${action} action triggered`);
+        });
+    });
+
+    // Run forecast button
+    const forecastBtn = document.querySelector('.module-card:nth-child(7) .btn');
+    if (forecastBtn) {
+        forecastBtn.addEventListener('click', function() {
+            alert('Running predictive forecast analysis...');
+        });
+    }
+
+    // Custom report builder buttons
+    const previewBtn = document.querySelector('.module-card:last-child .btn:nth-child(1)');
+    const generateBtn = document.querySelector('.module-card:last-child .btn-success');
+
+    if (previewBtn) {
+        previewBtn.addEventListener('click', function() {
+            alert('Previewing custom report...');
+        });
+    }
+
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function() {
+            const reportType = document.querySelector('.module-card:last-child select:nth-child(1)')?.value;
+            const timePeriod = document.querySelector('.module-card:last-child select:nth-child(2)')?.value;
+            alert(`Generating ${reportType} report for ${timePeriod}...`);
+        });
+    }
+
+    // Campaign performance item clicks
+    const campaignItems = document.querySelectorAll('.campaign-item');
+    campaignItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const campaignName = this.querySelector('.campaign-name').textContent;
+            console.log(`Viewing analytics for: ${campaignName}`);
+        });
+    });
+
+    // New enhanced functionality
     initializeApplication();
     setupEventListeners();
     loadDashboardData();
@@ -237,7 +243,7 @@ function initializeApplication() {
     // Set current page active
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
-        if (link.getAttribute('href').includes('Campaign-Analytics-Reports')) {
+        if (link.getAttribute('href') && link.getAttribute('href').includes('Campaign-Analytics-Reports')) {
             link.classList.add('active');
         } else {
             link.classList.remove('active');
@@ -245,8 +251,10 @@ function initializeApplication() {
     });
 
     // Set user info
-    document.getElementById('username').textContent = currentUser.name;
-    document.getElementById('userrole').textContent = currentUser.role;
+    const usernameEl = document.getElementById('username');
+    const userroleEl = document.getElementById('userrole');
+    if (usernameEl) usernameEl.textContent = currentUser.name;
+    if (userroleEl) userroleEl.textContent = currentUser.role;
 
     // Load dynamic content
     renderCampaigns();
@@ -262,11 +270,15 @@ function openCampaignModal(action, campaignId = null) {
     const title = document.getElementById('campaignModalTitle');
     const deleteBtn = document.getElementById('deleteCampaignBtn');
 
+    if (!modal || !title) return;
+
     if (action === 'create') {
         title.textContent = 'Add New Campaign';
-        document.getElementById('campaignForm').reset();
-        document.getElementById('campaignId').value = '';
-        deleteBtn.style.display = 'none';
+        const form = document.getElementById('campaignForm');
+        if (form) form.reset();
+        const campaignIdInput = document.getElementById('campaignId');
+        if (campaignIdInput) campaignIdInput.value = '';
+        if (deleteBtn) deleteBtn.style.display = 'none';
     } else if (action === 'edit') {
         const campaign = campaigns.find(c => c.id === campaignId);
         if (campaign) {
@@ -278,7 +290,7 @@ function openCampaignModal(action, campaignId = null) {
             document.getElementById('campaignProgress').value = campaign.progress;
             document.getElementById('campaignPerformance').value = campaign.performance;
             document.getElementById('campaignId').value = campaign.id;
-            deleteBtn.style.display = 'block';
+            if (deleteBtn) deleteBtn.style.display = 'block';
         }
     }
 
@@ -292,10 +304,10 @@ function saveCampaign(event) {
     const campaignData = {
         id: document.getElementById('campaignId').value || Date.now(),
         name: document.getElementById('campaignName').value,
-        reach: parseInt(document.getElementById('campaignReach').value),
-        engagement: parseFloat(document.getElementById('campaignEngagement').value),
-        roi: parseFloat(document.getElementById('campaignROI').value),
-        progress: parseInt(document.getElementById('campaignProgress').value),
+        reach: parseInt(document.getElementById('campaignReach').value) || 0,
+        engagement: parseFloat(document.getElementById('campaignEngagement').value) || 0,
+        roi: parseFloat(document.getElementById('campaignROI').value) || 0,
+        progress: parseInt(document.getElementById('campaignProgress').value) || 0,
         performance: document.getElementById('campaignPerformance').value,
         lastUpdated: new Date().toISOString().split('T')[0]
     };
@@ -336,18 +348,7 @@ function deleteCampaign() {
 function viewCampaignDetails(campaignId) {
     const campaign = campaigns.find(c => c.id === campaignId);
     if (campaign) {
-<<<<<<< HEAD
-        alert(`Campaign Details:
-
-Name: ${campaign.name}
-Reach: ${campaign.reach.toLocaleString()}
-Engagement: ${campaign.engagement}%
-ROI: ${campaign.roi}x
-Progress: ${campaign.progress}%
-Last Updated: ${campaign.lastUpdated}`);
-=======
         alert(`Campaign Details:\n\nName: ${campaign.name}\nReach: ${campaign.reach.toLocaleString()}\nEngagement: ${campaign.engagement}%\nROI: ${campaign.roi}x\nProgress: ${campaign.progress}%\nLast Updated: ${campaign.lastUpdated}`);
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 }
 
@@ -355,6 +356,8 @@ Last Updated: ${campaign.lastUpdated}`);
 function openReportManager() {
     const modal = document.getElementById('reportModal');
     const content = document.getElementById('reportModalContent');
+
+    if (!modal || !content) return;
 
     let html = `
         <div style="margin-bottom: 20px;">
@@ -456,6 +459,8 @@ function duplicateReport(reportId) {
 function openChannelManager() {
     const modal = document.getElementById('channelModal');
     const content = document.getElementById('channelModalContent');
+
+    if (!modal || !content) return;
 
     let html = `
         <div style="margin-bottom: 20px;">
@@ -592,26 +597,17 @@ function shareReport() {
 
 // Custom Report Builder Functions
 function previewCustomReport() {
-    const reportType = document.getElementById('reportType').value;
-    const timePeriod = document.getElementById('timePeriod').value;
-    const selectedCampaigns = document.getElementById('selectedCampaigns').value;
-    const metrics = document.getElementById('selectedMetrics').value;
+    const reportType = document.getElementById('reportType')?.value;
+    const timePeriod = document.getElementById('timePeriod')?.value;
+    const selectedCampaigns = document.getElementById('selectedCampaigns')?.value;
+    const metrics = document.getElementById('selectedMetrics')?.value;
 
-<<<<<<< HEAD
-    alert(`Previewing Custom Report:
-
-Type: ${reportType}
-Period: ${timePeriod}
-Campaigns: ${selectedCampaigns}
-Metrics: ${metrics}`);
-=======
     alert(`Previewing Custom Report:\n\nType: ${reportType}\nPeriod: ${timePeriod}\nCampaigns: ${selectedCampaigns}\nMetrics: ${metrics}`);
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 }
 
 function generateCustomReport() {
-    const reportType = document.getElementById('reportType').value;
-    const timePeriod = document.getElementById('timePeriod').value;
+    const reportType = document.getElementById('reportType')?.value;
+    const timePeriod = document.getElementById('timePeriod')?.value;
 
     showNotification(`Generating custom ${reportType} report for ${timePeriod}...`);
 
@@ -639,7 +635,10 @@ function runForecast() {
 
     // Simulate forecast calculation
     setTimeout(() => {
-        document.getElementById('performanceScore').textContent = Math.floor(Math.random() * 20) + 85;
+        const performanceScoreEl = document.getElementById('performanceScore');
+        if (performanceScoreEl) {
+            performanceScoreEl.textContent = Math.floor(Math.random() * 20) + 85;
+        }
         updatePerformanceRating();
         showNotification('Forecast analysis completed!');
     }, 2000);
@@ -658,12 +657,19 @@ function recalculateScores() {
         const newROIScore = Math.floor(Math.random() * 10) + 90;
         const newSatisfactionScore = Math.floor(Math.random() * 10) + 80;
 
-        document.getElementById('engagementScore').textContent = newEngagementScore;
-        document.getElementById('roiScore').textContent = newROIScore;
-        document.getElementById('satisfactionScore').textContent = newSatisfactionScore;
+        const engagementScoreEl = document.getElementById('engagementScore');
+        const roiScoreEl = document.getElementById('roiScore');
+        const satisfactionScoreEl = document.getElementById('satisfactionScore');
+        const performanceScoreEl = document.getElementById('performanceScore');
 
-        const avgScore = Math.round((newEngagementScore + newROIScore + newSatisfactionScore) / 3);
-        document.getElementById('performanceScore').textContent = avgScore;
+        if (engagementScoreEl) engagementScoreEl.textContent = newEngagementScore;
+        if (roiScoreEl) roiScoreEl.textContent = newROIScore;
+        if (satisfactionScoreEl) satisfactionScoreEl.textContent = newSatisfactionScore;
+
+        if (engagementScoreEl && roiScoreEl && satisfactionScoreEl) {
+            const avgScore = Math.round((newEngagementScore + newROIScore + newSatisfactionScore) / 3);
+            if (performanceScoreEl) performanceScoreEl.textContent = avgScore;
+        }
 
         updatePerformanceRating();
         showNotification('Scores recalculated successfully!');
@@ -671,7 +677,13 @@ function recalculateScores() {
 }
 
 function updatePerformanceRating() {
-    const score = parseInt(document.getElementById('performanceScore').textContent);
+    const performanceScoreEl = document.getElementById('performanceScore');
+    const performanceRatingEl = document.getElementById('performanceRating');
+    const performancePercentileEl = document.getElementById('performancePercentile');
+
+    if (!performanceScoreEl || !performanceRatingEl || !performancePercentileEl) return;
+
+    const score = parseInt(performanceScoreEl.textContent);
     let rating, percentile;
 
     if (score >= 90) {
@@ -688,8 +700,8 @@ function updatePerformanceRating() {
         percentile = "Bottom 20% of campaigns";
     }
 
-    document.getElementById('performanceRating').textContent = rating;
-    document.getElementById('performancePercentile').textContent = percentile;
+    performanceRatingEl.textContent = rating;
+    performancePercentileEl.textContent = percentile;
 }
 
 // Utility Functions
@@ -697,10 +709,14 @@ function applyFilter(filterType) {
     currentFilter = filterType;
     const filterItems = document.querySelectorAll('.filter-item');
     filterItems.forEach(item => item.classList.remove('active'));
-    event.target.classList.add('active');
+    
+    // Using event parameter to get the clicked element
+    if (event && event.target) {
+        event.target.classList.add('active');
+        showNotification(`Filter applied: ${event.target.textContent}`);
+    }
 
     renderCampaigns();
-    showNotification(`Filter applied: ${event.target.textContent}`);
 }
 
 function showUserMenu() {
@@ -727,12 +743,13 @@ function showUserMenu() {
 
     // Close menu when clicking elsewhere
     setTimeout(() => {
-        document.addEventListener('click', function closeMenu(e) {
-            if (!menu.contains(e.target) && e.target !== document.querySelector('.user-profile')) {
+        function closeMenu(e) {
+            if (!menu.contains(e.target) && !e.target.classList.contains('user-profile')) {
                 menu.remove();
                 document.removeEventListener('click', closeMenu);
             }
-        });
+        }
+        document.addEventListener('click', closeMenu);
     }, 0);
 }
 
@@ -740,7 +757,8 @@ function editProfile() {
     const newName = prompt('Enter your name:', currentUser.name);
     if (newName) {
         currentUser.name = newName;
-        document.getElementById('username').textContent = newName;
+        const usernameEl = document.getElementById('username');
+        if (usernameEl) usernameEl.textContent = newName;
         showNotification('Profile updated!');
     }
 }
@@ -753,22 +771,24 @@ function logout() {
     if (confirm('Are you sure you want to logout?')) {
         showNotification('Logging out...');
         setTimeout(() => {
-<<<<<<< HEAD
+            // Update this to match your actual login page path
             window.location.href = '/LGU4/login.php';
-=======
-            window.location.href = '/login.html';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
         }, 1000);
     }
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
     const messageEl = document.getElementById('notificationMessage');
+
+    if (!notification || !messageEl) return;
 
     notification.style.backgroundColor = type === 'success' ? 'var(--success)' :
                                       type === 'error' ? 'var(--danger)' :
@@ -785,6 +805,8 @@ function showNotification(message, type = 'success') {
 // Rendering Functions
 function renderCampaigns() {
     const container = document.getElementById('campaignList');
+    if (!container) return;
+
     let html = '';
 
     let filteredCampaigns = campaigns;
@@ -850,6 +872,8 @@ function deleteCampaignFromList(campaignId) {
 
 function renderReportsTable() {
     const tbody = document.getElementById('reportsTableBody');
+    if (!tbody) return;
+
     let html = '';
 
     reports.forEach(report => {
@@ -884,6 +908,8 @@ function renderReportsTable() {
 
 function renderChannels() {
     const container = document.getElementById('channelList');
+    if (!container) return;
+
     let html = '';
 
     channels.forEach(channel => {
@@ -925,22 +951,32 @@ function updateKPIDashboard() {
     const avgROI = campaigns.reduce((sum, c) => sum + c.roi, 0) / campaigns.length;
 
     // Update DOM elements
-    document.getElementById('totalReach').textContent = `${(totalReach / 1000).toFixed(0)}K`;
-    document.getElementById('avgEngagement').textContent = `${avgEngagement.toFixed(1)}%`;
-    document.getElementById('avgROI').textContent = `${avgROI.toFixed(1)}x`;
+    const totalReachEl = document.getElementById('totalReach');
+    const avgEngagementEl = document.getElementById('avgEngagement');
+    const avgROIEl = document.getElementById('avgROI');
+
+    if (totalReachEl) totalReachEl.textContent = `${(totalReach / 1000).toFixed(0)}K`;
+    if (avgEngagementEl) avgEngagementEl.textContent = `${avgEngagement.toFixed(1)}%`;
+    if (avgROIEl) avgROIEl.textContent = `${avgROI.toFixed(1)}x`;
 
     // Update ROI analysis
     const totalInvestment = 2400000;
     const totalValue = totalInvestment * (avgROI + 1);
     const netROI = ((totalValue - totalInvestment) / totalInvestment * 100).toFixed(0);
 
-    document.getElementById('totalInvestment').textContent = `$${(totalInvestment / 1000000).toFixed(1)}M`;
-    document.getElementById('totalValue').textContent = `$${(totalValue / 1000000).toFixed(1)}M`;
-    document.getElementById('netROI').textContent = `${netROI}%`;
+    const totalInvestmentEl = document.getElementById('totalInvestment');
+    const totalValueEl = document.getElementById('totalValue');
+    const netROIEl = document.getElementById('netROI');
+
+    if (totalInvestmentEl) totalInvestmentEl.textContent = `$${(totalInvestment / 1000000).toFixed(1)}M`;
+    if (totalValueEl) totalValueEl.textContent = `$${(totalValue / 1000000).toFixed(1)}M`;
+    if (netROIEl) netROIEl.textContent = `${netROI}%`;
 }
 
 function populateCampaignSelect() {
     const select = document.getElementById('selectedCampaigns');
+    if (!select) return;
+
     // Clear existing options except the first one
     while (select.options.length > 1) {
         select.remove(1);
@@ -958,21 +994,27 @@ function populateCampaignSelect() {
 // Setup Event Listeners
 function setupEventListeners() {
     // Campaign form submission
-    document.getElementById('campaignForm').addEventListener('submit', saveCampaign);
+    const campaignForm = document.getElementById('campaignForm');
+    if (campaignForm) {
+        campaignForm.addEventListener('submit', saveCampaign);
+    }
 
     // Global search
-    document.getElementById('globalSearch').addEventListener('keyup', function(e) {
-        if (e.key === 'Enter') {
-            const searchTerm = this.value.toLowerCase();
-            if (searchTerm) {
-                const filtered = reports.filter(r =>
-                    r.name.toLowerCase().includes(searchTerm) ||
-                    r.description.toLowerCase().includes(searchTerm)
-                );
-                alert(`Found ${filtered.length} reports matching "${searchTerm}"`);
+    const globalSearch = document.getElementById('globalSearch');
+    if (globalSearch) {
+        globalSearch.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.toLowerCase();
+                if (searchTerm) {
+                    const filtered = reports.filter(r =>
+                        r.name.toLowerCase().includes(searchTerm) ||
+                        r.description.toLowerCase().includes(searchTerm)
+                    );
+                    alert(`Found ${filtered.length} reports matching "${searchTerm}"`);
+                }
             }
-        }
-    });
+        });
+    }
 
     // Close modals when clicking outside
     window.addEventListener('click', function(e) {
@@ -994,7 +1036,8 @@ function setupEventListeners() {
         // Ctrl+F for search focus
         if (e.ctrlKey && e.key === 'f') {
             e.preventDefault();
-            document.getElementById('globalSearch').focus();
+            const searchInput = document.getElementById('globalSearch');
+            if (searchInput) searchInput.focus();
         }
         // Escape to close modals
         if (e.key === 'Escape') {
@@ -1059,18 +1102,7 @@ function loadDashboardData() {
 function viewReport(reportId) {
     const report = reports.find(r => r.id === reportId);
     if (report) {
-<<<<<<< HEAD
-        alert(`Viewing Report: ${report.name}
-
-Type: ${report.type}
-Period: ${report.period}
-Status: ${report.status}
-Generated: ${report.generated}
-
-${report.description}`);
-=======
         alert(`Viewing Report: ${report.name}\n\nType: ${report.type}\nPeriod: ${report.period}\nStatus: ${report.status}\nGenerated: ${report.generated}\n\n${report.description}`);
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 }
 
@@ -1096,23 +1128,39 @@ function shareSpecificReport(reportId) {
 }
 
 function editROI(type) {
-    const currentValue = document.getElementById(type === 'investment' ? 'totalInvestment' :
-                                                type === 'value' ? 'totalValue' :
-                                                'costPerEngagement').textContent;
-    const newValue = prompt(`Enter new ${type === 'investment' ? 'investment' : type === 'value' ? 'value generated' : 'cost per engagement'}:`, currentValue);
+    let elementId;
+    let label;
+    
+    if (type === 'investment') {
+        elementId = 'totalInvestment';
+        label = 'investment';
+    } else if (type === 'value') {
+        elementId = 'totalValue';
+        label = 'value generated';
+    } else {
+        elementId = 'costPerEngagement';
+        label = 'cost per engagement';
+    }
+    
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const currentValue = element.textContent;
+    const newValue = prompt(`Enter new ${label}:`, currentValue);
     if (newValue) {
-        document.getElementById(type === 'investment' ? 'totalInvestment' :
-                              type === 'value' ? 'totalValue' :
-                              'costPerEngagement').textContent = newValue;
+        element.textContent = newValue;
         showNotification('ROI metric updated!');
     }
 }
 
 function editDemo(ageGroup) {
-    const currentValue = document.getElementById(ageGroup).textContent;
+    const element = document.getElementById(ageGroup);
+    if (!element) return;
+    
+    const currentValue = element.textContent;
     const newValue = prompt(`Enter new percentage for ${ageGroup}:`, currentValue);
     if (newValue) {
-        document.getElementById(ageGroup).textContent = newValue;
+        element.textContent = newValue;
         showNotification('Demographic data updated!');
     }
 }
