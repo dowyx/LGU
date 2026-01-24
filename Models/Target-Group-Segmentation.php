@@ -21,8 +21,13 @@ $modelsDir = __DIR__;
 $modelFiles = [
     'TargetGroupSegmentation' => $modelsDir . '/TargetGroupSegmentation.php',
     'ContentRepository' => $modelsDir . '/ContentRepository.php'
-    // Note: EventSeminarManagement.php is procedural, so we access events directly via database
 ];
+
+// Include EventSeminarManagement separately as it's procedural
+$eventSeminarFile = $modelsDir . '/EventSeminarManagement.php';
+if (file_exists($eventSeminarFile)) {
+    require_once $eventSeminarFile;
+}
 // Load available models
 foreach ($modelFiles as $className => $filePath) {
     if (file_exists($filePath)) {
@@ -325,6 +330,65 @@ try {
         }
     }
     
+    // Cross-module integration functions for linking with Event Management
+    if (!function_exists('getEventsBySegment')) {
+        function getEventsBySegment($segmentId) {
+            global $models;
+            if (isset($models['TargetGroupSegmentation'])) {
+                $segModel = $models['TargetGroupSegmentation'];
+                if (method_exists($segModel, 'getEventsBySegment')) {
+                    return $segModel->getEventsBySegment($segmentId);
+                }
+            }
+            // Fallback: try to use direct database query
+            global $pdo;
+            try {
+                $stmt = $pdo->prepare(
+                    "SELECT e.*, sel.segment_id
+                     FROM events e
+                     JOIN segment_event_link sel ON e.id = sel.event_id
+                     WHERE sel.segment_id = ?
+                     ORDER BY e.start_date ASC"
+                );
+                $stmt->execute([$segmentId]);
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                error_log("Error fetching events by segment: " . $e->getMessage());
+                return [];
+            }
+        }
+    }
+    
+    if (!function_exists('linkEventToSegment')) {
+        function linkEventToSegment($eventId, $segmentId) {
+            global $models;
+            if (isset($models['TargetGroupSegmentation'])) {
+                $segModel = $models['TargetGroupSegmentation'];
+                if (method_exists($segModel, 'linkEventToSegment')) {
+                    return $segModel->linkEventToSegment($eventId, $segmentId);
+                }
+            }
+            // Fallback: try to use direct database query
+            global $pdo;
+            try {
+                $stmt = $pdo->prepare(
+                    "INSERT IGNORE INTO segment_event_link 
+                     (segment_id, event_id, created_at)
+                     VALUES (?, ?, NOW())"
+                );
+                return $stmt->execute([$segmentId, $eventId]);
+            } catch (Exception $e) {
+                error_log("Error linking event to segment: " . $e->getMessage());
+                return false;
+            }
+        }
+    }
+    
+    if (!function_exists('getSegmentEvents')) {
+        function getSegmentEvents($segmentId) {
+            return getEventsBySegment($segmentId);
+        }
+    }
 } catch (Exception $e) {
     // If methods don't exist, use fallback data
     $segments = [];

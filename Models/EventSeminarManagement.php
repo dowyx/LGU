@@ -14,6 +14,9 @@ require_once '../config/database.php';
 // Include Content Repository model for cross-module integration
 require_once './ContentRepository.php';
 
+// Include Target Group Segmentation model for cross-module integration
+require_once './TargetGroupSegmentation.php';
+
 // Initialize Content Repository
 $contentRepo = null;
 try {
@@ -398,13 +401,13 @@ function getAvailableContentForEvent($eventId) {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="ContentRepository.php" class="nav-link">
+                    <a href="Content-Repository.php" class="nav-link">
                         <i class="fas fa-database"></i>
                         <span class="nav-text">Content Repository</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="TargetGroupSegmentation.php" class="nav-link">
+                    <a href="Target-Group-Segmentation.php" class="nav-link">
                         <i class="fas fa-users"></i>
                         <span class="nav-text">Target Group Segmentation</span>
                     </a>
