@@ -1,4 +1,6 @@
+[file content begin]
 <?php
+
 // Start session and check authentication
 session_start();
 if (!isset($_SESSION['user_id'])) {
@@ -170,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     // Get all campaigns with their metrics
     $stmt = $pdo->prepare("
-        SELECT c.id, c.name, c.status, c.start_date, c.end_date,
+        SELECT c.id, c.name, c.status, c.start_date, c.end_date, c.budget,
                cm.reach, cm.engagement_rate, cm.roi,
                cs.overall_score, cs.engagement_score, cs.roi_score, cs.satisfaction_score
         FROM campaigns c
@@ -184,15 +186,30 @@ try {
     $stmt->execute([$user_id, $user_role]);
     $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Calculate KPIs
-    $total_reach = array_sum(array_column($campaigns, 'reach')) ?: 245000; // fallback to sample data
-    $avg_engagement = count($campaigns) > 0 ? round((array_sum(array_column($campaigns, 'engagement_rate')) / count($campaigns)), 1) : 18.5;
-    $avg_roi = count($campaigns) > 0 ? round((array_sum(array_column($campaigns, 'roi')) / count($campaigns)), 1) : 3.4;
-    $avg_satisfaction = count($campaigns) > 0 && !empty(array_filter(array_column($campaigns, 'satisfaction_score'))) ? 
-                        round((array_sum(array_column($campaigns, 'satisfaction_score')) / count(array_filter(array_column($campaigns, 'satisfaction_score')))), 1) : 4.2;
+    // Calculate KPIs with fallback values
+    $total_reach = array_sum(array_column($campaigns, 'reach')) ?: 245000;
+    $total_budget = array_sum(array_column($campaigns, 'budget')) ?: 5000000;
+    
+    // Calculate averages with fallback
+    $campaign_count = count($campaigns);
+    $avg_engagement = $campaign_count > 0 ? round((array_sum(array_column($campaigns, 'engagement_rate')) / $campaign_count), 1) : 18.5;
+    $avg_roi = $campaign_count > 0 ? round((array_sum(array_column($campaigns, 'roi')) / $campaign_count), 1) : 3.4;
+    
+    // Calculate satisfaction scores
+    $satisfaction_scores = array_filter(array_column($campaigns, 'satisfaction_score'), function($val) {
+        return !is_null($val) && $val !== '';
+    });
+    $satisfaction_count = count($satisfaction_scores);
+    $avg_satisfaction = $satisfaction_count > 0 ? round((array_sum($satisfaction_scores) / $satisfaction_count), 1) : 4.2;
     
     // Format values for display
-    $total_reach_formatted = $total_reach >= 1000 ? round($total_reach / 1000, 1) . 'K' : $total_reach;
+    if ($total_reach >= 1000000) {
+        $total_reach_formatted = round($total_reach / 1000000, 1) . 'M';
+    } elseif ($total_reach >= 1000) {
+        $total_reach_formatted = round($total_reach / 1000, 1) . 'K';
+    } else {
+        $total_reach_formatted = $total_reach;
+    }
     
     // Get channel analytics
     $stmt = $pdo->query("
@@ -235,18 +252,50 @@ try {
     $latest_score = $stmt->fetchColumn() ?: 92;
 
 } catch (PDOException $e) {
-    $campaigns = [];
-    $channels = [];
-    $demographics = [];
+    // Fallback sample data
+    $campaigns = [
+        [
+            'id' => 1,
+            'name' => 'Sample Campaign',
+            'budget' => 50000,
+            'reach' => 10000,
+            'engagement_rate' => 18.5,
+            'roi' => 3.4,
+            'overall_score' => 85,
+            'engagement_score' => 88,
+            'roi_score' => 95,
+            'satisfaction_score' => 85
+        ]
+    ];
+    $channels = [
+        ['channel_name' => 'Email', 'total_impressions' => 10000, 'avg_roi' => 4.2, 'avg_engagement_rate' => 24],
+        ['channel_name' => 'Social Media', 'total_impressions' => 5000, 'avg_roi' => 2.4, 'avg_engagement_rate' => 12]
+    ];
+    $demographics = [
+        ['demographic_value' => 'Age 25-44', 'percentage' => 45],
+        ['demographic_value' => 'Age 45-64', 'percentage' => 32],
+        ['demographic_value' => 'Age 18-24', 'percentage' => 18],
+        ['demographic_value' => 'Age 65+', 'percentage' => 5]
+    ];
     $reports = [];
     $latest_score = 92;
     $total_reach = 245000;
+    $total_budget = 5000000;
     $total_reach_formatted = '245K';
     $avg_engagement = 18.5;
     $avg_roi = 3.4;
     $avg_satisfaction = 4.2;
     error_log("Error fetching analytics: " . $e->getMessage());
 }
+
+// Calculate ROI values safely
+$total_investment = $total_budget;
+$total_value_generated = $total_investment * ($avg_roi + 1);
+$net_roi_percentage = $avg_roi > 0 ? round(($avg_roi - 1) * 100) : 0;
+
+// Calculate cost per engagement safely
+$total_engagement = $total_reach * ($avg_engagement / 100);
+$cost_per_engagement = $total_engagement > 0 ? $total_budget / $total_engagement : 0;
 
 // Helper functions
 function format_report_type($type) {
@@ -281,6 +330,7 @@ function get_performance_label($score) {
 }
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -299,81 +349,49 @@ function get_performance_label($score) {
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
-<<<<<<< HEAD
-                    <a href="/LGU4/home.php" class="nav-link">
-=======
                     <a href="../home.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-home"></i>
                         <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
-<<<<<<< HEAD
-                    <a href="/LGU4/Models/Module-1.php" class="nav-link">
-=======
                     <a href="Module-1.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-calendar-alt"></i>
                         <span class="nav-text">Campaign Planning & Calendar</span>
                     </a>
                 </li>
                 <li class="nav-item">
-<<<<<<< HEAD
-                    <a href="/LGU4/Models/Content-Repository.php" class="nav-link">
-=======
                     <a href="ContentRepository.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-database"></i>
                         <span class="nav-text">Content Repository</span>
                     </a>
                 </li>
                 <li class="nav-item">
-<<<<<<< HEAD
-                    <a href="/LGU4/Models/Target-Group-Segmentation.php" class="nav-link">
-=======
                     <a href="TargetGroupSegmentation.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-users"></i>
                         <span class="nav-text">Target Group Segmentation</span>
                     </a>
                 </li>
                 <li class="nav-item">
-<<<<<<< HEAD
-                    <a href="/LGU4/Models/EventSeminarManagement.php" class="nav-link">
-=======
                     <a href="EventSeminarManagement.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-calendar-check"></i>
                         <span class="nav-text">Event & Seminar Management</span>
                     </a>
                 </li>
                 <li class="nav-item">
-<<<<<<< HEAD
-                    <a href="/LGU4/Models/SurveyFeedbackCollection.php" class="nav-link">
-=======
                     <a href="SurveyFeedbackCollection.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-clipboard-check"></i>
                         <span class="nav-text">Survey & Feedback Collection</span>
                     </a>
                 </li>
                 <li class="nav-item">
-<<<<<<< HEAD
-                    <a href="/LGU4/Models/CampaignAnalyticsReports.php" class="nav-link active">
-=======
                     <a href="CampaignAnalyticsReports.php" class="nav-link active">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-chart-bar"></i>
                         <span class="nav-text">Campaign Analytics & Reports</span>
                     </a>
                 </li>
                 <li class="nav-item">
-<<<<<<< HEAD
-                    <a href="/LGU4/Models/HealthPoliceIntegration.php" class="nav-link">
-=======
                     <a href="HealthPoliceIntegration.php" class="nav-link">
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                         <i class="fas fa-link"></i>
                         <span class="nav-text">Community</span>
                     </a>
@@ -589,25 +607,25 @@ function get_performance_label($score) {
                     <div class="roi-analysis">
                         <div class="roi-item">
                             <div class="roi-label">Total Investment</div>
-                            <div class="roi-value" id="totalInvestment">₱<?php echo number_format(array_sum(array_column($campaigns, 'budget')) / 1000, 1); ?>M</div>
+                            <div class="roi-value" id="totalInvestment">₱<?php echo number_format($total_investment / 1000000, 1); ?>M</div>
                             <button class="btn-sm" onclick="editROI('investment')" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </div>
                         <div class="roi-item">
                             <div class="roi-label">Total Value Generated</div>
-                            <div class="roi-value positive-roi" id="totalValue">₱<?php echo number_format((array_sum(array_column($campaigns, 'budget')) * $avg_roi) / 1000, 1); ?>M</div>
+                            <div class="roi-value positive-roi" id="totalValue">₱<?php echo number_format($total_value_generated / 1000000, 1); ?>M</div>
                             <button class="btn-sm" onclick="editROI('value')" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </div>
                         <div class="roi-item">
                             <div class="roi-label">Net ROI</div>
-                            <div class="roi-value positive-roi" id="netROI"><?php echo round(($avg_roi - 1) * 100); ?>%</div>
+                            <div class="roi-value positive-roi" id="netROI"><?php echo $net_roi_percentage; ?>%</div>
                         </div>  
                         <div class="roi-item">
                             <div class="roi-label">Cost per Engagement</div>
-                            <div class="roi-value" id="costPerEngagement">₱<?php echo number_format(50000 / (array_sum(array_column($campaigns, 'reach')) * ($avg_engagement / 100)), 2); ?></div>
+                            <div class="roi-value" id="costPerEngagement">₱<?php echo number_format($cost_per_engagement, 2); ?></div>
                             <button class="btn-sm" onclick="editROI('cost')" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -1354,3 +1372,4 @@ function get_performance_label($score) {
     </style>
 </body>
 </html>
+[file content end]

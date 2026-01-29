@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 // Include database configuration
 require_once 'config/database.php';
 
-// Get user data
+
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'] ?? 'User';
 $user_role = $_SESSION['user_role'] ?? 'Safety Manager';
@@ -40,37 +40,55 @@ try {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $public_satisfaction = $result && $result['avg_score'] !== null ? round($result['avg_score'], 0) : 92;
     
-    // Incident types data
+    // Incident types data - FIXED QUERY
     $stmt = $pdo->prepare("
         SELECT type, COUNT(*) as count,
-               (SELECT COUNT(*) FROM incidents WHERE type = i.type AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) -
-               (SELECT COUNT(*) FROM incidents WHERE type = i.type AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)) as trend
+               COALESCE(
+                   (SELECT COUNT(*) FROM incidents WHERE type = i.type AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)), 
+                   0
+               ) -
+               COALESCE(
+                   (SELECT COUNT(*) FROM incidents WHERE type = i.type AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)), 
+                   0
+               ) as trend
         FROM incidents i 
         WHERE status = 'active' 
         GROUP BY type
+        ORDER BY count DESC
     ");
     $stmt->execute();
-    $incident_types = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $incident_types_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Campaigns data
+    // Campaigns data - FIXED QUERY with proper field selection
     $stmt = $pdo->prepare("
-        SELECT id, name, status, start_date, end_date, 
-               target_reach, actual_reach, completion_percentage
+        SELECT 
+            id, 
+            name, 
+            status, 
+            start_date, 
+            end_date, 
+            COALESCE(target_reach, 0) as target_reach,
+            COALESCE(actual_reach, 0) as actual_reach,
+            COALESCE(completion_percentage, 0) as completion_percentage,
+            COALESCE(engagement_rate, 0) as engagement_rate
         FROM campaigns 
         ORDER BY created_at DESC 
         LIMIT 10
     ");
     $stmt->execute();
-    $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $campaigns_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
 } catch (PDOException $e) {
+    // Log error but don't show to user
+    error_log("Database error: " . $e->getMessage());
+    
     // Set default values if database fails
     $active_incidents = 42;
     $active_campaigns = 18;
     $avg_response_time = 8.2;
     $public_satisfaction = 92;
-    $incident_types = [];
-    $campaigns = [];
+    $incident_types_result = [];
+    $campaigns_result = [];
 }
 
 // Helper function to get trend icon
@@ -299,7 +317,7 @@ function getTrendClass($trend) {
                             <div class="legend-item active" data-type="all">
                                 <div class="legend-color" style="background-color: #4A90E2;"></div>
                                 <span>All Types</span>
-                                <span class="badge"><?php echo array_sum(array_column($incident_types, 'count')) + 100; ?></span>
+                                <span class="badge"><?php echo $active_incidents; ?></span>
                             </div>
                         </div>
                         <div class="chart-filters">
@@ -323,32 +341,39 @@ function getTrendClass($trend) {
                                 'police' => 'fa-badge'
                             ];
                             
-                            $default_incidents = [
-                                ['type' => 'emergency', 'count' => 25, 'trend' => 12],
-                                ['type' => 'health', 'count' => 18, 'trend' => -5],
-                                ['type' => 'safety', 'count' => 32, 'trend' => 8],
-                                ['type' => 'fire', 'count' => 12, 'trend' => 0],
-                                ['type' => 'police', 'count' => 13, 'trend' => 15]
-                            ];
-                            
-                            $display_incidents = !empty($incident_types) ? $incident_types : $default_incidents;
+                            // Use database results if available, otherwise use defaults
+                            if (!empty($incident_types_result)) {
+                                $display_incidents = $incident_types_result;
+                            } else {
+                                $display_incidents = [
+                                    ['type' => 'emergency', 'count' => 25, 'trend' => 12],
+                                    ['type' => 'health', 'count' => 18, 'trend' => -5],
+                                    ['type' => 'safety', 'count' => 32, 'trend' => 8],
+                                    ['type' => 'fire', 'count' => 12, 'trend' => 0],
+                                    ['type' => 'police', 'count' => 13, 'trend' => 15]
+                                ];
+                            }
                             
                             foreach ($display_incidents as $incident):
+                                $incident_type = $incident['type'] ?? 'unknown';
+                                $incident_count = $incident['count'] ?? 0;
+                                $incident_trend = $incident['trend'] ?? 0;
+                                $icon_class = $incident_icons[$incident_type] ?? 'fa-exclamation-triangle';
                             ?>
-                            <div class="incident-type-card <?php echo htmlspecialchars($incident['type']); ?>" data-type="<?php echo htmlspecialchars($incident['type']); ?>" data-count="<?php echo $incident['count']; ?>">
+                            <div class="incident-type-card <?php echo htmlspecialchars($incident_type); ?>" data-type="<?php echo htmlspecialchars($incident_type); ?>" data-count="<?php echo $incident_count; ?>">
                                 <div class="incident-icon">
-                                    <i class="fas <?php echo $incident_icons[$incident['type']] ?? 'fa-exclamation-triangle'; ?>"></i>
+                                    <i class="fas <?php echo $icon_class; ?>"></i>
                                 </div>
                                 <div class="incident-info">
-                                    <h4><?php echo ucfirst(htmlspecialchars($incident['type'])); ?></h4>
-                                    <div class="incident-count"><?php echo $incident['count']; ?></div>
-                                    <div class="incident-trend <?php echo getTrendClass($incident['trend'] ?? 0); ?>"><?php echo getTrendIcon($incident['trend'] ?? 0); ?> <?php echo abs($incident['trend'] ?? 0); ?>%</div>
+                                    <h4><?php echo ucfirst(htmlspecialchars($incident_type)); ?></h4>
+                                    <div class="incident-count"><?php echo $incident_count; ?></div>
+                                    <div class="incident-trend <?php echo getTrendClass($incident_trend); ?>"><?php echo getTrendIcon($incident_trend); ?> <?php echo abs($incident_trend); ?></div>
                                 </div>
                                 <div class="incident-actions">
-                                    <button class="mini-action-btn view-details" onclick="viewIncidentDetails('<?php echo htmlspecialchars($incident['type']); ?>')">
+                                    <button class="mini-action-btn view-details" onclick="viewIncidentDetails('<?php echo htmlspecialchars($incident_type); ?>')">
                                         <i class="fas fa-search"></i>
                                     </button>
-                                    <button class="mini-action-btn assign-team" onclick="assignTeam('<?php echo htmlspecialchars($incident['type']); ?>')">
+                                    <button class="mini-action-btn assign-team" onclick="assignTeam('<?php echo htmlspecialchars($incident_type); ?>')">
                                         <i class="fas fa-user-plus"></i>
                                     </button>
                                 </div>
@@ -440,54 +465,89 @@ function getTrendClass($trend) {
                     <!-- Campaign Cards Grid -->
                     <div class="campaign-grid">
                         <?php
-                        $default_campaigns = [
-                            ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'progress' => 75, 'reach' => 7500, 'engagement' => 92, 'icon' => 'fa-sun'],
-                            ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'progress' => 60, 'reach' => 5200, 'engagement' => 88, 'icon' => 'fa-school'],
-                            ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'progress' => 10, 'reach' => 10000, 'engagement' => 0, 'icon' => 'fa-home'],
-                            ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'progress' => 100, 'reach' => 12500, 'engagement' => 95, 'icon' => 'fa-car']
+                        // Use database results if available, otherwise use defaults
+                        if (!empty($campaigns_result)) {
+                            $display_campaigns = $campaigns_result;
+                            // Ensure we have at least 4 campaigns for display
+                            if (count($display_campaigns) < 4) {
+                                $default_campaigns = [
+                                    ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92, 'icon' => 'fa-sun'],
+                                    ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'engagement_rate' => 88, 'icon' => 'fa-school'],
+                                    ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 0, 'engagement_rate' => 0, 'icon' => 'fa-home'],
+                                    ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95, 'icon' => 'fa-car']
+                                ];
+                                
+                                // Merge with defaults
+                                foreach ($default_campaigns as $default_campaign) {
+                                    $found = false;
+                                    foreach ($display_campaigns as $campaign) {
+                                        if ($campaign['name'] == $default_campaign['name']) {
+                                            $found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!$found && count($display_campaigns) < 4) {
+                                        $display_campaigns[] = $default_campaign;
+                                    }
+                                }
+                            }
+                        } else {
+                            $display_campaigns = [
+                                ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92, 'icon' => 'fa-sun'],
+                                ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'engagement_rate' => 88, 'icon' => 'fa-school'],
+                                ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 0, 'engagement_rate' => 0, 'icon' => 'fa-home'],
+                                ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95, 'icon' => 'fa-car']
+                            ];
+                        }
+                        
+                        // Define icon mapping
+                        $campaign_icons = [
+                            'Summer Safety' => 'fa-sun',
+                            'School Zone Safety' => 'fa-school',
+                            'Home Safety Week' => 'fa-home',
+                            'Road Safety Month' => 'fa-car',
+                            'default' => 'fa-bullhorn'
                         ];
                         
-                        $display_campaigns = !empty($campaigns) ? $campaigns : $default_campaigns;
-                        
                         foreach ($display_campaigns as $campaign):
-                            $campaign_data = is_array($campaign) ? $campaign : [
-                                'id' => $campaign['id'] ?? 1,
-                                'name' => $campaign['name'] ?? 'Campaign',
-                                'status' => $campaign['status'] ?? 'active',
-                                'completion_percentage' => $campaign['completion_percentage'] ?? 75,
-                                'actual_reach' => $campaign['actual_reach'] ?? 5000,
-                                'target_reach' => $campaign['target_reach'] ?? 10000
-                            ];
+                            // Safely extract values with defaults
+                            $campaign_id = $campaign['id'] ?? uniqid();
+                            $campaign_name = $campaign['name'] ?? 'Unnamed Campaign';
+                            $campaign_status = $campaign['status'] ?? 'planned';
+                            $completion_percentage = $campaign['completion_percentage'] ?? 0;
+                            $actual_reach = $campaign['actual_reach'] ?? 0;
+                            $engagement_rate = $campaign['engagement_rate'] ?? 0;
+                            $campaign_icon = $campaign_icons[$campaign_name] ?? $campaign['icon'] ?? $campaign_icons['default'];
                         ?>
-                        <div class="campaign-card <?php echo htmlspecialchars($campaign_data['status']); ?>" data-id="<?php echo $campaign_data['id']; ?>">
-                            <div class="campaign-status <?php echo htmlspecialchars($campaign_data['status']); ?>"><?php echo strtoupper(htmlspecialchars($campaign_data['status'])); ?></div>
+                        <div class="campaign-card <?php echo htmlspecialchars($campaign_status); ?>" data-id="<?php echo $campaign_id; ?>">
+                            <div class="campaign-status <?php echo htmlspecialchars($campaign_status); ?>"><?php echo strtoupper(htmlspecialchars($campaign_status)); ?></div>
                             <div class="campaign-icon">
-                                <i class="fas <?php echo $default_campaigns[array_search($campaign_data['id'], array_column($default_campaigns, 'id'))]['icon'] ?? 'fa-bullhorn'; ?>"></i>
+                                <i class="fas <?php echo $campaign_icon; ?>"></i>
                             </div>
                             <div class="campaign-info">
-                                <h4><?php echo htmlspecialchars($campaign_data['name']); ?></h4>
+                                <h4><?php echo htmlspecialchars($campaign_name); ?></h4>
                                 <div class="campaign-progress">
                                     <div class="progress-bar">
-                                        <div class="progress-fill" style="width: <?php echo $campaign_data['completion_percentage']; ?>%"></div>
+                                        <div class="progress-fill" style="width: <?php echo min(100, max(0, $completion_percentage)); ?>%"></div>
                                     </div>
-                                    <span class="progress-text"><?php echo $campaign_data['completion_percentage']; ?>% Complete</span>
+                                    <span class="progress-text"><?php echo min(100, max(0, $completion_percentage)); ?>% Complete</span>
                                 </div>
                                 <div class="campaign-stats">
                                     <div class="stat">
                                         <i class="fas fa-eye"></i>
-                                        <span><?php echo number_format($campaign_data['actual_reach']); ?></span>
+                                        <span><?php echo number_format($actual_reach); ?></span>
                                     </div>
                                     <div class="stat">
                                         <i class="fas fa-thumbs-up"></i>
-                                        <span><?php echo $campaign_data['status'] === 'planned' ? 'N/A' : '88%'; ?></span>
+                                        <span><?php echo $campaign_status === 'planned' ? 'N/A' : ($engagement_rate > 0 ? $engagement_rate . '%' : 'N/A'); ?></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="campaign-actions">
-                                <button class="campaign-action-btn" onclick="viewCampaign(<?php echo $campaign_data['id']; ?>)" title="View Details">
+                                <button class="campaign-action-btn" onclick="viewCampaign(<?php echo $campaign_id; ?>)" title="View Details">
                                     <i class="fas fa-chart-line"></i>
                                 </button>
-                                <button class="campaign-action-btn" onclick="editCampaign(<?php echo $campaign_data['id']; ?>)" title="Edit">
+                                <button class="campaign-action-btn" onclick="editCampaign(<?php echo $campaign_id; ?>)" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </div>
@@ -653,9 +713,6 @@ function getTrendClass($trend) {
 
     <script>
     // Critical functions needed immediately
-    // Chatbot functions are now handled by chatbot.js class
-    
-    // Other critical functions
     function markAllAsRead() {
         const notifications = document.querySelectorAll('.notification-item.unread');
         notifications.forEach(notification => {
