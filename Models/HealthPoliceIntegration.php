@@ -310,13 +310,13 @@ function time_elapsed_string($datetime, $full = false) {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="ContentRepository.php" class="nav-link">
+                    <a href="Content-Repository.php" class="nav-link">
                         <i class="fas fa-database"></i>
                         <span class="nav-text">Content Repository</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="TargetGroupSegmentation.php" class="nav-link">
+                    <a href="Target-Group-Segmentation.php" class="nav-link">
                         <i class="fas fa-users"></i>
                         <span class="nav-text">Target Group Segmentation</span>
                     </a>
