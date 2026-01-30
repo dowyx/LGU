@@ -1,7 +1,6 @@
 // Enhanced JavaScript for interactive dashboard
 // Refactored to use shared utilities for better maintainability
 
-<<<<<<< HEAD
 // Global error handling
 window.addEventListener('error', function(e) {
     console.error('JavaScript Error:', e.error);
@@ -36,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeDashboard(apiHandler);
         initializeSearch();
         initializeNotifications();
-        // initializeThemeToggle(); - REMOVED as per requirement
         initializeExport();
         initializeQuickActions();
         initializeActivityFeed();
@@ -47,41 +45,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Initialize additional functionality
         initializeUserData();
+        
+        // Initialize interactive charts
+        initializeInteractiveCharts();
+        
+        // Initialize notification system
+        initializeNotificationSystem();
+        
+        // Add custom styles
+        addCustomStyles();
     } catch (error) {
         console.error('Error initializing dashboard:', error);
         // Page will still render even if JS initialization fails
     }
-=======
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if utils are loaded
-    if (!window.Utils) {
-        console.error('Utils not loaded. Please include utils.js before home.js');
-        return;
-    }
-
-    // Initialize session management
-    Utils.SessionManager.init();
-
-    // Initialize shared components
-    const navigationManager = new Utils.NavigationManager();
-    const apiHandler = new Utils.APIHandler();
-    
-    // Initialize dashboard components
-    initializeDashboard(apiHandler);
-    initializeSearch();
-    initializeNotifications();
-    // initializeThemeToggle(); - REMOVED as per requirement
-    initializeExport();
-    initializeQuickActions();
-    initializeActivityFeed();
-    initializeUserProfile();
-
-    // Setup global error handling
-    setupErrorHandling();
-    
-    // Initialize additional functionality
-    initializeUserData();
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 });
 
 // Define missing functions to prevent errors
@@ -260,29 +236,6 @@ function initializeSearch() {
     }
 }
 
-function performSearch(query) {
-    // Validate and sanitize the query
-    if (!validateSearchQuery(query)) {
-        Utils.UIHelper.showToast('Invalid search query provided', 'error');
-        return;
-    }
-    
-    const sanitizedQuery = Utils.UIHelper.sanitizeHTML(query);
-    
-    Utils.UIHelper.showToast(`Searching for: "${sanitizedQuery}"`, 'info');
-    
-    // Perform actual search
-    const apiHandler = new Utils.APIHandler();
-    apiHandler.get(`/search?q=${encodeURIComponent(sanitizedQuery)}`)
-        .then(results => {
-            displaySearchResults(results);
-        })
-        .catch(() => {
-            // Fallback to mock results
-            displaySearchResults(getMockSearchResults(sanitizedQuery));
-        });
-}
-
 // Validate search query
 function validateSearchQuery(query) {
     if (typeof query !== 'string') {
@@ -360,15 +313,13 @@ function navigateToResult(type, id) {
     document.querySelector('.search-box input').value = '';
 }
 
-// 5. Notification System
+// Notification System
 function initializeNotifications() {
     // The notifications are already handled by the separate notification system
     // This function can remain for backward compatibility if needed
 }
 
-// 6. Theme Toggle functionality removed as per requirement
-
-// 7. Data Export
+// Data Export
 function initializeExport() {
     // Create export button if it doesn't exist
     let exportBtn = document.getElementById('exportData');
@@ -403,7 +354,7 @@ function initializeExport() {
     });
 }
 
-// 8. Quick Actions with Confirmation
+// Quick Actions with Confirmation
 function initializeQuickActions() {
     document.querySelectorAll('.action-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
@@ -414,7 +365,7 @@ function initializeQuickActions() {
     });
 }
 
-// 9. Real-time Activity Feed
+// Real-time Activity Feed
 function initializeActivityFeed() {
     // Simulate real-time updates
     setInterval(() => {
@@ -431,7 +382,7 @@ function initializeActivityFeed() {
     });
 }
 
-// 10. Real-time Data Updates
+// Real-time Data Updates
 function initializeRealTimeUpdates() {
     // Update widget values periodically
     setInterval(updateRealTimeData, 10000);
@@ -469,41 +420,10 @@ function updateWidgetData(widget) {
     }, 300);
 }
 
-function performSearch(query) {
-    // Simulate API call
-    const results = [
-        { type: 'Incident', title: 'Downtown Safety Incident', match: '85%' },
-        { type: 'Campaign', title: 'Summer Safety Campaign', match: '72%' },
-        { type: 'Report', title: 'Monthly Safety Report', match: '68%' }
-    ];
-
-    displaySearchResults(results);
-}
-
-function performAdvancedSearch(query) {
-    alert(`Advanced search for: "${query}"\nOpening search results page...`);
-}
-
-function displaySearchResults(results) {
-    const container = document.querySelector('.search-results');
-    if (!container) return;
-
-    container.innerHTML = results.map(result => `
-        <div class="search-result-item">
-            <div class="result-type">${result.type}</div>
-            <div class="result-title">${result.title}</div>
-            <div class="result-match">${result.match} match</div>
-        </div>
-    `).join('');
-    container.style.display = 'block';
-}
-
 function hideSearchResults() {
     const container = document.querySelector('.search-results');
     if (container) container.style.display = 'none';
 }
-
-
 
 function exportToPDF() {
     alert('Generating PDF report...\nThis would generate a comprehensive report in a real application.');
@@ -638,233 +558,6 @@ function dismissAlert(alertDiv) {
     }, 300);
 }
 
-// Update the initializeCharts function with enhanced features:
-function initializeCharts() {
-    // Check if chart elements exist
-    if (document.getElementById('incidentsChart')) {
-        // Incidents by Type Chart (Interactive Doughnut)
-        const incidentsCtx = document.getElementById('incidentsChart').getContext('2d');
-        const incidentsChart = new Chart(incidentsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Emergency', 'Health', 'Safety', 'Fire', 'Police'],
-                datasets: [{
-                    data: [25, 18, 32, 12, 13],
-                    backgroundColor: [
-                        '#F44336', // danger - Emergency
-                        '#FFA726', // warning - Health
-                        '#4A90E2', // accent - Safety
-                        '#FF5722', // fire orange - Fire
-                        '#2196F3'  // police blue - Police
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#121212',
-                    hoverOffset: 15, // Makes segments pop out on hover
-                    hoverBackgroundColor: [
-                        '#FF5252', // Lighter red for hover
-                        '#FFB74D', // Lighter orange for hover
-                        '#64B5F6', // Lighter blue for hover
-                        '#FF8A65', // Lighter fire orange for hover
-                        '#42A5F5'  // Lighter police blue for hover
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#4A90E2',
-                        borderWidth: 1,
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${label}: ${value} incidents (${percentage}%)`;
-                            }
-                        }
-                    }
-                },
-                onClick: function(evt, elements) {
-                    if (elements.length > 0) {
-                        const index = elements[0].index;
-                        const labels = this.data.labels;
-                        const values = this.data.datasets[0].data;
-                        alert(`Clicked on: ${labels[index]}\nIncidents: ${values[index]}\n\nWould open detailed view for ${labels[index]} incidents.`);
-                    }
-                },
-                animation: {
-                    animateScale: true,
-                    animateRotate: true,
-                    duration: 1000
-                }
-            }
-        });
-
-        // Add click event to chart container for reset
-        const incidentsContainer = document.querySelector('#incidentsChart').parentElement;
-        incidentsContainer.addEventListener('dblclick', function() {
-            incidentsChart.reset();
-        });
-    }
-
-    if (document.getElementById('campaignChart')) {
-        // Campaign Reach Chart (Interactive Line Chart)
-        const campaignCtx = document.getElementById('campaignChart').getContext('2d');
-        const campaignChart = new Chart(campaignCtx, {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-                datasets: [
-                    {
-                        label: 'Current Month',
-                        data: [1200, 1900, 3000, 5000, 7500],
-                        borderColor: '#4CAF50', // success
-                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#4CAF50',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointHoverBackgroundColor: '#66BB6A',
-                        pointHoverBorderColor: '#fff',
-                        pointHoverBorderWidth: 3
-                    },
-                    {
-                        label: 'Previous Month',
-                        data: [1000, 1700, 2500, 4000, 6000],
-                        borderColor: '#4A90E2', // accent
-                        backgroundColor: 'rgba(74, 144, 226, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#4A90E2',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointHoverBackgroundColor: '#64B5F6',
-                        pointHoverBorderColor: '#fff',
-                        pointHoverBorderWidth: 3
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 12
-                            }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#4A90E2',
-                        borderWidth: 1,
-                        usePointStyle: true,
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} reach`;
-                            }
-                        }
-                    }
-                },
-                onClick: function(evt, elements) {
-                    if (elements.length > 0) {
-                        const datasetIndex = elements[0].datasetIndex;
-                        const index = elements[0].index;
-                        const dataset = this.data.datasets[datasetIndex];
-                        const label = this.data.labels[index];
-                        const value = dataset.data[index];
-                        alert(`Clicked on: ${label}\n${dataset.label}: ${value.toLocaleString()} reach`);
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return value.toLocaleString() + ' reach';
-                            },
-                            font: {
-                                size: 11
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Campaign Reach',
-                            color: 'var(--text-gray)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            font: {
-                                size: 11
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Week',
-                            color: 'var(--text-gray)'
-                        }
-                    }
-                },
-                animation: {
-                    duration: 1500,
-                    easing: 'easeInOutQuart'
-                },
-                elements: {
-                    line: {
-                        tension: 0.4
-                    }
-                }
-            }
-        });
-
-        // Add hover effect to chart container
-        const campaignContainer = document.querySelector('#campaignChart').parentElement;
-        campaignContainer.addEventListener('mouseenter', function() {
-            campaignChart.options.plugins.tooltip.enabled = true;
-            campaignChart.update('none');
-        });
-
-        campaignContainer.addEventListener('mouseleave', function() {
-            campaignChart.options.plugins.tooltip.enabled = false;
-            campaignChart.update('none');
-        });
-    }
-}
-
-
 // Debug function to check chart loading
 function checkChartLoading() {
     console.log('Checking chart elements...');
@@ -901,626 +594,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ===== INTERACTIVE CHART FUNCTIONS =====
 
-// Initialize Interactive Charts
-function initializeInteractiveCharts() {
-    // Initialize heat map
-    generateHeatMap();
-
-    // Add click events to incident cards
-    document.querySelectorAll('.incident-type-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const type = this.dataset.type;
-            const count = this.dataset.count;
-            openIncidentDashboard(type, count);
-        });
-    });
-
-    // Add click events to campaign cards
-    document.querySelectorAll('.campaign-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-            // Only trigger if not clicking on action buttons
-            if (!e.target.closest('.campaign-actions')) {
-                const campaignId = this.dataset.id;
-                viewCampaignDetails(campaignId);
-            }
-        });
-    });
-
-    // Initialize time filter
-    document.getElementById('timeFilter')?.addEventListener('change', function() {
-        filterIncidentsByTime(this.value);
-    });
-}
-
-// Generate Heat Map
-function generateHeatMap() {
-    const grid = document.querySelector('.heat-map-grid');
-    if (!grid) return;
-
-    grid.innerHTML = '';
-
-    // Generate 28 cells (4 weeks x 7 days)
-    for (let i = 0; i < 28; i++) {
-        const cell = document.createElement('div');
-
-        // Random intensity for demo
-        const intensity = Math.floor(Math.random() * 20);
-
-        if (intensity <= 5) {
-            cell.className = 'heat-map-cell low';
-            cell.title = `${intensity} incidents`;
-        } else if (intensity <= 15) {
-            cell.className = 'heat-map-cell medium';
-            cell.title = `${intensity} incidents`;
-        } else {
-            cell.className = 'heat-map-cell high';
-            cell.title = `${intensity} incidents`;
-        }
-
-        // Add click event
-        cell.addEventListener('click', function() {
-            const day = Math.floor(i / 7) + 1;
-            const week = i % 7 + 1;
-            showDayDetails(day, week, intensity);
-        });
-
-        grid.appendChild(cell);
-    }
-}
-
-// Incident Type Functions
-function viewIncidentDetails(type) {
-    alert(`Opening detailed view for ${type} incidents\n\nThis would show:
-    • Recent ${type} incidents
-    • Response teams assigned
-    • Resolution status
-    • Time analytics`);
-
-    // In a real app, this would navigate to incident details page
-    console.log(`Viewing ${type} incident details`);
-}
-
-function assignTeam(type) {
-    const teamName = prompt(`Assign team to ${type} incidents:`);
-    if (teamName) {
-        alert(`Team "${teamName}" assigned to ${type} incidents`);
-
-        // Show success notification
-        showNotification(`Team assigned to ${type} incidents`, 'success');
-    }
-}
-
-function openIncidentDashboard(type, count) {
-    console.log(`Opening dashboard for ${type} (${count} incidents)`);
-
-    // Highlight selected card
-    document.querySelectorAll('.incident-type-card').forEach(card => {
-        card.style.transform = 'none';
-        card.style.boxShadow = 'none';
-    });
-
-    const selectedCard = document.querySelector(`.incident-type-card.${type}`);
-    if (selectedCard) {
-        selectedCard.style.transform = 'scale(1.02)';
-        selectedCard.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
-    }
-
-    // In a real app, this would filter data and update other components
-    showNotification(`Showing ${type} incidents (${count} total)`, 'info');
-}
-
-// Time Filter Function
-function filterIncidentsByTime(timeRange) {
-    const ranges = {
-        'today': 'Last 24 hours',
-        'week': 'Last 7 days',
-        'month': 'Last 30 days',
-        'quarter': 'Last 90 days'
-    };
-
-    console.log(`Filtering incidents for: ${ranges[timeRange]}`);
-
-    // Simulate loading
-    showNotification(`Loading incidents for ${ranges[timeRange].toLowerCase()}...`, 'info');
-
-    // Simulate API call
-    setTimeout(() => {
-        // Update incident counts (random for demo)
-        const incidents = {
-            emergency: Math.floor(Math.random() * 30) + 10,
-            health: Math.floor(Math.random() * 25) + 5,
-            safety: Math.floor(Math.random() * 40) + 10,
-            fire: Math.floor(Math.random() * 20) + 5,
-            police: Math.floor(Math.random() * 25) + 8
-        };
-
-        // Update UI
-        Object.keys(incidents).forEach(type => {
-<<<<<<< HEAD
-            const card = document.querySelector(`.incident-type-card[data-type="${type}"]`);
-=======
-            const card = document.querySelector(`.incident-type-card.${type}`);
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-            if (card) {
-                card.querySelector('.incident-count').textContent = incidents[type];
-                card.dataset.count = incidents[type];
-
-                // Update trend randomly
-                const trends = ['up', 'down', 'neutral'];
-                const trend = trends[Math.floor(Math.random() * 3)];
-                const change = Math.floor(Math.random() * 20);
-
-                const trendElement = card.querySelector('.incident-trend');
-                trendElement.textContent = trend === 'up' ? `↑ ${change}%` :
-                                          trend === 'down' ? `↓ ${change}%` : '↔ 0%';
-                trendElement.className = `incident-trend ${trend}`;
-<<<<<<< HEAD
-                
-                console.log(`✓ Updated ${type} card: ${incidents[type]} incidents`);
-            } else {
-                console.log(`✗ Could not find card for type: ${type}`);
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
-            }
-        });
-
-        // Regenerate heat map with new data
-        generateHeatMap();
-
-        showNotification(`Incidents filtered for ${ranges[timeRange].toLowerCase()}`, 'success');
-    }, 800);
-}
-
-// Day Details Function
-function showDayDetails(week, day, incidents) {
-    const modalContent = `
-        <div class="modal-header">
-            <h3>Week ${week}, Day ${day}</h3>
-        </div>
-        <div class="modal-body">
-            <div class="incident-breakdown">
-                <h4>Incident Breakdown</h4>
-                <div class="breakdown-item">
-                    <span>Emergency:</span>
-                    <span>${Math.floor(incidents * 0.3)}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>Health:</span>
-                    <span>${Math.floor(incidents * 0.2)}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>Safety:</span>
-                    <span>${Math.floor(incidents * 0.25)}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>Fire:</span>
-                    <span>${Math.floor(incidents * 0.1)}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>Police:</span>
-                    <span>${Math.floor(incidents * 0.15)}</span>
-                </div>
-            </div>
-            <div class="response-info">
-                <h4>Response Information</h4>
-                <p>Average response time: ${(Math.random() * 15 + 5).toFixed(1)} minutes</p>
-                <p>Resolution rate: ${(Math.random() * 30 + 70).toFixed(0)}%</p>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button onclick="closeModal()" class="btn-secondary">Close</button>
-            <button onclick="exportDayReport(${week}, ${day})" class="btn-primary">Export Report</button>
-        </div>
-    `;
-
-    showModal('Day Details', modalContent);
-}
-
-// Campaign Functions
-
-
-
-
-
-
-
-
-
-
-function remindMe(campaign) {
-    const time = prompt('Set reminder for when? (e.g., "1 hour", "tomorrow 9am")');
-    if (time) {
-        showNotification(`Reminder set for ${campaign} campaign in ${time}`, 'success');
-    }
-}
-
-
-
-// Modal Functions
-function showModal(title, content, autoRefresh = false) {
-    // Remove existing modal if present
-    const existingModal = document.getElementById('customModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    const modal = document.createElement('div');
-    modal.id = 'customModal';
-    modal.className = 'custom-modal';
-    modal.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal()"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>${title}</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                ${content}
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-
-    // Store auto-refresh flag
-    modal.dataset.autoRefresh = autoRefresh;
-}
-
-function closeModal() {
-    const modal = document.getElementById('customModal');
-    if (modal) {
-        // Clear auto-refresh interval
-        if (modal.dataset.autoRefresh === 'true' && window.statsInterval) {
-            clearInterval(window.statsInterval);
-        }
-        modal.remove();
-        document.body.style.overflow = 'auto';
-    }
-}
-
-// Enhanced Notification Function
-function showNotification(message, type = 'info', duration = 3000) {
-    // Remove any existing notifications of the same type to prevent stacking
-    document.querySelectorAll(`.custom-notification.${type}`).forEach(n => n.remove());
-    
-    const notification = document.createElement('div');
-    notification.className = `custom-notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${getNotificationIcon(type)}"></i>
-        <span>${message}</span>
-        <button class="notification-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
-
-    // Add to notification container or body if no container exists
-    const notificationContainer = document.getElementById('notification-container') || document.body;
-    notificationContainer.appendChild(notification);
-    
-    // Trigger reflow to enable animation
-    void notification.offsetWidth;
-    
-    // Add show class for animation
-    notification.classList.add('show');
-
-    // Auto-remove after specified duration
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.classList.add('fade-out');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 300);
-        }
-    }, duration);
-    
-    // Add click to dismiss
-    notification.addEventListener('click', function(e) {
-        if (e.target !== this.querySelector('.notification-close')) {
-            this.classList.add('fade-out');
-            setTimeout(() => {
-                if (this.parentNode) {
-                    this.remove();
-                }
-            }, 300);
-        }
-    });
-}
-
-function getNotificationIcon(type) {
-    const icons = {
-        'success': 'check-circle',
-        'error': 'exclamation-circle',
-        'warning': 'exclamation-triangle',
-        'info': 'info-circle'
-    };
-    return icons[type] || 'info-circle';
-}
-
-// Initialize everything
-document.addEventListener('DOMContentLoaded', function() {
-    // Original initialization
-    initializeNavigation();
-    initializeWidgets();
-    initializeSearch();
-    initializeNotifications();
-    // initializeThemeToggle(); - REMOVED as per requirement
-    initializeExport();
-    initializeQuickActions();
-    initializeActivityFeed();
-    initializeRealTimeUpdates();
-
-    // NEW: Initialize interactive charts
-    initializeInteractiveCharts();
-    
-    // Initialize notification system
-    initializeNotificationSystem();
-    
-    // Add CSS for modals and notifications
-    addCustomStyles();
-});
-
-// Add custom styles for new components
-function addCustomStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .custom-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-
-        .modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            background: var(--secondary-black);
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            z-index: 10001;
-            border: 1px solid var(--medium-gray);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid var(--dark-gray);
-        }
-
-        .modal-header h2 {
-            font-size: 18px;
-            margin: 0;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--text-gray);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-        }
-
-        .modal-close:hover {
-            background: var(--dark-gray);
-            color: var(--white);
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .btn-primary, .btn-secondary {
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            margin: 5px;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #3a7bc8;
-        }
-
-        .btn-secondary {
-            background: var(--dark-gray);
-            color: var(--white);
-        }
-
-        .btn-secondary:hover {
-            background: var(--medium-gray);
-        }
-        
-        /* Enhanced notification styles */
-        .custom-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--secondary-black);
-            border: 1px solid var(--medium-gray);
-            border-left: 4px solid var(--accent);
-            border-radius: 8px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 9999;
-            min-width: 300px;
-            max-width: 400px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-        }
-
-        .custom-notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .custom-notification.fade-out {
-            opacity: 0;
-            transform: translateX(100%);
-        }
-
-        .custom-notification.success {
-            border-left-color: var(--success);
-        }
-
-        .custom-notification.error {
-            border-left-color: var(--danger);
-        }
-
-        .custom-notification.warning {
-            border-left-color: var(--warning);
-        }
-
-        .custom-notification.info {
-            border-left-color: var(--accent);
-        }
-
-        .custom-notification i {
-            font-size: 16px;
-        }
-
-        .custom-notification.success i {
-            color: var(--success);
-        }
-
-        .custom-notification.error i {
-            color: var(--danger);
-        }
-
-        .custom-notification.warning i {
-            color: var(--warning);
-        }
-        
-        .custom-notification.info i {
-            color: var(--accent);
-        }
-
-        .notification-close {
-            background: none;
-            border: none;
-            color: var(--text-gray);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 0;
-        }
-        
-        /* Campaign wizard styles */
-        .campaign-wizard {
-            width: 100%;
-        }
-        
-        .wizard-steps {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .step {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            background: var(--dark-gray);
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .step.active {
-            background: var(--accent);
-            color: white;
-        }
-        
-        .step-form {
-            display: none;
-        }
-        
-        .step-form.active {
-            display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--medium-gray);
-            border-radius: 4px;
-            background: var(--secondary-black);
-            color: var(--white);
-        }
-        
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        .wizard-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--dark-gray);
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-
 // Interactive Chart Functions
 function initializeInteractiveCharts() {
-<<<<<<< HEAD
     console.log('Initializing interactive charts...');
     
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     // Initialize heat map
     generateHeatMap();
 
     // Add click events to incident cards
-<<<<<<< HEAD
     const incidentCards = document.querySelectorAll('.incident-type-card');
     console.log(`Found ${incidentCards.length} incident cards`);
     
@@ -1558,34 +639,16 @@ function initializeInteractiveCharts() {
         });
         
         console.log(`Added listener to campaign card ${index + 1}: ${newCard.dataset.id}`);
-=======
-    document.querySelectorAll('.incident-type-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const type = this.dataset.type;
-            const count = this.dataset.count;
-            openIncidentDashboard(type, count);
-        });
-    });
-
-    // Add click events to campaign cards
-    document.querySelectorAll('.campaign-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-            // Only trigger if not clicking on action buttons
-            if (!e.target.closest('.campaign-actions')) {
-                const campaignId = this.dataset.id;
-                viewCampaignDetails(campaignId);
-            }
-        });
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     });
 
     // Initialize time filter
     const timeFilter = document.getElementById('timeFilter');
     if (timeFilter) {
-<<<<<<< HEAD
         // Remove existing listener
-        timeFilter.removeEventListener('change', filterIncidentsByTime);
-        timeFilter.addEventListener('change', function() {
+        const newTimeFilter = timeFilter.cloneNode(true);
+        timeFilter.parentNode.replaceChild(newTimeFilter, timeFilter);
+        
+        newTimeFilter.addEventListener('change', function() {
             console.log(`Time filter changed to: ${this.value}`);
             filterIncidentsByTime(this.value);
         });
@@ -1595,17 +658,10 @@ function initializeInteractiveCharts() {
     }
     
     console.log('✓ Interactive charts initialized');
-=======
-        timeFilter.addEventListener('change', function() {
-            filterIncidentsByTime(this.value);
-        });
-    }
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 }
 
 // Generate Heat Map
 function generateHeatMap() {
-<<<<<<< HEAD
     const grid = document.querySelector('.heat-map-grid') || document.getElementById('heatMapGrid');
     if (!grid) {
         console.log('✗ Heat map grid element not found (.heat-map-grid or #heatMapGrid)');
@@ -1613,11 +669,6 @@ function generateHeatMap() {
     }
 
     console.log('✓ Generating heat map');
-=======
-    const grid = document.getElementById('heatMapGrid');
-    if (!grid) return;
-
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     grid.innerHTML = '';
 
     // Generate 28 cells (4 weeks x 7 days)
@@ -1641,35 +692,18 @@ function generateHeatMap() {
         // Add click event
         cell.addEventListener('click', function() {
             const day = Math.floor(i / 7) + 1;
-<<<<<<< HEAD
             const week = (i % 7) + 1;
             console.log(`Heat map cell clicked: Week ${week}, Day ${day} (${intensity} incidents)`);
-=======
-            const week = i % 7 + 1;
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
             showDayDetails(day, week, intensity);
         });
 
         grid.appendChild(cell);
     }
-<<<<<<< HEAD
     
     console.log('✓ Heat map generated with 28 cells');
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 }
 
 // Incident Type Functions
-function viewIncidentDetails(type) {
-    alert(`Opening detailed view for ${type} incidents\n\nThis would show:
-    • Recent ${type} incidents
-    • Response teams assigned
-    • Resolution status
-    • Time analytics`);
-
-    console.log(`Viewing ${type} incident details`);
-}
-
 function assignTeam(type) {
     const teamName = prompt(`Assign team to ${type} incidents:`);
     if (teamName) {
@@ -1686,7 +720,6 @@ function openIncidentDashboard(type, count) {
         card.style.boxShadow = 'none';
     });
 
-<<<<<<< HEAD
     const selectedCard = document.querySelector(`.incident-type-card[data-type="${type}"]`);
     if (selectedCard) {
         selectedCard.style.transform = 'scale(1.02)';
@@ -1694,12 +727,6 @@ function openIncidentDashboard(type, count) {
         console.log(`✓ Highlighted ${type} card`);
     } else {
         console.log(`✗ Could not find card for type: ${type}`);
-=======
-    const selectedCard = document.querySelector(`.incident-type-card.${type}`);
-    if (selectedCard) {
-        selectedCard.style.transform = 'scale(1.02)';
-        selectedCard.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 
     showNotification(`Showing ${type} incidents (${count} total)`, 'info');
@@ -1732,11 +759,7 @@ function filterIncidentsByTime(timeRange) {
 
         // Update UI
         Object.keys(incidents).forEach(type => {
-<<<<<<< HEAD
             const card = document.querySelector(`.incident-type-card[data-type="${type}"]`);
-=======
-            const card = document.querySelector(`.incident-type-card.${type}`);
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
             if (card) {
                 card.querySelector('.incident-count').textContent = incidents[type];
                 card.dataset.count = incidents[type];
@@ -1750,13 +773,10 @@ function filterIncidentsByTime(timeRange) {
                 trendElement.textContent = trend === 'up' ? `↑ ${change}%` :
                                           trend === 'down' ? `↓ ${change}%` : '↔ 0%';
                 trendElement.className = `incident-trend ${trend}`;
-<<<<<<< HEAD
                 
                 console.log(`✓ Updated ${type} card: ${incidents[type]} incidents`);
             } else {
                 console.log(`✗ Could not find card for type: ${type}`);
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
             }
         });
 
@@ -1835,11 +855,7 @@ function addNewCampaign() {
         showNotification('New campaign created successfully!', 'success', 3000);
         
         // Redirect to campaign planning module
-<<<<<<< HEAD
-        window.location.href = '../Modules/Module-1.html';
-=======
         window.location.href = '../Models/Module-1.php';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     } catch (error) {
         console.error('Error creating campaign:', error);
         showNotification('Failed to create campaign. Please try again.', 'error', 4000);
@@ -1883,23 +899,27 @@ function openCampaignCreationModal(campaignId) {
 function nextWizardStep(step) {
     // Update UI to show next step
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    document.querySelector(`[data-step="${step}"]`).classList.add('active');
+    const nextStep = document.querySelector(`[data-step="${step}"]`);
+    if (nextStep) nextStep.classList.add('active');
     
     document.querySelectorAll('.step-form').forEach(el => el.classList.remove('active'));
-    document.querySelector(`[data-step="${step}"]`).classList.add('active');
+    const nextForm = document.querySelector(`.step-form[data-step="${step}"]`);
+    if (nextForm) nextForm.classList.add('active');
     
     // Update button actions based on step
     const actionsDiv = document.querySelector('.wizard-actions');
-    if (step < 4) {
-        actionsDiv.innerHTML = `
-            <button class="btn-secondary" onclick="prevWizardStep(${step - 1})">Back</button>
-            <button class="btn-primary" onclick="nextWizardStep(${step + 1})">Next</button>
-        `;
-    } else {
-        actionsDiv.innerHTML = `
-            <button class="btn-secondary" onclick="prevWizardStep(${step - 1})">Back</button>
-            <button class="btn-primary" onclick="finishCampaignCreation()">Finish</button>
-        `;
+    if (actionsDiv) {
+        if (step < 4) {
+            actionsDiv.innerHTML = `
+                <button class="btn-secondary" onclick="prevWizardStep(${step - 1})">Back</button>
+                <button class="btn-primary" onclick="nextWizardStep(${step + 1})">Next</button>
+            `;
+        } else {
+            actionsDiv.innerHTML = `
+                <button class="btn-secondary" onclick="prevWizardStep(${step - 1})">Back</button>
+                <button class="btn-primary" onclick="finishCampaignCreation()">Finish</button>
+            `;
+        }
     }
 }
 
@@ -1915,11 +935,7 @@ function finishCampaignCreation() {
     
     // Redirect to campaign planning module after a short delay
     setTimeout(() => {
-<<<<<<< HEAD
-        window.location.href = '../Modules/Module-1.html';
-=======
         window.location.href = '../Models/Module-1.php';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }, 1500);
 }
 
@@ -1973,12 +989,6 @@ function viewCampaign(id) {
     }
 }
 
-
-
-
-
-
-
 function remindMe(campaign) {
     const time = prompt('Set reminder for when? (e.g., "1 hour", "tomorrow 9am")');
     if (time) {
@@ -2030,51 +1040,31 @@ function viewLiveStats(campaign) {
 
 function editCampaign(id) {
     // Redirect to the campaign planning module to edit
-<<<<<<< HEAD
-    window.location.href = '../Modules/Module-1.html?campaignId=' + id + '&action=edit';
-=======
     window.location.href = '../Models/Module-1.php?campaignId=' + id + '&action=edit';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     console.log('Editing campaign: ' + id);
 }
 
 function viewReport(id) {
     // Redirect to the campaign analytics reports
-<<<<<<< HEAD
-    window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id + '&view=report';
-=======
     window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id + '&view=report';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     console.log('Viewing report for campaign: ' + id);
 }
 
 function viewAllCampaigns() {
     // Redirect to the campaign analytics reports module
-<<<<<<< HEAD
-    window.location.href = '../Modules/Campaign-Analytics-Reports.html';
-=======
     window.location.href = '../Models/CampaignAnalyticsReports.php';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     console.log('Viewing all campaigns');
 }
 
 function openAnalytics(id) {
     // Redirect to the analytics module for the specific campaign
-<<<<<<< HEAD
-    window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id;
-=======
     window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id;
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     console.log('Opening analytics for campaign: ' + id);
 }
 
 function viewCampaignDetails(id) {
     // Redirect to the campaign analytics for detailed view
-<<<<<<< HEAD
-    window.location.href = '../Modules/Campaign-Analytics-Reports.html?campaignId=' + id;
-=======
     window.location.href = '../Models/CampaignAnalyticsReports.php?campaignId=' + id;
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     console.log('Viewing details for campaign: ' + id);
 }
 
@@ -2188,158 +1178,457 @@ function exportDayReport(week, day) {
     • Recommendations`);
 }
 
+// Add custom styles for new components
+function addCustomStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .custom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
 
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 10001;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
 
-// Initialize everything
-document.addEventListener('DOMContentLoaded', function() {
-    // Original initialization
-    initializeNavigation();
-    initializeWidgets();
-    initializeSearch();
-    initializeNotifications();
-    // initializeThemeToggle(); - REMOVED as per requirement
-    initializeExport();
-    initializeQuickActions();
-    initializeActivityFeed();
-    initializeRealTimeUpdates();
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
 
-    // NEW: Initialize interactive charts
-    initializeInteractiveCharts();
-    
-    // Initialize notification system
-    initializeNotificationSystem();
-    
-    // Initialize user data
-    initializeUserData();
-});
+        .modal-header h2 {
+            font-size: 18px;
+            margin: 0;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: var(--light);
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+            color: #333;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a7bc8;
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: #333;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e8eef7;
+        }
+        
+        /* Enhanced notification styles */
+        .custom-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 400px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .custom-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .custom-notification.fade-out {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        .custom-notification.success {
+            border-left-color: var(--success);
+        }
+
+        .custom-notification.error {
+            border-left-color: var(--danger);
+        }
+
+        .custom-notification.warning {
+            border-left-color: var(--warning);
+        }
+
+        .custom-notification.info {
+            border-left-color: var(--primary);
+        }
+
+        .custom-notification i {
+            font-size: 16px;
+        }
+
+        .custom-notification.success i {
+            color: var(--success);
+        }
+
+        .custom-notification.error i {
+            color: var(--danger);
+        }
+
+        .custom-notification.warning i {
+            color: var(--warning);
+        }
+        
+        .custom-notification.info i {
+            color: var(--primary);
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+        }
+        
+        /* Campaign wizard styles */
+        .campaign-wizard {
+            width: 100%;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: var(--light);
+            border-radius: 4px;
+            cursor: pointer;
+            color: #333;
+        }
+        
+        .step.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .step-form {
+            display: none;
+        }
+        
+        .step-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: white;
+            color: #333;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .wizard-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        
+        /* Additional styles for interactive elements */
+        .incident-type-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .incident-type-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .campaign-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .campaign-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .heat-map-cell {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .heat-map-cell:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Search results styles */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .search-result-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background: var(--light);
+        }
+        
+        .search-result-item i {
+            color: var(--primary);
+        }
+        
+        .result-content {
+            flex: 1;
+        }
+        
+        .result-title {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .result-type {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 2px;
+        }
+        
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: var(--gray);
+        }
+        
+        /* Incident alert styles */
+        .incident-alert {
+            position: relative;
+            background: linear-gradient(135deg, #FF4757 0%, #ff6b6b 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 0 30px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+        
+        .incident-alert.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .dismiss-alert {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .dismiss-alert:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    `;
+    document.head.appendChild(style);
+}
 
 // Export modal functions
 function openExportModal() {
-    document.getElementById('exportModal').classList.add('active');
+    const exportModal = document.getElementById('exportModal');
+    if (exportModal) {
+        exportModal.classList.add('active');
+    } else {
+        alert('Export functionality is ready. Please select export format.');
+    }
 }
 
 function closeExportModal() {
-    document.getElementById('exportModal').classList.remove('active');
+    const exportModal = document.getElementById('exportModal');
+    if (exportModal) {
+        exportModal.classList.remove('active');
+    }
 }
 
 function exportReport() {
     alert('Report exported successfully!');
     closeExportModal();
-<<<<<<< HEAD
 }
 
-// Chatbot Functions
-// Legacy chatbot function - kept for backward compatibility
-function toggleLegacyChatbot() {
-    const chatbot = document.getElementById('chatbotContainer');
-    if (chatbot) {
-        chatbot.classList.toggle('open');
-        if (chatbot.classList.contains('open')) {
-            document.getElementById('chatbotInput')?.focus();
-        }
-    }
-}
-
-// Legacy chatbot functions - kept for backward compatibility
-function handleLegacyChatbotKeyPress(event) {
-    if (event.key === 'Enter') {
-        sendLegacyMessage();
-    }
-}
-
-function sendLegacyMessage() {
-    const input = document.getElementById('chatbotInput');
-    const messages = document.getElementById('chatbotMessages');
-    
-    if (!input || !messages) return;
-    
-    const message = input.value.trim();
-    if (!message) return;
-    
-    // Add user message
-    const userMessage = document.createElement('div');
-    userMessage.className = 'message user-message';
-    userMessage.textContent = message;
-    messages.appendChild(userMessage);
-    
-    // Clear input
-    input.value = '';
-    
-    // Simulate bot response
-    setTimeout(() => {
-        const botMessage = document.createElement('div');
-        botMessage.className = 'message bot-message';
-        botMessage.textContent = 'I understand you need help with the Public Safety system. How can I assist you today?';
-        messages.appendChild(botMessage);
-        messages.scrollTop = messages.scrollHeight;
-    }, 1000);
-    
-    // Scroll to bottom
-    messages.scrollTop = messages.scrollHeight;
-}
-
-// Additional helper functions
-function viewIncidentDetails(type) {
-    showNotification(`Viewing details for ${type} incidents`, 'info');
-}
-
-function assignTeam(type) {
-    showNotification(`Assigning team for ${type} incidents`, 'success');
-}
-
-function addNewCampaign() {
-    showNotification('Opening new campaign creation wizard...', 'info');
-}
-
-function viewCampaign(id) {
-    showNotification(`Viewing campaign details for ID: ${id}`, 'info');
-}
-
-function editCampaign(id) {
-    showNotification(`Editing campaign ID: ${id}`, 'info');
-}
-
-function remindMe(campaign) {
-    showNotification(`Reminder set for ${campaign}`, 'success');
-}
-
-function viewLiveStats(campaign) {
-    showNotification(`Viewing live stats for ${campaign}`, 'info');
-}
-
-function viewAllCampaigns() {
-    showNotification('Viewing all campaigns', 'info');
-}
-
+// Additional helper functions for backward compatibility
 function markAllAsRead() {
     const notifications = document.querySelectorAll('.notification-item.unread');
     notifications.forEach(notification => {
         notification.classList.remove('unread');
     });
+    
+    // Update badge
+    const badge = document.querySelector('.notification-badge');
+    if (badge) {
+        badge.textContent = '0';
+    }
+    
     showNotification('All notifications marked as read', 'success');
 }
 
-// Show notification function
-function showNotification(message, type = 'info', duration = 3000) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
+// Enhanced performSearch function
+function performSearch(query) {
+    // Validate and sanitize the query
+    if (!validateSearchQuery(query)) {
+        Utils.UIHelper.showToast('Invalid search query provided', 'error');
+        return;
+    }
     
-    // Add to body
-    document.body.appendChild(notification);
+    const sanitizedQuery = Utils.UIHelper.sanitizeHTML(query);
     
-    // Remove after duration
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, duration);
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+    Utils.UIHelper.showToast(`Searching for: "${sanitizedQuery}"`, 'info');
+    
+    // Perform actual search
+    const apiHandler = new Utils.APIHandler();
+    apiHandler.get(`/search?q=${encodeURIComponent(sanitizedQuery)}`)
+        .then(results => {
+            displaySearchResults(results);
+        })
+        .catch(() => {
+            // Fallback to mock results
+            displaySearchResults(getMockSearchResults(sanitizedQuery));
+        });
 }
+
+// Initialize charts function for compatibility
+function initializeCharts() {
+    console.log('Charts initialization requested');
+    // Check if chart elements exist and initialize them
+    checkChartLoading();
+}
+
+// Make functions available globally
+window.viewIncidentDetails = viewIncidentDetails;
+window.assignTeam = assignTeam;
+window.addNewCampaign = addNewCampaign;
+window.viewCampaign = viewCampaign;
+window.editCampaign = editCampaign;
+window.remindMe = remindMe;
+window.viewLiveStats = viewLiveStats;
+window.viewAllCampaigns = viewAllCampaigns;
+window.openExportModal = openExportModal;
+window.markAllAsRead = markAllAsRead;
+window.closeModal = closeModal;
+window.showNotification = showNotification;
