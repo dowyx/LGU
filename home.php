@@ -11,7 +11,6 @@ if (!isset($_SESSION['user_id'])) {
 // Include database configuration
 require_once 'config/database.php';
 
-
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'] ?? 'User';
 $user_role = $_SESSION['user_role'] ?? 'Safety Manager';
@@ -40,7 +39,7 @@ try {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $public_satisfaction = $result && $result['avg_score'] !== null ? round($result['avg_score'], 0) : 92;
     
-    // Incident types data - FIXED QUERY
+    // Incident types data
     $stmt = $pdo->prepare("
         SELECT type, COUNT(*) as count,
                COALESCE(
@@ -59,7 +58,7 @@ try {
     $stmt->execute();
     $incident_types_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Campaigns data - FIXED QUERY with proper field selection
+    // Campaigns data
     $stmt = $pdo->prepare("
         SELECT 
             id, 
@@ -110,20 +109,62 @@ function getTrendClass($trend) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="Styles/home.css">
-    <link rel="stylesheet" href="Styles/chatbot.css">
-    <link rel="stylesheet" href="Styles/userprofile.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="styles/home.css">
+    <link rel="stylesheet" href="styles/chatbot.css">
+    <link rel="stylesheet" href="styles/userprofile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>Public Safety Campaign Management</title>
 
     <style>
-    /* Hide all Export Report buttons except in modal */
-    button:has(i.fa-download),
-    .action-btn-small:last-child {
-        display: none !important;
-    }
-</style>
-
+        /* Show Export Report button only where needed */
+        .chart-actions .action-btn-small:last-child {
+            display: inline-flex !important;
+        }
+        
+        /* Chatbot toggle button styling */
+        .chatbot-toggle-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .chatbot-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .chatbot-toggle-btn i {
+            color: white;
+            font-size: 24px;
+        }
+        
+        .chatbot-toggle-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            font-size: 12px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -140,43 +181,43 @@ function getTrendClass($trend) {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/Module-1.php" class="nav-link">
+                    <a href="models/module-1.php" class="nav-link">
                         <i class="fas fa-calendar-alt"></i>
                         <span class="nav-text">Campaign Planning & Calendar</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/Content-Repository.php" class="nav-link">
+                    <a href="models/content-repository.php" class="nav-link">
                         <i class="fas fa-database"></i>
                         <span class="nav-text">Content Repository</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/Target-Group-Segmentation.php" class="nav-link">
+                    <a href="models/target-group-segmentation.php" class="nav-link">
                         <i class="fas fa-users"></i>
                         <span class="nav-text">Target Group Segmentation</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/EventSeminarManagement.php" class="nav-link">
+                    <a href="models/eventseminarmanagement.php" class="nav-link">
                         <i class="fas fa-calendar-check"></i>
                         <span class="nav-text">Event & Seminar Management</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/SurveyFeedbackCollection.php" class="nav-link">
+                    <a href="models/surveyfeedbackcollection.php" class="nav-link">
                         <i class="fas fa-clipboard-check"></i>
                         <span class="nav-text">Survey & Feedback Collection</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/CampaignAnalyticsReports.php" class="nav-link">
+                    <a href="models/campaignanalyticsreports.php" class="nav-link">
                         <i class="fas fa-chart-bar"></i>
                         <span class="nav-text">Campaign Analytics & Reports</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/HealthPoliceIntegration.php" class="nav-link">
+                    <a href="models/healthpoliceintegration.php" class="nav-link">
                         <i class="fas fa-link"></i>
                         <span class="nav-text">Community Integration</span>
                     </a>
@@ -235,13 +276,7 @@ function getTrendClass($trend) {
                         </div>
                     </div>
 
-                    <!-- AI Chatbot Icon -->
-                    <div class="ai-chatbot-icon">
-                        <a href="#" class="chatbot-link" title="AI Assistant" onclick="chatbot.open(); return false;">
-                            <i class="fas fa-robot"></i>
-                            <span class="chatbot-text">AI Assistant</span>
-                        </a>
-                    </div>
+                    <!-- User Profile -->
                     <div class="user-profile">
                         <div class="user-avatar"><?php echo strtoupper(substr($user_name, 0, 1)); ?></div>
                         <div>
@@ -307,7 +342,7 @@ function getTrendClass($trend) {
                 </div>
             </div>
 
-            <!-- Charts Section - INTERACTIVE VERSION -->
+            <!-- Charts Section -->
             <div class="charts-section">
                 <!-- Interactive Incidents Matrix -->
                 <div class="chart-container interactive-chart">
@@ -341,7 +376,6 @@ function getTrendClass($trend) {
                                 'police' => 'fa-badge'
                             ];
                             
-                            // Use database results if available, otherwise use defaults
                             if (!empty($incident_types_result)) {
                                 $display_incidents = $incident_types_result;
                             } else {
@@ -381,7 +415,7 @@ function getTrendClass($trend) {
                             <?php endforeach; ?>
                         </div>
 
-                        <!-- Heat Map Visualization - FIXED -->
+                        <!-- Heat Map Visualization -->
                         <div class="heat-map-container">
                             <div class="heat-map-title">
                                 <span>Incident Heat Map</span>
@@ -465,10 +499,8 @@ function getTrendClass($trend) {
                     <!-- Campaign Cards Grid -->
                     <div class="campaign-grid">
                         <?php
-                        // Use database results if available, otherwise use defaults
                         if (!empty($campaigns_result)) {
                             $display_campaigns = $campaigns_result;
-                            // Ensure we have at least 4 campaigns for display
                             if (count($display_campaigns) < 4) {
                                 $default_campaigns = [
                                     ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92, 'icon' => 'fa-sun'],
@@ -477,7 +509,6 @@ function getTrendClass($trend) {
                                     ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95, 'icon' => 'fa-car']
                                 ];
                                 
-                                // Merge with defaults
                                 foreach ($default_campaigns as $default_campaign) {
                                     $found = false;
                                     foreach ($display_campaigns as $campaign) {
@@ -500,7 +531,6 @@ function getTrendClass($trend) {
                             ];
                         }
                         
-                        // Define icon mapping
                         $campaign_icons = [
                             'Summer Safety' => 'fa-sun',
                             'School Zone Safety' => 'fa-school',
@@ -510,7 +540,6 @@ function getTrendClass($trend) {
                         ];
                         
                         foreach ($display_campaigns as $campaign):
-                            // Safely extract values with defaults
                             $campaign_id = $campaign['id'] ?? uniqid();
                             $campaign_name = $campaign['name'] ?? 'Unnamed Campaign';
                             $campaign_status = $campaign['status'] ?? 'planned';
@@ -665,46 +694,53 @@ function getTrendClass($trend) {
         </main>
     </div>
 
-    <!-- Enhanced Chatbot Modal -->
-    <div class="chatbot-modal" id="chatbotModal">
+    <!-- Chatbot Toggle Button (Floating) -->
+    <button class="chatbot-toggle-btn" id="chatbotToggleBtn">
+        <i class="fas fa-robot"></i>
+        <span class="badge" id="chatbotBadge">0</span>
+    </button>
+
+    <!-- Chatbot Panel (Hidden by default) -->
+    <div class="chatbot-panel" id="chatbotPanel">
         <div class="chatbot-header">
             <div class="chatbot-header-title">
                 <i class="fas fa-robot"></i>
-                <span>Public Safety AI Assistant</span>
+                <span>AI Safety Assistant</span>
             </div>
-            <button class="chatbot-close" id="closeChatbotBtn" onclick="chatbot.close(); return false;">
+            <button class="chatbot-close" id="closeChatbotBtn">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
         <div class="chatbot-messages" id="chatMessages">
             <div class="message message-ai">
-                👋 Hello! I'm your Public Safety AI Assistant. I can help you with:
-                • Incident analysis
-                • Campaign planning
-                • Report generation
-                • Safety recommendations
-                • Emergency procedures
-                How can I assist you today?
+                <div class="message-content">
+                    👋 Hello! I'm your Public Safety AI Assistant. I can help you with:
+                    • Incident analysis
+                    • Campaign planning
+                    • Report generation
+                    • Safety recommendations
+                    • Emergency procedures
+                    How can I assist you today?
+                </div>
                 <div class="message-time">Just now</div>
             </div>
         </div>
 
         <div class="chatbot-input-area">
             <div class="quick-questions">
-                <button class="quick-question-btn" onclick="chatbot.askQuickQuestion('Show active incidents')">Active Incidents</button>
-                <button class="quick-question-btn" onclick="chatbot.askQuickQuestion('Generate safety report')">Generate Report</button>
-                <button class="quick-question-btn" onclick="chatbot.askQuickQuestion('Emergency procedures')">Emergency Guide</button>
-                <button class="quick-question-btn" onclick="chatbot.askQuickQuestion('Campaign suggestions')">Campaign Ideas</button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('Show active incidents')">Active Incidents</button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('Generate safety report')">Generate Report</button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('Emergency procedures')">Emergency Guide</button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('Campaign suggestions')">Campaign Ideas</button>
             </div>
 
             <div class="chatbot-input-container">
                 <input type="text"
                        class="chatbot-input"
                        id="chatInput"
-                       placeholder="Ask about incidents, campaigns, or safety procedures..."
-                       onkeypress="chatbot.handleKeyPress(event)">
-                <button class="chatbot-send-btn" onclick="chatbot.sendMessage()">
+                       placeholder="Ask about incidents, campaigns, or safety procedures...">
+                <button class="chatbot-send-btn" id="sendChatBtn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -712,44 +748,168 @@ function getTrendClass($trend) {
     </div>
 
     <script>
-    // Critical functions needed immediately
-    function markAllAsRead() {
-        const notifications = document.querySelectorAll('.notification-item.unread');
-        notifications.forEach(notification => {
-            notification.classList.remove('unread');
+    // Simple chatbot functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
+        const chatbotPanel = document.getElementById('chatbotPanel');
+        const closeChatbotBtn = document.getElementById('closeChatbotBtn');
+        const chatInput = document.getElementById('chatInput');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        
+        // Toggle chatbot panel
+        chatbotToggleBtn.addEventListener('click', function() {
+            chatbotPanel.classList.toggle('open');
         });
-        // Show notification
-        const notification = document.createElement('div');
-        notification.className = 'notification notification-success';
-        notification.innerHTML = '<div class="notification-content"><i class="fas fa-check-circle"></i><span>All notifications marked as read</span></div>';
-        document.body.appendChild(notification);
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
+        
+        // Close chatbot panel
+        closeChatbotBtn.addEventListener('click', function() {
+            chatbotPanel.classList.remove('open');
+        });
+        
+        // Send message function
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (message === '') return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            
+            // Clear input
+            chatInput.value = '';
+            
+            // Simulate AI response after delay
+            setTimeout(() => {
+                const response = getAIResponse(message);
+                addMessage(response, 'ai');
+                scrollToBottom();
+            }, 1000);
+        }
+        
+        // Add message to chat
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${sender}`;
+            
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${text}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Get AI response based on input
+        function getAIResponse(input) {
+            const lowerInput = input.toLowerCase();
+            
+            if (lowerInput.includes('incident') || lowerInput.includes('emergency')) {
+                return `There are currently <strong>${<?php echo $active_incidents; ?>} active incidents</strong>. The most common type is safety-related incidents. Would you like me to show you detailed incident reports?`;
+            } else if (lowerInput.includes('campaign') || lowerInput.includes('marketing')) {
+                return `You have <strong>${<?php echo $active_campaigns; ?>} active campaigns</strong> running. The average completion rate is 78% and total reach is 38,200 people. Need help with campaign planning?`;
+            } else if (lowerInput.includes('report') || lowerInput.includes('generate')) {
+                return 'I can help you generate a safety report. Would you like: 1) Weekly incident summary, 2) Campaign performance report, or 3) Public satisfaction analysis?';
+            } else if (lowerInput.includes('help') || lowerInput.includes('assist')) {
+                return 'I can help with: incident analysis, campaign planning, report generation, safety recommendations, emergency procedures, data visualization, and risk assessment. What would you like to know?';
+            } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
+                return 'Hello! 👋 How can I assist you with public safety management today?';
+            } else {
+                return 'I understand you\'re asking about "' + input + '". As your Public Safety Assistant, I can help analyze data, generate reports, or provide safety recommendations. Could you be more specific about what you need?';
             }
-        }, 3000);
-    }
-    
-    // Load remaining scripts with error handling
-    function loadScript(src, callback) {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = callback;
-        script.onerror = function() {
-            console.error('Failed to load script: ' + src);
-            if (callback) callback();
-        };
-        document.head.appendChild(script);
-    }
-    
-    // Load utils.js first, then chatbot.js, then home.js
-    loadScript('Scripts/utils.js', function() {
-        loadScript('Scripts/chatbot.js', function() {
-            loadScript('Scripts/home.js', function() {
-                console.log('All scripts loaded successfully');
-            });
+        }
+        
+        // Quick question function
+        function askQuickQuestion(question) {
+            addMessage(question, 'user');
+            setTimeout(() => {
+                const response = getAIResponse(question);
+                addMessage(response, 'ai');
+                scrollToBottom();
+            }, 800);
+        }
+        
+        // Event listeners
+        sendChatBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
         });
+        
+        // Make functions available globally
+        window.askQuickQuestion = askQuickQuestion;
+        
+        // Mark all notifications as read
+        window.markAllAsRead = function() {
+            const notifications = document.querySelectorAll('.notification-item.unread');
+            notifications.forEach(notification => {
+                notification.classList.remove('unread');
+            });
+            
+            // Update badge
+            const badge = document.querySelector('.notification-badge');
+            if (badge) {
+                badge.textContent = '0';
+            }
+            
+            // Show success message
+            const notification = document.createElement('div');
+            notification.className = 'notification notification-success';
+            notification.innerHTML = '<div class="notification-content"><i class="fas fa-check-circle"></i><span>All notifications marked as read</span></div>';
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        };
     });
+    
+    // Placeholder functions for other buttons
+    function viewIncidentDetails(type) {
+        alert('Viewing details for ' + type + ' incidents');
+    }
+    
+    function assignTeam(type) {
+        alert('Assigning team to ' + type + ' incidents');
+    }
+    
+    function viewCampaign(id) {
+        alert('Viewing campaign details for ID: ' + id);
+    }
+    
+    function editCampaign(id) {
+        alert('Editing campaign with ID: ' + id);
+    }
+    
+    function addNewCampaign() {
+        alert('Adding new campaign');
+    }
+    
+    function openExportModal() {
+        alert('Opening export modal');
+    }
+    
+    function viewAllCampaigns() {
+        alert('Viewing all campaigns');
+    }
+    
+    function remindMe(campaign) {
+        alert('Setting reminder for ' + campaign);
+    }
+    
+    function viewLiveStats(campaign) {
+        alert('Viewing live stats for ' + campaign);
+    }
     </script>
 
 </body>
