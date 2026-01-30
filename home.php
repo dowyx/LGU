@@ -219,7 +219,7 @@ function getTrendClass($trend) {
                 <li class="nav-item">
                     <a href="models/healthpoliceintegration.php" class="nav-link">
                         <i class="fas fa-link"></i>
-                        <span class="nav-text">Community Integration</span>
+                        <span class="nav-text">Community</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -490,10 +490,6 @@ function getTrendClass($trend) {
                             <button class="action-btn-small" onclick="addNewCampaign()">
                                 <i class="fas fa-plus"></i> New Campaign
                             </button>
-                            <button class="action-btn-small" onclick="openExportModal()" style="margin-left: 10px;">
-                                <i class="fas fa-download"></i> Export Report
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Campaign Cards Grid -->
