@@ -174,43 +174,43 @@ try {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Modules/Module-1.php" class="nav-link">
+                    <a href="../Models/Module-1.php" class="nav-link">
                         <i class="fas fa-calendar-alt"></i>
                         <span class="nav-text">Campaign Planning</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Content-Repository.php" class="nav-link active">
+                    <a href="../ModelsContent-Repository.php" class="nav-link active">
                         <i class="fas fa-database"></i>
                         <span class="nav-text">Content Repository</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Modules/Target-Group-Segmentation.php" class="nav-link">
+                    <a href="../Models/Target-Group-Segmentation.php" class="nav-link">
                         <i class="fas fa-users"></i>
                         <span class="nav-text">Target Groups</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Modules/EventSeminarManagement.php" class="nav-link">
+                    <a href="../Models/EventSeminarManagement.php" class="nav-link">
                         <i class="fas fa-calendar-check"></i>
                         <span class="nav-text">Events & Seminars</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Modules/SurveyFeedbackCollection.php" class="nav-link">
+                    <a href="../Models/SurveyFeedbackCollection.php" class="nav-link">
                         <i class="fas fa-clipboard-check"></i>
                         <span class="nav-text">Surveys</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Modules/CampaignAnalyticsReports.php" class="nav-link">
+                    <a href="../Models/CampaignAnalyticsReports.php" class="nav-link">
                         <i class="fas fa-chart-bar"></i>
                         <span class="nav-text">Analytics</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Modules/HealthPoliceIntegration.php" class="nav-link">
+                    <a href="../Models/HealthPoliceIntegration.php" class="nav-link">
                         <i class="fas fa-link"></i>
                         <span class="nav-text">Community</span>
                     </a>
