@@ -237,13 +237,13 @@ function get_campaign_icon($type) {
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="home.php" class="nav-link active">
+                    <a href="home.php" class="nav-link">
                         <i class="fas fa-home"></i>
                         <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="models/module-1.php" class="nav-link">
+                    <a href="models/module-1.php" class="nav-link active">
                         <i class="fas fa-calendar-alt"></i>
                         <span class="nav-text">Campaign Planning & Calendar</span>
                     </a>
