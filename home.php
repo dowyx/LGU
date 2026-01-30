@@ -77,34 +77,6 @@ try {
     $stmt->execute();
     $campaigns_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Recent activity data
-    $stmt = $pdo->prepare("
-        (SELECT 
-            'incident' as type,
-            CONCAT('New incident reported: ', description) as text,
-            created_at as time,
-            'exclamation-triangle' as icon,
-            'alert' as icon_class
-        FROM incidents 
-        ORDER BY created_at DESC 
-        LIMIT 3)
-        UNION ALL
-        (SELECT 
-            'campaign' as type,
-            CONCAT('Campaign \"', name, '\" updated') as text,
-            updated_at as time,
-            'bullhorn' as icon,
-            'success' as icon_class
-        FROM campaigns 
-        WHERE status = 'active'
-        ORDER BY updated_at DESC 
-        LIMIT 3)
-        ORDER BY time DESC 
-        LIMIT 5
-    ");
-    $stmt->execute();
-    $recent_activity = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
 } catch (PDOException $e) {
     // Log error but don't show to user
     error_log("Database error: " . $e->getMessage());
@@ -116,7 +88,6 @@ try {
     $public_satisfaction = 92;
     $incident_types_result = [];
     $campaigns_result = [];
-    $recent_activity = [];
 }
 
 // Helper function to get trend icon
@@ -132,28 +103,6 @@ function getTrendClass($trend) {
     if ($trend < 0) return 'down';
     return 'neutral';
 }
-
-// Helper function to format time ago
-function timeAgo($datetime) {
-    $time = strtotime($datetime);
-    $now = time();
-    $diff = $now - $time;
-    
-    if ($diff < 60) {
-        return 'Just now';
-    } elseif ($diff < 3600) {
-        $mins = floor($diff / 60);
-        return $mins . ' minute' . ($mins > 1 ? 's' : '') . ' ago';
-    } elseif ($diff < 86400) {
-        $hours = floor($diff / 3600);
-        return $hours . ' hour' . ($hours > 1 ? 's' : '') . ' ago';
-    } elseif ($diff < 604800) {
-        $days = floor($diff / 86400);
-        return $days . ' day' . ($days > 1 ? 's' : '') . ' ago';
-    } else {
-        return date('M j, Y', $time);
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -167,1081 +116,12 @@ function timeAgo($datetime) {
     <title>Public Safety Campaign Management</title>
 
     <style>
-        /* Additional styles */
-        :root {
-    --primary-black: #674EA7;
-    --secondary-black: #B4A7D6;
-    --dark-gray: #8E7CC3;
-    --medium-gray: #D9D2E9;
-    --light-gray: #E0E0E0;
-    --text-gray: #B0B0B0;
-    --white: #FFFFFF;
-    --accent: #4A90E2;
-    --warning: #FFA726;
-    --success: #4CAF50;
-    --danger: #F44336;
-}
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-        
-        body {
-            background: #f5f7fa;
-            color: #333;
-            min-height: 100vh;
-        }
-        
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        /* Sidebar Styles */
-        .sidebar {
-            width: 250px;
-            background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            z-index: 100;
-            position: fixed;
-            height: 100vh;
-        }
-        
-        .logo {
-            padding: 25px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .logo h1 {
-            font-size: 22px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-        
-        .nav-menu {
-            list-style: none;
-            padding: 20px 0;
-            flex: 1;
-        }
-        
-        .nav-item {
-            margin: 5px 15px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 14px 20px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
-        
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border-left-color: #4A90E2;
-        }
-        
-        .nav-link i {
-            width: 24px;
-            margin-right: 12px;
-            font-size: 16px;
-            text-align: center;
-        }
-        
-        .nav-text {
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        /* Main Content Styles */
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 0;
-            background: #f5f7fa;
-        }
-        
-        /* Header Styles */
-        .header {
-            background: white;
-            padding: 20px 30px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 99;
-        }
-        
-        .header h2 {
-            color: #1a237e;
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .search-box {
-            display: flex;
-            align-items: center;
-            background: #f5f7fa;
-            border-radius: 25px;
-            padding: 10px 20px;
-            width: 300px;
-            border: 1px solid var(--border);
-        }
-        
-        .search-box i {
-            color: var(--gray);
-            margin-right: 10px;
-        }
-        
-        .search-box input {
-            border: none;
-            background: none;
-            outline: none;
-            width: 100%;
-            color: #333;
-        }
-        
-        /* Notifications */
-        .notifications-dropdown {
-            position: relative;
-        }
-        
-        .notifications-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: var(--gray);
-            cursor: pointer;
-            position: relative;
-            padding: 5px;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .notifications-btn:hover {
-            background: #f5f7fa;
-            color: var(--primary);
-        }
-        
-        .notification-badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background: var(--danger);
-            color: white;
-            font-size: 10px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-        
-        .notifications-menu {
-            position: absolute;
-            top: 50px;
-            right: 0;
-            width: 350px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            display: none;
-            border: 1px solid var(--border);
-            z-index: 1000;
-        }
-        
-        .notifications-dropdown:hover .notifications-menu {
-            display: block;
-        }
-        
-        .notifications-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .notifications-header h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .mark-all-read {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-size: 13px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .notifications-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .notification-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #f5f5f5;
-            display: flex;
-            align-items: flex-start;
-            transition: background 0.2s;
-        }
-        
-        .notification-item:hover {
-            background: #f9f9f9;
-        }
-        
-        .notification-item.unread {
-            background: rgba(74, 144, 226, 0.05);
-        }
-        
-        .notification-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            flex-shrink: 0;
-        }
-        
-        .notification-icon.alert {
-            background: rgba(255, 71, 87, 0.1);
-            color: var(--danger);
-        }
-        
-        .notification-icon.success {
-            background: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-        
-        .notification-content {
-            flex: 1;
-        }
-        
-        .notification-text {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 4px;
-            line-height: 1.4;
-        }
-        
-        .notification-time {
-            font-size: 12px;
-            color: var(--gray);
-        }
-        
-        /* User Profile */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 15px;
-            background: #f5f7fa;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .user-profile:hover {
-            background: #e8eef7;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 18px;
-        }
-        
-        /* Dashboard Widgets */
-        .dashboard-widgets {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            padding: 30px;
-        }
-        
-        .widget {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .widget:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-        
-        .widget-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-        
-        .widget-title {
-            font-size: 14px;
-            color: var(--gray);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .widget-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-        }
-        
-        .icon-incidents {
-            background: rgba(255, 71, 87, 0.1);
-            color: var(--danger);
-        }
-        
-        .icon-campaigns {
-            background: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-        
-        .icon-response {
-            background: rgba(255, 167, 38, 0.1);
-            color: var(--warning);
-        }
-        
-        .icon-analytics {
-            background: rgba(74, 144, 226, 0.1);
-            color: var(--primary);
-        }
-        
-        .widget-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .widget-change {
-            font-size: 14px;
-        }
-        
-        .widget-change .positive {
-            color: var(--success);
-        }
-        
-        .widget-change .negative {
-            color: var(--danger);
-        }
-        
-        /* Charts Section */
-        .charts-section {
-            padding: 0 30px 30px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 30px;
-        }
-        
-        .chart-container {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-        
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .chart-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .chart-legend {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: #f5f7fa;
-            border-radius: 6px;
-            font-size: 13px;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .legend-item:hover {
-            background: #e8eef7;
-        }
-        
-        .legend-item.active {
-            background: rgba(74, 144, 226, 0.1);
-            color: var(--primary);
-        }
-        
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-        }
-        
-        .badge {
-            background: var(--primary);
-            color: white;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-        
-        .chart-filters select {
-            padding: 8px 16px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            background: white;
-            color: #333;
-            font-size: 14px;
-            cursor: pointer;
-            outline: none;
-        }
-        
-        /* Incident Types Grid */
-        .incident-types {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .incident-type-card {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .incident-type-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        
-        .incident-icon {
-            width: 48px;
-            height: 48px;
-            background: white;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: var(--primary);
-            margin-bottom: 15px;
-            border: 1px solid var(--border);
-        }
-        
-        .incident-info h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        
-        .incident-count {
-            font-size: 28px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .incident-trend {
-            font-size: 13px;
-            font-weight: 500;
-        }
-        
-        .incident-trend.up {
-            color: var(--success);
-        }
-        
-        .incident-trend.down {
-            color: var(--danger);
-        }
-        
-        .incident-trend.neutral {
-            color: var(--gray);
-        }
-        
-        .incident-actions {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 5px;
-        }
-        
-        .mini-action-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: white;
-            color: var(--gray);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .mini-action-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        /* Heat Map */
-        .heat-map-container {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 25px;
-            border: 1px solid var(--border);
-        }
-        
-        .heat-map-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .heat-map-title span {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .heat-map-period {
-            font-size: 14px;
-            color: var(--gray);
-            font-weight: normal;
-        }
-        
-        .heat-map-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .heat-map-cell {
-            aspect-ratio: 1;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .heat-map-cell:hover {
-            transform: scale(1.1);
-        }
-        
-        .heat-map-cell.low { background: #c6f6d5; }
-        .heat-map-cell.medium { background: #68d391; }
-        .heat-map-cell.high { background: #38a169; }
-        
-        .heat-map-legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-        }
-        
-        .legend-color.low { background: #c6f6d5; }
-        .legend-color.medium { background: #68d391; }
-        .legend-color.high { background: #38a169; }
-        
-        /* Quick Stats */
-        .quick-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-        }
-        
-        .stat-card {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border: 1px solid var(--border);
-        }
-        
-        .stat-card i {
-            font-size: 24px;
-            color: var(--primary);
-        }
-        
-        .stat-info {
-            flex: 1;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 4px;
-        }
-        
-        .stat-label {
-            font-size: 13px;
-            color: var(--gray);
-        }
-        
-        /* Campaign Grid */
-        .campaign-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        
-        .campaign-card {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .campaign-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        
-        .campaign-status {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 12px;
-            text-transform: uppercase;
-        }
-        
-        .campaign-status.active {
-            background: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-        
-        .campaign-status.planned {
-            background: rgba(255, 167, 38, 0.1);
-            color: var(--warning);
-        }
-        
-        .campaign-status.completed {
-            background: rgba(74, 144, 226, 0.1);
-            color: var(--primary);
-        }
-        
-        .campaign-icon {
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: var(--primary);
-            margin-bottom: 15px;
-            border: 1px solid var(--border);
-        }
-        
-        .campaign-info h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-        }
-        
-        .campaign-progress {
-            margin-bottom: 15px;
-        }
-        
-        .progress-bar {
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4A90E2, #764ba2);
-            border-radius: 4px;
-        }
-        
-        .progress-text {
-            font-size: 12px;
-            color: var(--gray);
-        }
-        
-        .campaign-stats {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .campaign-stats .stat {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .campaign-stats .stat i {
-            color: var(--gray);
-        }
-        
-        .campaign-actions {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 5px;
-        }
-        
-        .campaign-action-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: white;
-            color: var(--gray);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .campaign-action-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        /* Performance Metrics */
-        .performance-metrics {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 1px solid var(--border);
-        }
-        
-        .metric-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        
-        .metric {
-            text-align: center;
-        }
-        
-        .metric-label {
-            font-size: 13px;
-            color: var(--gray);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .metric-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .metric-change {
-            font-size: 13px;
-            font-weight: 500;
-        }
-        
-        .metric-change.positive {
-            color: var(--success);
-        }
-        
-        .metric-change.negative {
-            color: var(--danger);
-        }
-        
-        .metric-change.neutral {
-            color: var(--gray);
-        }
-        
-        /* Timeline */
-        .campaign-timeline {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid var(--border);
-        }
-        
-        .timeline-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .timeline-header h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .view-all-btn {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        
-        .timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .timeline-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border-radius: 8px;
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            transition: all 0.2s;
-        }
-        
-        .timeline-item:hover {
-            background: #e8eef7;
-        }
-        
-        .timeline-item.current {
-            background: rgba(74, 144, 226, 0.05);
-            border-color: var(--primary);
-        }
-        
-        .timeline-date {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            width: 60px;
-            flex-shrink: 0;
-        }
-        
-        .timeline-content {
-            flex: 1;
-        }
-        
-        .timeline-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
-        }
-        
-        .timeline-desc {
-            font-size: 12px;
-            color: var(--gray);
-        }
-        
-        .timeline-actions {
-            flex-shrink: 0;
-        }
-        
-        .timeline-action-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: white;
-            color: var(--gray);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .timeline-action-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        /* Recent Activity */
-        .activity-container {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin: 0 30px 30px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-        
-        .activity-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        
-        .activity-list {
-            list-style: none;
-        }
-        
-        .activity-item {
-            display: flex;
-            align-items: flex-start;
-            padding: 20px 0;
-            border-bottom: 1px solid #f5f5f5;
-        }
-        
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-        
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            margin-right: 15px;
-            flex-shrink: 0;
-        }
-        
-        .icon-alert {
-            background: rgba(255, 71, 87, 0.1);
-            color: var(--danger);
-        }
-        
-        .icon-success {
-            background: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-        
-        .icon-info {
-            background: rgba(74, 144, 226, 0.1);
-            color: var(--primary);
-        }
-        
-        .activity-content {
-            flex: 1;
-        }
-        
-        .activity-text {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 4px;
-            line-height: 1.4;
-        }
-        
-        .activity-time {
-            font-size: 12px;
-            color: var(--gray);
+        /* Show Export Report button only where needed */
+        .chart-actions .action-btn-small:last-child {
+            display: inline-flex !important;
         }
         
-        /* Chatbot Toggle Button */
+        /* Chatbot toggle button styling */
         .chatbot-toggle-btn {
             position: fixed;
             bottom: 30px;
@@ -1274,7 +154,7 @@ function timeAgo($datetime) {
             position: absolute;
             top: -5px;
             right: -5px;
-            background: var(--danger);
+            background: #ff4757;
             color: white;
             font-size: 12px;
             width: 20px;
@@ -1283,339 +163,6 @@ function timeAgo($datetime) {
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        
-        /* Chatbot Panel */
-        .chatbot-panel {
-            position: fixed;
-            bottom: 100px;
-            right: 30px;
-            width: 380px;
-            height: 600px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
-            z-index: 999;
-            display: none;
-            flex-direction: column;
-            border: 1px solid var(--border);
-        }
-        
-        .chatbot-panel.open {
-            display: flex;
-        }
-        
-        .chatbot-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px 15px 0 0;
-            color: white;
-        }
-        
-        .chatbot-header-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-        
-        .chatbot-header-title i {
-            font-size: 22px;
-        }
-        
-        .chatbot-close {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .chatbot-close:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        .chatbot-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: #f8f9fa;
-        }
-        
-        .message {
-            margin-bottom: 20px;
-            max-width: 80%;
-        }
-        
-        .message-ai {
-            align-self: flex-start;
-        }
-        
-        .message-user {
-            align-self: flex-end;
-            margin-left: auto;
-        }
-        
-        .message-content {
-            padding: 15px;
-            border-radius: 15px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .message-ai .message-content {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 15px 15px 15px 5px;
-        }
-        
-        .message-user .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 5px 15px;
-        }
-        
-        .message-time {
-            font-size: 11px;
-            color: var(--gray);
-            margin-top: 5px;
-            text-align: right;
-        }
-        
-        .chatbot-input-area {
-            padding: 20px;
-            border-top: 1px solid var(--border);
-            background: white;
-            border-radius: 0 0 15px 15px;
-        }
-        
-        .quick-questions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .quick-question-btn {
-            padding: 8px 12px;
-            background: #f5f7fa;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 12px;
-            color: #333;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        
-        .quick-question-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        .chatbot-input-container {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chatbot-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 25px;
-            font-size: 14px;
-            outline: none;
-        }
-        
-        .chatbot-input:focus {
-            border-color: var(--primary);
-        }
-        
-        .chatbot-send-btn {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .chart-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .action-btn-small {
-            padding: 8px 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-        
-        .action-btn-small:hover {
-            background: #3a7bd5;
-            transform: translateY(-2px);
-        }
-        
-        /* Show Export Report button only where needed */
-        .chart-actions .action-btn-small:last-child {
-            display: inline-flex !important;
-            background: var(--success);
-        }
-        
-        .chart-actions .action-btn-small:last-child:hover {
-            background: #43a047;
-        }
-        
-        /* Notification popup */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            border-radius: 10px;
-            padding: 15px 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-left: 4px solid var(--success);
-            animation: slideIn 0.3s ease;
-        }
-        
-        .notification-success {
-            border-left-color: var(--success);
-        }
-        
-        .notification-content {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .notification i {
-            color: var(--success);
-            font-size: 18px;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .sidebar {
-                width: 70px;
-            }
-            
-            .main-content {
-                margin-left: 70px;
-            }
-            
-            .nav-text {
-                display: none;
-            }
-            
-            .logo h1 {
-                font-size: 0;
-            }
-            
-            .logo:after {
-                content: "PS";
-                font-size: 18px;
-                font-weight: 600;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-            
-            .main-content {
-                margin-left: 0;
-            }
-            
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                padding: 15px;
-            }
-            
-            .header-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .search-box {
-                width: 100%;
-            }
-            
-            .dashboard-widgets {
-                grid-template-columns: 1fr;
-            }
-            
-            .charts-section {
-                padding: 15px;
-            }
-            
-            .chart-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .incident-types {
-                grid-template-columns: 1fr;
-            }
-            
-            .campaign-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .metric-row {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .chatbot-panel {
-                width: calc(100vw - 40px);
-                right: 20px;
-                bottom: 20px;
-                height: 500px;
-            }
         }
     </style>
 </head>
@@ -1725,15 +272,6 @@ function timeAgo($datetime) {
                                         <div class="notification-time">1 hour ago</div>
                                     </div>
                                 </div>
-                                <div class="notification-item unread">
-                                    <div class="notification-icon alert">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <div class="notification-text">System update required for incident reports</div>
-                                        <div class="notification-time">2 hours ago</div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1743,7 +281,7 @@ function timeAgo($datetime) {
                         <div class="user-avatar"><?php echo strtoupper(substr($user_name, 0, 1)); ?></div>
                         <div>
                             <div style="font-weight: 500;"><?php echo htmlspecialchars($user_name); ?></div>
-                            <div style="font-size: 13px; color: var(--gray);"><?php echo htmlspecialchars($user_role); ?></div>
+                            <div style="font-size: 13px; color: var(--text-gray);"><?php echo htmlspecialchars($user_role); ?></div>
                         </div>
                     </div>
                 </div>
@@ -1835,10 +373,7 @@ function timeAgo($datetime) {
                                 'health' => 'fa-heartbeat',
                                 'safety' => 'fa-shield-alt',
                                 'fire' => 'fa-fire',
-                                'police' => 'fa-badge',
-                                'traffic' => 'fa-traffic-light',
-                                'environmental' => 'fa-leaf',
-                                'cyber' => 'fa-shield-alt'
+                                'police' => 'fa-badge'
                             ];
                             
                             if (!empty($incident_types_result)) {
@@ -1849,10 +384,7 @@ function timeAgo($datetime) {
                                     ['type' => 'health', 'count' => 18, 'trend' => -5],
                                     ['type' => 'safety', 'count' => 32, 'trend' => 8],
                                     ['type' => 'fire', 'count' => 12, 'trend' => 0],
-                                    ['type' => 'police', 'count' => 13, 'trend' => 15],
-                                    ['type' => 'traffic', 'count' => 8, 'trend' => -3],
-                                    ['type' => 'environmental', 'count' => 5, 'trend' => 2],
-                                    ['type' => 'cyber', 'count' => 3, 'trend' => 1]
+                                    ['type' => 'police', 'count' => 13, 'trend' => 15]
                                 ];
                             }
                             
@@ -1862,22 +394,20 @@ function timeAgo($datetime) {
                                 $incident_trend = $incident['trend'] ?? 0;
                                 $icon_class = $incident_icons[$incident_type] ?? 'fa-exclamation-triangle';
                             ?>
-                            <div class="incident-type-card" data-type="<?php echo htmlspecialchars($incident_type); ?>" data-count="<?php echo $incident_count; ?>">
+                            <div class="incident-type-card <?php echo htmlspecialchars($incident_type); ?>" data-type="<?php echo htmlspecialchars($incident_type); ?>" data-count="<?php echo $incident_count; ?>">
                                 <div class="incident-icon">
                                     <i class="fas <?php echo $icon_class; ?>"></i>
                                 </div>
                                 <div class="incident-info">
-                                    <h4><?php echo ucfirst(htmlspecialchars($incident_type)); ?> Incidents</h4>
+                                    <h4><?php echo ucfirst(htmlspecialchars($incident_type)); ?></h4>
                                     <div class="incident-count"><?php echo $incident_count; ?></div>
-                                    <div class="incident-trend <?php echo getTrendClass($incident_trend); ?>">
-                                        <?php echo getTrendIcon($incident_trend); ?> <?php echo abs($incident_trend); ?> this week
-                                    </div>
+                                    <div class="incident-trend <?php echo getTrendClass($incident_trend); ?>"><?php echo getTrendIcon($incident_trend); ?> <?php echo abs($incident_trend); ?></div>
                                 </div>
                                 <div class="incident-actions">
-                                    <button class="mini-action-btn view-details" onclick="viewIncidentDetails('<?php echo htmlspecialchars($incident_type); ?>')" title="View Details">
+                                    <button class="mini-action-btn view-details" onclick="viewIncidentDetails('<?php echo htmlspecialchars($incident_type); ?>')">
                                         <i class="fas fa-search"></i>
                                     </button>
-                                    <button class="mini-action-btn assign-team" onclick="assignTeam('<?php echo htmlspecialchars($incident_type); ?>')" title="Assign Team">
+                                    <button class="mini-action-btn assign-team" onclick="assignTeam('<?php echo htmlspecialchars($incident_type); ?>')">
                                         <i class="fas fa-user-plus"></i>
                                     </button>
                                 </div>
@@ -1960,7 +490,7 @@ function timeAgo($datetime) {
                             <button class="action-btn-small" onclick="addNewCampaign()">
                                 <i class="fas fa-plus"></i> New Campaign
                             </button>
-                            <button class="action-btn-small" onclick="openExportModal()">
+                            <button class="action-btn-small" onclick="openExportModal()" style="margin-left: 10px;">
                                 <i class="fas fa-download"></i> Export Report
                             </button>
                         </div>
@@ -1970,19 +500,19 @@ function timeAgo($datetime) {
                     <div class="campaign-grid">
                         <?php
                         if (!empty($campaigns_result)) {
-                            $display_campaigns = array_slice($campaigns_result, 0, 4);
+                            $display_campaigns = $campaigns_result;
                             if (count($display_campaigns) < 4) {
                                 $default_campaigns = [
-                                    ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92],
-                                    ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'engagement_rate' => 88],
-                                    ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 0, 'engagement_rate' => 0],
-                                    ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95]
+                                    ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92, 'icon' => 'fa-sun'],
+                                    ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'engagement_rate' => 88, 'icon' => 'fa-school'],
+                                    ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 0, 'engagement_rate' => 0, 'icon' => 'fa-home'],
+                                    ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95, 'icon' => 'fa-car']
                                 ];
                                 
                                 foreach ($default_campaigns as $default_campaign) {
                                     $found = false;
                                     foreach ($display_campaigns as $campaign) {
-                                        if (isset($campaign['name']) && $campaign['name'] == $default_campaign['name']) {
+                                        if ($campaign['name'] == $default_campaign['name']) {
                                             $found = true;
                                             break;
                                         }
@@ -1994,10 +524,10 @@ function timeAgo($datetime) {
                             }
                         } else {
                             $display_campaigns = [
-                                ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92],
-                                ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'engagement_rate' => 88],
-                                ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 0, 'engagement_rate' => 0],
-                                ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95]
+                                ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92, 'icon' => 'fa-sun'],
+                                ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'engagement_rate' => 88, 'icon' => 'fa-school'],
+                                ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 0, 'engagement_rate' => 0, 'icon' => 'fa-home'],
+                                ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95, 'icon' => 'fa-car']
                             ];
                         }
                         
@@ -2006,7 +536,6 @@ function timeAgo($datetime) {
                             'School Zone Safety' => 'fa-school',
                             'Home Safety Week' => 'fa-home',
                             'Road Safety Month' => 'fa-car',
-                            'Cybersecurity Month' => 'fa-shield-alt',
                             'default' => 'fa-bullhorn'
                         ];
                         
@@ -2017,7 +546,7 @@ function timeAgo($datetime) {
                             $completion_percentage = $campaign['completion_percentage'] ?? 0;
                             $actual_reach = $campaign['actual_reach'] ?? 0;
                             $engagement_rate = $campaign['engagement_rate'] ?? 0;
-                            $campaign_icon = $campaign_icons[$campaign_name] ?? $campaign_icons['default'];
+                            $campaign_icon = $campaign_icons[$campaign_name] ?? $campaign['icon'] ?? $campaign_icons['default'];
                         ?>
                         <div class="campaign-card <?php echo htmlspecialchars($campaign_status); ?>" data-id="<?php echo $campaign_id; ?>">
                             <div class="campaign-status <?php echo htmlspecialchars($campaign_status); ?>"><?php echo strtoupper(htmlspecialchars($campaign_status)); ?></div>
@@ -2133,26 +662,33 @@ function timeAgo($datetime) {
             <div class="activity-container">
                 <div class="activity-title">Recent Activity</div>
                 <ul class="activity-list">
-                    <?php if (!empty($recent_activity)): ?>
-                        <?php foreach ($recent_activity as $activity): ?>
-                        <li class="activity-item">
-                            <div class="activity-icon icon-<?php echo htmlspecialchars($activity['icon_class'] ?? 'info'); ?>">
-                                <i class="fas fa-<?php echo htmlspecialchars($activity['icon'] ?? 'info-circle'); ?>"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="activity-text"><?php echo htmlspecialchars($activity['text']); ?></div>
-                                <div class="activity-time"><?php echo timeAgo($activity['time']); ?></div>
-                            </div>
-                        </li>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <li class="activity-item">
-                            <div class="activity-content">
-                                <div class="activity-text">No recent activity to display</div>
-                                <div class="activity-time">System is up to date</div>
-                            </div>
-                        </li>
-                    <?php endif; ?>
+                    <li class="activity-item">
+                        <div class="activity-icon icon-alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">New incident reported: Fire emergency at Downtown District</div>
+                            <div class="activity-time">5 minutes ago</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon icon-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">Campaign "Summer Safety" reached 75% completion</div>
+                            <div class="activity-time">1 hour ago</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon icon-info">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">System maintenance scheduled for tonight 11 PM</div>
+                            <div class="activity-time">2 hours ago</div>
+                        </div>
+                    </li>
                 </ul>
             </div>
         </main>
@@ -2180,13 +716,11 @@ function timeAgo($datetime) {
             <div class="message message-ai">
                 <div class="message-content">
                     👋 Hello! I'm your Public Safety AI Assistant. I can help you with:
-                    <br><br>
-                    • Incident analysis and reporting<br>
-                    • Campaign planning and optimization<br>
-                    • Report generation and analytics<br>
-                    • Safety recommendations<br>
-                    • Emergency procedures guidance<br>
-                    <br>
+                    • Incident analysis
+                    • Campaign planning
+                    • Report generation
+                    • Safety recommendations
+                    • Emergency procedures
                     How can I assist you today?
                 </div>
                 <div class="message-time">Just now</div>
@@ -2214,53 +748,54 @@ function timeAgo($datetime) {
     </div>
 
     <script>
-    // Simple chatbot functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
-        const chatbotPanel = document.getElementById('chatbotPanel');
-        const closeChatbotBtn = document.getElementById('closeChatbotBtn');
-        const chatInput = document.getElementById('chatInput');
-        const sendChatBtn = document.getElementById('sendChatBtn');
-        const chatMessages = document.getElementById('chatMessages');
-        
-        // Generate heat map
-        generateHeatMap();
-        
-        // Toggle chatbot panel
-        chatbotToggleBtn.addEventListener('click', function() {
-            chatbotPanel.classList.toggle('open');
-            // Clear badge when opened
-            if (chatbotPanel.classList.contains('open')) {
-                document.getElementById('chatbotBadge').textContent = '0';
+        // Chatbot functionality
+        let isChatbotOpen = false;
+
+        function toggleChatbot() {
+            const panel = document.getElementById('chatbotPanel');
+            isChatbotOpen = !isChatbotOpen;
+            
+            if (isChatbotOpen) {
+                panel.classList.add('open');
+                document.getElementById('chatInput').focus();
+                updateChatbotBadge();
+            } else {
+                panel.classList.remove('open');
             }
-        });
-        
-        // Close chatbot panel
-        closeChatbotBtn.addEventListener('click', function() {
-            chatbotPanel.classList.remove('open');
-        });
-        
-        // Send message function
+        }
+
+        function closeChatbot() {
+            const panel = document.getElementById('chatbotPanel');
+            panel.classList.remove('open');
+            isChatbotOpen = false;
+        }
+
         function sendMessage() {
-            const message = chatInput.value.trim();
-            if (message === '') return;
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
             
             // Add user message
             addMessage(message, 'user');
+            input.value = '';
             
-            // Clear input
-            chatInput.value = '';
+            // Show typing indicator
+            showTypingIndicator();
             
-            // Simulate AI response after delay
+            // Simulate AI response
             setTimeout(() => {
+                hideTypingIndicator();
                 const response = getAIResponse(message);
                 addMessage(response, 'ai');
-                scrollToBottom();
+                
+                // Update badge if needed
+                updateChatbotBadge();
             }, 1000);
         }
-        
-        // Add message to chat
+
         function addMessage(text, sender) {
+            const messages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message message-${sender}`;
             
@@ -2272,124 +807,214 @@ function timeAgo($datetime) {
                 <div class="message-time">${timeString}</div>
             `;
             
-            chatMessages.appendChild(messageDiv);
+            messages.appendChild(messageDiv);
             scrollToBottom();
         }
-        
-        // Scroll to bottom of chat
-        function scrollToBottom() {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        function showTypingIndicator() {
+            const messages = document.getElementById('chatMessages');
+            let indicator = document.getElementById('typingIndicator');
+            
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'typingIndicator';
+                indicator.className = 'typing-indicator';
+                indicator.innerHTML = `
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span class="typing-text">AI is typing...</span>
+                `;
+            }
+            
+            messages.appendChild(indicator);
+            scrollToBottom();
         }
-        
-        // Get AI response based on input
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            const messages = document.getElementById('chatMessages');
+            messages.scrollTop = messages.scrollHeight;
+        }
+
         function getAIResponse(input) {
             const lowerInput = input.toLowerCase();
             
             if (lowerInput.includes('incident') || lowerInput.includes('emergency')) {
-                return `There are currently <strong>${<?php echo $active_incidents; ?>} active incidents</strong>. The most common type is safety-related incidents (32 active cases). Would you like me to:<br>
-                1. Show detailed incident reports?<br>
-                2. Generate incident statistics?<br>
-                3. Suggest response strategies?`;
+                if (lowerInput.includes('active') || lowerInput.includes('current')) {
+                    return `There are currently <strong>${<?php echo $active_incidents; ?>} active incidents</strong>. The most common type is safety-related incidents. Would you like me to show you detailed incident reports?`;
+                } else if (lowerInput.includes('procedure') || lowerInput.includes('handle')) {
+                    return `📋 <strong>Emergency Procedures</strong> 📋<br><br>
+                           <strong>MEDICAL EMERGENCY:</strong><br>
+                           1. Call 911 immediately<br>
+                           2. Provide first aid<br>
+                           3. Keep patient calm<br>
+                           4. Clear area for responders<br><br>
+                           <strong>FIRE EMERGENCY:</strong><br>
+                           1. Activate fire alarm<br>
+                           2. Evacuate immediately<br>
+                           3. Use extinguisher if safe<br>
+                           4. Report to assembly point`;
+                }
+                return `I can help with incident management. Ask me about:<br>
+                        • Active incidents<br>
+                        • Emergency procedures<br>
+                        • Response coordination<br>
+                        • Incident reporting`;
             } else if (lowerInput.includes('campaign') || lowerInput.includes('marketing')) {
-                return `You have <strong>${<?php echo $active_campaigns; ?>} active campaigns</strong> running. The average completion rate is 78% and total reach is 38,200 people.<br><br>
-                <strong>Top Performing Campaign:</strong> Summer Safety (92% engagement)<br>
-                <strong>Needs Attention:</strong> School Zone Safety (60% completion)<br><br>
-                Need help with campaign planning or optimization?`;
+                return `You have <strong>${<?php echo $active_campaigns; ?>} active campaigns</strong> running.<br><br>
+                       <strong>Campaign Suggestions:</strong><br>
+                       • Community Safety Workshops<br>
+                       • Digital Awareness Campaign<br>
+                       • School Safety Program<br>
+                       • Emergency Response Training`;
             } else if (lowerInput.includes('report') || lowerInput.includes('generate')) {
-                return 'I can help you generate a comprehensive safety report. Would you like:<br>
-                1) Weekly incident summary<br>
-                2) Campaign performance report<br>
-                3) Public satisfaction analysis<br>
-                4) Risk assessment report<br>
-                5) Emergency response metrics';
+                return `📊 <strong>Report Generator</strong> 📊<br><br>
+                       I can help create:<br><br>
+                       <strong>Daily Report:</strong><br>
+                       • Incident summary<br>
+                       • Response metrics<br>
+                       • Campaign updates<br><br>
+                       <strong>Weekly Report:</strong><br>
+                       • Trend analysis<br>
+                       • Resource allocation<br>
+                       • Performance review`;
             } else if (lowerInput.includes('help') || lowerInput.includes('assist')) {
-                return 'I can help with:<br>
-                • Incident analysis and reporting<br>
-                • Campaign planning and tracking<br>
-                • Report generation and analytics<br>
-                • Safety recommendations<br>
-                • Emergency procedures guidance<br>
-                • Data visualization<br>
-                • Risk assessment and mitigation<br>
-                <br>What would you like to know?';
-            } else if (lowerInput.includes('hello') || lowerInput.includes('hi') || lowerInput.includes('hey')) {
-                return 'Hello! 👋 How can I assist you with public safety management today? I\'m here to help with incidents, campaigns, reports, and safety guidance.';
-            } else if (lowerInput.includes('safety') && lowerInput.includes('tip')) {
-                return 'Here are some safety tips I can provide:<br>
-                1. Emergency evacuation procedures<br>
-                2. Fire safety guidelines<br>
-                3. First aid basics<br>
-                4. Cybersecurity best practices<br>
-                5. Natural disaster preparedness<br>
-                <br>Which area would you like to explore?';
-            } else if (lowerInput.includes('stat') || lowerInput.includes('data') || lowerInput.includes('number')) {
-                return `Current Dashboard Statistics:<br>
-                • Active Incidents: ${<?php echo $active_incidents; ?>}<br>
-                • Active Campaigns: ${<?php echo $active_campaigns; ?>}<br>
-                • Avg Response Time: ${<?php echo $avg_response_time; ?>} minutes<br>
-                • Public Satisfaction: ${<?php echo $public_satisfaction; ?>}%<br>
-                • Campaign Reach: 38,200 people<br>
-                • Resolution Rate: 94%<br>
-                <br>Would you like more detailed statistics?`;
+                return `I can help with:<br>
+                        • Incident analysis<br>
+                        • Campaign planning<br>
+                        • Report generation<br>
+                        • Safety recommendations<br>
+                        • Emergency procedures<br>
+                        • Data visualization<br>
+                        • Risk assessment<br><br>
+                        What would you like to know?`;
+            } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
+                return 'Hello! 👋 How can I assist you with public safety management today?';
             } else {
-                return `I understand you're asking about "${input}". As your Public Safety Assistant, I specialize in:<br>
-                1. Analyzing incident data and trends<br>
-                2. Optimizing campaign performance<br>
-                3. Generating safety reports<br>
-                4. Providing emergency guidance<br>
-                <br>Could you be more specific about what you need?`;
+                return `I understand you're asking about "${input}".<br><br>
+                       As your Public Safety Assistant, I can help analyze data, generate reports, or provide safety recommendations.<br><br>
+                       Could you be more specific about what you need?`;
             }
         }
-        
-        // Generate heat map
-        function generateHeatMap() {
-            const grid = document.getElementById('heatMapGrid');
-            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            
-            for (let i = 0; i < 7; i++) {
-                for (let j = 0; j < 7; j++) {
-                    const cell = document.createElement('div');
-                    const count = Math.floor(Math.random() * 20) + 1;
-                    
-                    let intensity = 'low';
-                    if (count > 15) intensity = 'high';
-                    else if (count > 5) intensity = 'medium';
-                    
-                    cell.className = `heat-map-cell ${intensity}`;
-                    cell.textContent = count;
-                    cell.title = `${days[j]}: ${count} incidents`;
-                    cell.style.cursor = 'pointer';
-                    
-                    cell.addEventListener('click', function() {
-                        alert(`Day: ${days[j]}\nIncidents: ${count}\nTime period: ${this.textContent.includes('high') ? 'High activity' : 'Normal activity'}`);
-                    });
-                    
-                    grid.appendChild(cell);
+
+        function askQuickQuestion(question) {
+            const input = document.getElementById('chatInput');
+            input.value = question;
+            sendMessage();
+        }
+
+        function updateChatbotBadge() {
+            const badge = document.getElementById('chatbotBadge');
+            if (badge) {
+                // Reset badge when chatbot is opened
+                if (isChatbotOpen) {
+                    badge.textContent = '0';
                 }
             }
         }
-        
-        // Quick question function
-        function askQuickQuestion(question) {
-            addMessage(question, 'user');
-            setTimeout(() => {
-                const response = getAIResponse(question);
-                addMessage(response, 'ai');
-                scrollToBottom();
-            }, 800);
-        }
-        
-        // Event listeners
-        sendChatBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup chatbot toggle button
+            const toggleBtn = document.getElementById('chatbotToggleBtn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleChatbot);
             }
+            
+            // Setup chatbot close button
+            const closeBtn = document.getElementById('closeChatbotBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeChatbot);
+            }
+            
+            // Setup send button
+            const sendBtn = document.getElementById('sendChatBtn');
+            if (sendBtn) {
+                sendBtn.addEventListener('click', sendMessage);
+            }
+            
+            // Setup enter key in input
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            }
+            
+            // Close chatbot when clicking outside
+            document.addEventListener('click', function(e) {
+                const panel = document.getElementById('chatbotPanel');
+                const toggleBtn = document.getElementById('chatbotToggleBtn');
+                
+                if (panel && panel.classList.contains('open') && 
+                    !panel.contains(e.target) && 
+                    !toggleBtn.contains(e.target)) {
+                    closeChatbot();
+                }
+            });
+
+            // Initialize heat map
+            initializeHeatMap();
         });
-        
-        // Make functions available globally
-        window.askQuickQuestion = askQuickQuestion;
-        
+
+        // Initialize heat map with sample data
+        function initializeHeatMap() {
+            const heatMapGrid = document.getElementById('heatMapGrid');
+            if (!heatMapGrid) return;
+
+            // Sample data for 7 days x 8 time slots = 56 cells
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const timeSlots = ['6-9', '9-12', '12-15', '15-18', '18-21', '21-24', '0-3', '3-6'];
+            
+            // Clear existing content
+            heatMapGrid.innerHTML = '';
+            
+            // Create header row with days
+            days.forEach(day => {
+                const headerCell = document.createElement('div');
+                headerCell.className = 'heat-map-cell header';
+                headerCell.textContent = day;
+                headerCell.style.background = 'transparent';
+                headerCell.style.color = 'var(--text-gray)';
+                headerCell.style.fontSize = '11px';
+                headerCell.style.fontWeight = '600';
+                headerCell.style.cursor = 'default';
+                heatMapGrid.appendChild(headerCell);
+            });
+            
+            // Create time slot cells with random incident counts
+            for (let i = 0; i < timeSlots.length; i++) {
+                for (let j = 0; j < days.length; j++) {
+                    const cell = document.createElement('div');
+                    const incidentCount = Math.floor(Math.random() * 20); // 0-19 incidents
+                    
+                    // Determine intensity level
+                    if (incidentCount <= 5) {
+                        cell.className = 'heat-map-cell low';
+                    } else if (incidentCount <= 15) {
+                        cell.className = 'heat-map-cell medium';
+                    } else {
+                        cell.className = 'heat-map-cell high';
+                    }
+                    
+                    cell.title = `${days[j]} ${timeSlots[i]}: ${incidentCount} incidents`;
+                    cell.textContent = incidentCount > 0 ? incidentCount : '';
+                    heatMapGrid.appendChild(cell);
+                }
+            }
+        }
+
         // Mark all notifications as read
         window.markAllAsRead = function() {
             const notifications = document.querySelectorAll('.notification-item.unread');
@@ -2404,89 +1029,66 @@ function timeAgo($datetime) {
             }
             
             // Show success message
+            showNotification('All notifications marked as read', 'success');
+        };
+
+        // Show notification function
+        function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
-            notification.className = 'notification notification-success';
-            notification.innerHTML = '<div class="notification-content"><i class="fas fa-check-circle"></i><span>All notifications marked as read</span></div>';
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
             document.body.appendChild(notification);
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
                 }
             }, 3000);
-        };
-    });
-    
-    // Placeholder functions for other buttons
-    function viewIncidentDetails(type) {
-        alert(`Viewing details for ${type} incidents\n\nWould you like to:\n1. See location map\n2. View response teams\n3. Check timeline\n4. Generate report`);
-    }
-    
-    function assignTeam(type) {
-        alert(`Assigning team to ${type} incidents\n\nAvailable teams:\n• Emergency Response Unit\n• Fire Department\n• Medical Team\n• Police Unit\n\nSelect team to assign:`);
-    }
-    
-    function viewCampaign(id) {
-        alert(`Viewing campaign details for ID: ${id}\n\nLoading analytics dashboard...`);
-    }
-    
-    function editCampaign(id) {
-        alert(`Editing campaign with ID: ${id}\n\nOpening campaign editor...`);
-    }
-    
-    function addNewCampaign() {
-        alert('Adding new campaign\n\nOpening campaign creation wizard...');
-    }
-    
-    function openExportModal() {
-        alert('Opening export modal\n\nSelect report type:\n• PDF Report\n• Excel Data\n• CSV Export\n• Summary Dashboard');
-    }
-    
-    function viewAllCampaigns() {
-        alert('Viewing all campaigns\n\nRedirecting to campaigns dashboard...');
-    }
-    
-    function remindMe(campaign) {
-        alert(`Setting reminder for ${campaign}\n\nReminder set for tomorrow at 9:00 AM`);
-    }
-    
-    function viewLiveStats(campaign) {
-        alert(`Viewing live stats for ${campaign}\n\nLoading real-time analytics...`);
-    }
-    
-    // Time filter functionality
-    document.getElementById('timeFilter').addEventListener('change', function() {
-        const period = this.value;
-        let periodText = 'This Week';
-        
-        switch(period) {
-            case 'today':
-                periodText = 'Today';
-                break;
-            case 'month':
-                periodText = 'This Month';
-                break;
-            case 'quarter':
-                periodText = 'This Quarter';
-                break;
         }
-        
-        // Update heat map period
-        document.querySelector('.heat-map-period').textContent = periodText;
-        
-        // In a real app, this would fetch new data
-        alert(`Loading ${periodText.toLowerCase()} data...`);
-    });
-    
-    // Search functionality
-    document.querySelector('.search-box input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const query = this.value.trim();
-            if (query) {
-                alert(`Searching for: "${query}"\n\nWould search incidents, campaigns, and reports in a real application.`);
-            }
-        }
-    });
-    </script>
 
+        // Placeholder functions for other buttons
+        window.viewIncidentDetails = function(type) {
+            alert('Viewing details for ' + type + ' incidents');
+        };
+
+        window.assignTeam = function(type) {
+            alert('Assigning team to ' + type + ' incidents');
+        };
+
+        window.viewCampaign = function(id) {
+            alert('Viewing campaign details for ID: ' + id);
+        };
+
+        window.editCampaign = function(id) {
+            alert('Editing campaign with ID: ' + id);
+        };
+
+        window.addNewCampaign = function() {
+            alert('Adding new campaign');
+        };
+
+        window.openExportModal = function() {
+            alert('Opening export modal');
+        };
+
+        window.viewAllCampaigns = function() {
+            alert('Viewing all campaigns');
+        };
+
+        window.remindMe = function(campaign) {
+            alert('Setting reminder for ' + campaign);
+        };
+
+        window.viewLiveStats = function(campaign) {
+            alert('Viewing live stats for ' + campaign);
+        };
+
+        // Make quick question function available globally
+        window.askQuickQuestion = askQuickQuestion;
+    </script>
 </body>
 </html>
