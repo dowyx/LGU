@@ -694,58 +694,6 @@ function getTrendClass($trend) {
         </main>
     </div>
 
-    <!-- Chatbot Toggle Button (Floating) -->
-    <button class="chatbot-toggle-btn" id="chatbotToggleBtn">
-        <i class="fas fa-robot"></i>
-        <span class="badge" id="chatbotBadge">0</span>
-    </button>
-
-    <!-- Chatbot Panel (Hidden by default) -->
-    <div class="chatbot-panel" id="chatbotPanel">
-        <div class="chatbot-header">
-            <div class="chatbot-header-title">
-                <i class="fas fa-robot"></i>
-                <span>AI Safety Assistant</span>
-            </div>
-            <button class="chatbot-close" id="closeChatbotBtn">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
-        <div class="chatbot-messages" id="chatMessages">
-            <div class="message message-ai">
-                <div class="message-content">
-                    👋 Hello! I'm your Public Safety AI Assistant. I can help you with:
-                    • Incident analysis
-                    • Campaign planning
-                    • Report generation
-                    • Safety recommendations
-                    • Emergency procedures
-                    How can I assist you today?
-                </div>
-                <div class="message-time">Just now</div>
-            </div>
-        </div>
-
-        <div class="chatbot-input-area">
-            <div class="quick-questions">
-                <button class="quick-question-btn" onclick="askQuickQuestion('Show active incidents')">Active Incidents</button>
-                <button class="quick-question-btn" onclick="askQuickQuestion('Generate safety report')">Generate Report</button>
-                <button class="quick-question-btn" onclick="askQuickQuestion('Emergency procedures')">Emergency Guide</button>
-                <button class="quick-question-btn" onclick="askQuickQuestion('Campaign suggestions')">Campaign Ideas</button>
-            </div>
-
-            <div class="chatbot-input-container">
-                <input type="text"
-                       class="chatbot-input"
-                       id="chatInput"
-                       placeholder="Ask about incidents, campaigns, or safety procedures...">
-                <button class="chatbot-send-btn" id="sendChatBtn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Chatbot functionality
