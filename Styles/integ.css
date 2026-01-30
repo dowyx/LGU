@@ -1132,3 +1132,140 @@ body {
 .api-test-btn:hover {
     background-color: var(--accent);
 }
+
+
+.modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: #2D2D2D;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            padding: 15px 20px;
+            background: #2D2D2D;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .modal-close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            background: #2D2D2D;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: var(--dark-gray);
+            color: var(--white);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-gray);
+            font-style: italic;
+        }
+        
+        .log-success { color: var(--success); }
+        .log-info { color: var(--info); }
+        .log-warning { color: var(--warning); }
+        .log-error { color: var(--danger); }
+        
+        .compliance-compliant { color: var(--success); }
+        .compliance-non-compliant { color: var(--danger); }
+        .compliance-pending { color: var(--warning); }
+        .compliance-audit-required { color: var(--warning); }
+        
+        .status-active { color: var(--success); }
+        .status-disabled { color: var(--text-gray); }
+        .status-maintenance { color: var(--warning); }
+        .status-error { color: var(--danger); }
+        
+        .type-health { background-color: #17a2b8; }
+        .type-police { background-color: #6f42c1; }
+        .type-emergency { background-color: #fd7e14; }
+        .type-data { background-color: #6c757d; }
+        
+        .integration-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .integration-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .status-active { background-color: var(--success); }
+        .status-disabled { background-color: var(--text-gray); }
+        .status-maintenance { background-color: var(--warning); }
+        .status-error { background-color: var(--danger); }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            z-index: 10000;
+            min-width: 250px;
+        }
+        
+        .notification-success { background-color: #28a745; }
+        .notification-error { background-color: #dc3545; }
+        .notification-info { background-color: #17a2b8; }
+        .notification-warning { background-color: #ffc107; color: #000; }

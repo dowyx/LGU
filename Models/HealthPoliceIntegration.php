@@ -44,15 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             UPDATE integration_systems 
                             SET name = ?, system_type = ?, connected_system = ?, description = ?, status = ?,
                                 updated_at = CURRENT_TIMESTAMP
-                            WHERE id = ? AND id IN (
-                                SELECT DISTINCT integration_id FROM integration_logs il 
-                                JOIN integration_systems i ON il.integration_id = i.id
-                                WHERE i.id = ?
-                            )
+                            WHERE id = ?
                         ");
                         $stmt->execute([
                             $name, $type, $connected_system, $description, $status,
-                            $integration_id, $integration_id
+                            $integration_id
                         ]);
                         $success_message = 'Integration updated successfully!';
                     } else {
@@ -76,11 +72,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $integration_id = isset($_POST['integration_id']) ? intval($_POST['integration_id']) : 0;
                     if ($integration_id > 0) {
+                        // Temporarily disable foreign key checks
+                        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+                        
+                        // Delete the integration
                         $stmt = $pdo->prepare("DELETE FROM integration_systems WHERE id = ?");
                         $stmt->execute([$integration_id]);
-                        $success_message = 'Integration deleted successfully!';
+                        
+                        // Re-enable foreign key checks
+                        $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+                        
+                        if ($stmt->rowCount() > 0) {
+                            $success_message = 'Integration deleted successfully!';
+                        } else {
+                            $error_message = 'Integration not found';
+                        }
                     }
                 } catch (Exception $e) {
+                    $pdo->exec("SET FOREIGN_KEY_CHECKS = 1"); // Ensure FK checks are re-enabled on error
                     $error_message = 'Error deleting integration: ' . $e->getMessage();
                 }
                 break;
@@ -193,8 +202,8 @@ function get_status_class($status) {
 
 function get_status_label($status) {
     switch ($status) {
-        case 'online': return 'Online';
-        case 'offline': return 'Offline';
+        case 'active': return 'Active';
+        case 'disabled': return 'Disabled';
         case 'maintenance': return 'Maintenance';
         case 'error': return 'Error';
         default: return ucfirst($status);
@@ -241,6 +250,34 @@ function get_compliance_label($status) {
     }
 }
 
+// Helper function to calculate time elapsed
+function time_elapsed_string($datetime, $full = false) {
+    if (!$datetime) return 'Never';
+    
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+
+    $string = array(
+        'y' => 'year',
+        'm' => 'month',
+        'd' => 'day',
+        'h' => 'hour',
+        'i' => 'minute',
+        's' => 'second',
+    );
+    foreach ($string as $k => &$v) {
+        if ($diff->$k) {
+            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        } else {
+            unset($string[$k]);
+        }
+    }
+
+    if (!$full) $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -254,79 +291,68 @@ function get_compliance_label($status) {
 </head>
 <body>
     <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h1>Public Safety</h1>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a href="/LGU4/home.php" class="nav-link">
-                <a href="../home.php" class="nav-link">
-
-                    <i class="fas fa-home"></i>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-
-                <a href="/LGU4/Models/Module-1.php" class="nav-link">
-                <a href="Module-1.php" class="nav-link">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="nav-text">Campaign Planning & Calendar</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/Content-Repository.php" class="nav-link">
-                <a href="ContentRepository.php" class="nav-link">
-                    <i class="fas fa-database"></i>
-                    <span class="nav-text">Content Repository</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/Target-Group-Segmentation.php" class="nav-link">
-                <a href="TargetGroupSegmentation.php" class="nav-link">
-                    <i class="fas fa-users"></i>
-                    <span class="nav-text">Target Group Segmentation</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/EventSeminarManagement.php" class="nav-link">
-             <a href="EventSeminarManagement.php" class="nav-link">
-                    <i class="fas fa-calendar-check"></i>
-                    <span class="nav-text">Event & Seminar Management</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/SurveyFeedbackCollection.php" class="nav-link">
-                <a href="SurveyFeedbackCollection.php" class="nav-link">
-                    <i class="fas fa-clipboard-check"></i>
-                    <span class="nav-text">Survey & Feedback Collection</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/CampaignAnalyticsReports.php" class="nav-link">
-                <a href="CampaignAnalyticsReports.php" class="nav-link">
-                    <i class="fas fa-chart-bar"></i>
-                    <span class="nav-text">Campaign Analytics & Reports</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/HealthPoliceIntegration.php" class="nav-link active">
-                <a href="HealthPoliceIntegration.php" class="nav-link active">
-
-                    <i class="fas fa-link"></i>
-                    <span class="nav-text">Community</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="../logout.php" class="nav-link">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="nav-text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Public Safety</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../home.php" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="Module-1.php" class="nav-link">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="nav-text">Campaign Planning & Calendar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="ContentRepository.php" class="nav-link">
+                        <i class="fas fa-database"></i>
+                        <span class="nav-text">Content Repository</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="TargetGroupSegmentation.php" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-text">Target Group Segmentation</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="EventSeminarManagement.php" class="nav-link">
+                        <i class="fas fa-calendar-check"></i>
+                        <span class="nav-text">Event & Seminar Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="SurveyFeedbackCollection.php" class="nav-link">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span class="nav-text">Survey & Feedback Collection</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="CampaignAnalyticsReports.php" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="nav-text">Campaign Analytics & Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="HealthPoliceIntegration.php" class="nav-link active">
+                        <i class="fas fa-link"></i>
+                        <span class="nav-text">Community</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../logout.php" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="nav-text">Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -584,6 +610,7 @@ function get_compliance_label($status) {
                     <div class="alert-triggers">
                         <?php foreach ($alert_triggers as $trigger): ?>
                         <div class="trigger-item">
+                            <div class="trigger-name"><?php echo htmlspecialchars($trigger['trigger_name']); ?></div>
                             <div class="trigger-condition"><?php echo htmlspecialchars($trigger['trigger_condition']); ?></div>
                             <div class="trigger-action"><?php echo htmlspecialchars($trigger['trigger_action']); ?></div>
                         </div>
@@ -689,7 +716,7 @@ function get_compliance_label($status) {
                                 <?php 
                                 $data_points = explode(',', $integration['description']); // Simplified - in reality, this would come from data_flows table
                                 foreach (array_slice($data_points, 0, 3) as $point) {
-                                    echo '<span class="badge">' . htmlspecialchars(trim($point, '. ')) . '</span>';
+                                    echo '<span class="badge">' . htmlspecialchars(trim($point)) . '</span> ';
                                 }
                                 ?>
                             </td>
@@ -699,7 +726,7 @@ function get_compliance_label($status) {
                                 <div class="integration-actions">
                                     <i class="fas fa-sync" title="Sync Now" onclick="syncIntegration(<?php echo $integration['id']; ?>)"></i>
                                     <i class="fas fa-cog" title="Configure" onclick="editIntegration(<?php echo $integration['id']; ?>)"></i>
-                                    <i class="fas fa-chart-line" title="Monitor" onclick="monitorIntegration(<?php echo $integration['id']; ?>)"></i>
+                                    <i class="fas fa-trash" title="Delete" onclick="deleteIntegration(<?php echo $integration['id']; ?>)"></i>
                                 </div>
                             </td>
                         </tr>
@@ -783,7 +810,7 @@ function get_compliance_label($status) {
                 <span class="modal-close" onclick="closeModal('createModal')">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="integrationForm" method="POST">
+                <form id="integrationForm" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
                     <input type="hidden" name="action" value="create_integration">
                     <input type="hidden" id="integrationId" name="id">
                     
@@ -834,7 +861,7 @@ function get_compliance_label($status) {
                 <span class="modal-close" onclick="closeModal('editModal')">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="editIntegrationForm" method="POST">
+                <form id="editIntegrationForm" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
                     <input type="hidden" name="action" value="update_integration">
                     <input type="hidden" id="editId" name="id">
                     
@@ -924,6 +951,20 @@ function get_compliance_label($status) {
             }
         }
         
+        function deleteIntegration(id) {
+            if (confirm('Are you sure you want to delete this integration?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>';
+                form.innerHTML = `
+                    <input type="hidden" name="action" value="delete_integration">
+                    <input type="hidden" name="integration_id" value="${id}">
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
@@ -1001,171 +1042,5 @@ function get_compliance_label($status) {
     <script src="../Scripts/utils.js"></script>
     <script src="../Scripts/mod7.js"></script>
 
-    <style>
-        /* Additional styles for the integration module */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            background: #2D2D2D;
-            border-radius: 8px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        
-        .modal-header {
-            padding: 15px 20px;
-            background: #2D2D2D;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 8px 8px 0 0;
-        }
-        
-        .modal-close {
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            color: white;
-        }
-        
-        .modal-body {
-            padding: 20px;
-        }
-        
-        .modal-footer {
-            padding: 15px 20px;
-            background: #2D2D2D;
-            border-top: 1px solid #dee2e6;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            box-sizing: border-box;
-            background-color: var(--dark-gray);
-            color: var(--white);
-        }
-        
-        .no-data {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-gray);
-            font-style: italic;
-        }
-        
-        .log-success { color: var(--success); }
-        .log-info { color: var(--info); }
-        .log-warning { color: var(--warning); }
-        .log-error { color: var(--danger); }
-        
-        .compliance-compliant { color: var(--success); }
-        .compliance-non-compliant { color: var(--danger); }
-        .compliance-pending { color: var(--warning); }
-        .compliance-audit-required { color: var(--warning); }
-        
-        .status-active { color: var(--success); }
-        .status-disabled { color: var(--text-gray); }
-        .status-maintenance { color: var(--warning); }
-        .status-error { color: var(--danger); }
-        
-        .type-health { background-color: #17a2b8; }
-        .type-police { background-color: #6f42c1; }
-        .type-emergency { background-color: #fd7e14; }
-        .type-data { background-color: #6c757d; }
-        
-        .integration-type {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            color: white;
-        }
-        
-        .integration-status {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-        }
-        
-        .status-active { background-color: var(--success); }
-        .status-disabled { background-color: var(--text-gray); }
-        .status-maintenance { background-color: var(--warning); }
-        .status-error { background-color: var(--danger); }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 5px;
-            color: white;
-            z-index: 10000;
-            min-width: 250px;
-        }
-        
-        .notification-success { background-color: #28a745; }
-        .notification-error { background-color: #dc3545; }
-        .notification-info { background-color: #17a2b8; }
-        .notification-warning { background-color: #ffc107; color: #000; }
-    </style>
 </body>
 </html>
-
-<?php
-// Helper function to calculate time elapsed
-function time_elapsed_string($datetime, $full = false) {
-    $now = new DateTime;
-    $ago = new DateTime($datetime);
-    $diff = $now->diff($ago);
-
-    $string = array(
-        'y' => 'year',
-        'm' => 'month',
-        'd' => 'day',
-        'h' => 'hour',
-        'i' => 'minute',
-        's' => 'second',
-    );
-    foreach ($string as $k => &$v) {
-        if ($diff->$k) {
-            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
-        } else {
-            unset($string[$k]);
-        }
-    }
-
-    if (!$full) $string = array_slice($string, 0, 1);
-    return $string ? implode(', ', $string) . ' ago' : 'just now';
-}
-?>
