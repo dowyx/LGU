@@ -8,11 +8,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Include the content repository model
-<<<<<<< HEAD
 require_once 'ContentRepository.php';
-=======
 require_once '../Models/ContentRepository.php';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
 
 $contentRepo = new ContentRepository();
 $stats = $contentRepo->getContentStats();
@@ -41,12 +38,9 @@ $categories = $contentRepo->getCategories();
         </div>
         <ul class="nav-menu">
             <li class="nav-item">
-<<<<<<< HEAD
                 <a href="/LGU4/home.php" class="nav-link active">
-=======
                 <a href="/home.php" class="nav-link active">
                     <!-- Changed to root -->
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     <i class="fas fa-home"></i>
                     <span class="nav-text">Dashboard</span>
                 </a>
