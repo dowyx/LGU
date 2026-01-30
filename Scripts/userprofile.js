@@ -50,7 +50,7 @@ class UserProfile {
         console.log('Current user session:', userSession);
 
         // Check if we're on a protected page
-        const protectedPages = ['home.html', 'index.html', 'dashboard.html'];
+        const protectedPages = ['home.php', 'index.php', 'dashboard.php', 'home.html', 'index.html', 'dashboard.html'];
         const currentPage = window.location.pathname.split('/').pop();
         const isProtectedPage = protectedPages.some(page =>
             window.location.pathname.includes(page) ||
@@ -128,11 +128,8 @@ class UserProfile {
                 loginBtn.addEventListener('click', () => {
                     console.log('Redirecting to login page');
                     modal.remove();
-<<<<<<< HEAD
+                    // Redirect to login.php (PHP version)
                     window.location.href = 'login.php';
-=======
-                    window.location.href = 'login.html';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                 });
             }
 
@@ -140,11 +137,7 @@ class UserProfile {
             setTimeout(() => {
                 if (document.getElementById('loginRequiredModal')) {
                     console.log('Auto-redirecting to login page');
-<<<<<<< HEAD
                     window.location.href = 'login.php';
-=======
-                    window.location.href = 'login.html';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                 }
             }, 5000);
         }, 10);
@@ -189,9 +182,11 @@ class UserProfile {
             }
         }
         
-        // Validate email format
-        if (data.email && !Utils.ValidationUtils.email(data.email)) {
-            return false;
+        // Validate email format if Utils is available
+        if (data.email && window.Utils?.ValidationUtils?.email) {
+            if (!Utils.ValidationUtils.email(data.email)) {
+                return false;
+            }
         }
         
         // Check for potentially dangerous content
@@ -216,7 +211,17 @@ class UserProfile {
         for (const key in data) {
             if (data.hasOwnProperty(key)) {
                 if (typeof data[key] === 'string') {
-                    sanitized[key] = Utils.UIHelper.sanitizeHTML(data[key]);
+                    // Use Utils if available, otherwise use basic sanitization
+                    if (window.Utils?.UIHelper?.sanitizeHTML) {
+                        sanitized[key] = Utils.UIHelper.sanitizeHTML(data[key]);
+                    } else {
+                        // Basic sanitization
+                        sanitized[key] = data[key]
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;')
+                            .replace(/'/g, '&#39;');
+                    }
                 } else {
                     sanitized[key] = data[key];
                 }
@@ -247,13 +252,22 @@ class UserProfile {
         const userAvatarElement = document.querySelector('.user-avatar');
 
         if (userNameElement) {
-            userNameElement.textContent = Utils.UIHelper.sanitizeHTML(this.userData.name);
+            const sanitizedName = window.Utils?.UIHelper?.sanitizeHTML 
+                ? Utils.UIHelper.sanitizeHTML(this.userData.name)
+                : this.userData.name;
+            userNameElement.textContent = sanitizedName;
         }
         if (userRoleElement) {
-            userRoleElement.textContent = Utils.UIHelper.sanitizeHTML(this.userData.role);
+            const sanitizedRole = window.Utils?.UIHelper?.sanitizeHTML 
+                ? Utils.UIHelper.sanitizeHTML(this.userData.role)
+                : this.userData.role;
+            userRoleElement.textContent = sanitizedRole;
         }
         if (userAvatarElement) {
-            userAvatarElement.textContent = Utils.UIHelper.sanitizeHTML(this.userData.avatar);
+            const sanitizedAvatar = window.Utils?.UIHelper?.sanitizeHTML 
+                ? Utils.UIHelper.sanitizeHTML(this.userData.avatar)
+                : this.userData.avatar;
+            userAvatarElement.textContent = sanitizedAvatar;
         }
     }
 
@@ -294,17 +308,17 @@ class UserProfile {
 
                 <div class="dropdown-divider"></div>
 
-                <a href="profile.html" class="dropdown-item">
+                <a href="profile.php" class="dropdown-item">
                     <i class="fas fa-user-circle"></i>
                     <span>My Profile</span>
                 </a>
 
-                <a href="settings.html" class="dropdown-item">
+                <a href="settings.php" class="dropdown-item">
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>
                 </a>
 
-                <a href="notifications.html" class="dropdown-item">
+                <a href="notifications.php" class="dropdown-item">
                     <i class="fas fa-bell"></i>
                     <span>Notifications</span>
                     ${this.userData.notifications > 0 ? `<span class="notification-badge">${this.userData.notifications}</span>` : ''}
@@ -312,12 +326,12 @@ class UserProfile {
 
                 <div class="dropdown-divider"></div>
 
-                <a href="help.html" class="dropdown-item">
+                <a href="help.php" class="dropdown-item">
                     <i class="fas fa-question-circle"></i>
                     <span>Help & Support</span>
                 </a>
 
-                <a href="feedback.html" class="dropdown-item">
+                <a href="feedback.php" class="dropdown-item">
                     <i class="fas fa-comment-alt"></i>
                     <span>Send Feedback</span>
                 </a>
@@ -773,15 +787,11 @@ class UserProfile {
                 `;
             }
 
-            // Redirect after delay
+            // Redirect after delay - ONLY to login.php
             setTimeout(() => {
                 console.log('Redirecting to login page...');
                 document.body.classList.remove('logout-modal-open');
-<<<<<<< HEAD
                 window.location.href = 'login.php';
-=======
-                window.location.href = 'login.html';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
             }, 1000);
         }, 1500);
     }
@@ -790,11 +800,8 @@ class UserProfile {
 // Initialize user profile when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Don't initialize on login page
-<<<<<<< HEAD
-    if (window.location.pathname.includes('login.php')) {
-=======
-    if (window.location.pathname.includes('login.html')) {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('login.php') || currentPath.includes('login.html')) {
         return;
     }
 
@@ -826,7 +833,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <i class="fas fa-redo"></i>
                             Refresh Page
                         </button>
-                        <button class="btn-primary modal-btn" onclick="window.location.href='help.html'">
+                        <button class="btn-primary modal-btn" onclick="window.location.href='help.php'">
                             <i class="fas fa-life-ring"></i>
                             Get Help
                         </button>
@@ -849,11 +856,7 @@ window.forceLogout = function() {
         // Fallback to simple logout
         localStorage.clear();
         sessionStorage.clear();
-<<<<<<< HEAD
         window.location.href = 'login.php';
-=======
-        window.location.href = 'login.html';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 };
 
@@ -993,4 +996,3 @@ window.showMessage = function(type, title, message, duration = 5000) {
         }
     }, duration);
 };
-

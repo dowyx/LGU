@@ -18,7 +18,6 @@ class Chatbot {
             console.error('Utils not loaded. Chatbot may not function properly.');
         }
 
-<<<<<<< HEAD
         // Initialize immediately but defer DOM setup
         this.deferredInit();
     }
@@ -34,23 +33,12 @@ class Chatbot {
             });
         } else {
             // DOM is already loaded
-=======
-        this.init();
-    }
-
-    init() {
-        document.addEventListener('DOMContentLoaded', () => {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
             this.setupElements();
             this.setupEventListeners();
             this.loadMessageHistory();
             this.setupKeyboardShortcuts();
             console.log('Enhanced Chatbot initialized successfully');
-<<<<<<< HEAD
         }
-=======
-        });
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 
     setupElements() {
@@ -59,11 +47,7 @@ class Chatbot {
         this.closeBtn = document.getElementById('closeChatbotBtn');
         this.messages = document.getElementById('chatMessages');
         this.input = document.getElementById('chatInput');
-<<<<<<< HEAD
-        this.sendBtn = document.querySelector('.chatbot-send-btn'); // Changed to match home.php
-=======
-        this.sendBtn = document.getElementById('sendChatBtn');
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+        this.sendBtn = document.querySelector('.chatbot-send-btn');
 
         // Add ID if missing
         if (this.chatIcon && !this.chatIcon.id) {
@@ -115,13 +99,10 @@ class Chatbot {
     }
 
     setupEventListeners() {
-<<<<<<< HEAD
         console.log('Setting up chatbot event listeners...');
         console.log('Chat icon found:', this.chatIcon);
         console.log('Modal found:', this.modal);
         
-=======
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
         if (!this.chatIcon || !this.modal) {
             console.error('Chatbot elements not found');
             if (window.Utils) {
@@ -131,7 +112,6 @@ class Chatbot {
         }
 
         // Open chatbot
-<<<<<<< HEAD
         if (this.chatIcon) {
             this.chatIcon.addEventListener('click', (e) => {
                 console.log('Chat icon clicked!');
@@ -145,29 +125,14 @@ class Chatbot {
             this.closeBtn.addEventListener('click', (e) => {
                 console.log('Close button clicked!');
                 e.preventDefault();
-=======
-        this.chatIcon.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.open();
-        });
-
-        // Close chatbot
-        if (this.closeBtn) {
-            this.closeBtn.addEventListener('click', () => {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                 this.close();
             });
         }
 
         // Send message on Enter key
         if (this.input) {
-<<<<<<< HEAD
             this.input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-=======
-            this.input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
                     e.preventDefault();
                     this.sendMessage();
                 }
@@ -259,7 +224,7 @@ class Chatbot {
         const timeString = new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
         messageDiv.innerHTML = `
-            <div class="message-content">${Utils.UIHelper?.sanitizeHTML(text) || text}</div>
+            <div class="message-content">${text}</div>
             <div class="message-time">${timeString}</div>
         `;
         
@@ -327,7 +292,6 @@ class Chatbot {
     }
 
     open() {
-<<<<<<< HEAD
         console.log('Opening chatbot...');
         console.log('Modal element:', this.modal);
         if (this.modal) {
@@ -347,16 +311,6 @@ class Chatbot {
             this.isOpen = false;
             console.log('Chatbot closed, class removed:', this.modal.classList.contains('open'));
         }
-=======
-        this.modal.style.display = 'flex';
-        this.isOpen = true;
-        if (this.input) this.input.focus();
-    }
-
-    close() {
-        this.modal.style.display = 'none';
-        this.isOpen = false;
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
     }
 
     addMessage(text, sender) {
@@ -490,7 +444,7 @@ class Chatbot {
         }
         
         // Sanitize message before processing
-        const sanitizedMessage = Utils.UIHelper.sanitizeHTML(message);
+        const sanitizedMessage = window.Utils?.UIHelper?.sanitizeHTML ? window.Utils.UIHelper.sanitizeHTML(message) : message;
         
         // Add user message
         this.addMessage(sanitizedMessage, 'user');
@@ -538,11 +492,6 @@ class Chatbot {
     }
 }
 
-<<<<<<< HEAD
 // Create chatbot instance immediately and make it globally available
 window.chatbot = new Chatbot();
 console.log('Chatbot instance created:', window.chatbot);
-=======
-// Initialize chatbot when script loads
-const chatbot = new Chatbot();
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
