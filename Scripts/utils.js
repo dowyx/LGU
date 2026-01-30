@@ -12,6 +12,7 @@ const CONFIG = {
     SESSION_TIMEOUT: 3600000, // 1 hour
     MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
     ALLOWED_FILE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'],
+    ALLOWED_FILE_EXTENSIONS: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'],
     SECURITY_HEADERS: {
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
@@ -28,7 +29,10 @@ class NavigationManager {
     }
 
     getCurrentPage() {
-        return window.location.pathname.split('/').pop() || 'home.html';
+        const path = window.location.pathname;
+        // Extract just the filename from the path
+        const filename = path.split('/').pop();
+        return filename || 'home.php';
     }
 
     init() {
@@ -39,10 +43,12 @@ class NavigationManager {
     setActiveNavigation() {
         this.navLinks.forEach(link => {
             const linkHref = link.getAttribute('href');
-            const isActive = this.currentPage === linkHref ||
-                (this.currentPage === '' && linkHref === '#') ||
-                (this.currentPage === 'home.html' && linkHref === '#') ||
-                (linkHref && linkHref.includes(this.currentPage));
+            if (!linkHref) return;
+            
+            // Extract filename from href
+            const linkFilename = linkHref.split('/').pop();
+            const isActive = this.currentPage === linkFilename ||
+                           (linkHref && linkHref.includes(this.currentPage));
 
             link.classList.toggle('active', isActive);
         });
@@ -51,7 +57,8 @@ class NavigationManager {
     setupNavigationTracking() {
         this.navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
-                if (!link.getAttribute('href')?.startsWith('#')) {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('#')) {
                     const moduleName = link.querySelector('.nav-text')?.textContent;
                     this.trackNavigation(moduleName);
                 }
@@ -66,19 +73,23 @@ class NavigationManager {
     }
 
     saveUserActivity(action, data) {
-        const activities = JSON.parse(localStorage.getItem('userActivities') || '[]');
-        activities.push({
-            action,
-            data,
-            timestamp: new Date().toISOString()
-        });
-        
-        // Keep only last 100 activities
-        if (activities.length > 100) {
-            activities.shift();
+        try {
+            const activities = JSON.parse(localStorage.getItem('userActivities') || '[]');
+            activities.push({
+                action,
+                data,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Keep only last 100 activities
+            if (activities.length > 100) {
+                activities.shift();
+            }
+            
+            localStorage.setItem('userActivities', JSON.stringify(activities));
+        } catch (error) {
+            console.error('Error saving user activity:', error);
         }
-        
-        localStorage.setItem('userActivities', JSON.stringify(activities));
     }
 }
 
@@ -130,8 +141,12 @@ class APIHandler {
     
     // Sanitize endpoint to prevent path traversal
     sanitizeEndpoint(endpoint) {
+        if (typeof endpoint !== 'string') {
+            return '/';
+        }
+        
         // Remove any path traversal sequences
-        let sanitized = endpoint.replace('..\\', '').replace('../', '');
+        let sanitized = endpoint.replace(/\.\.(\/|\\)/g, '');
         // Ensure it starts with /
         if (!sanitized.startsWith('/')) {
             sanitized = '/' + sanitized;
@@ -204,7 +219,7 @@ class UIHelper {
                     position: fixed;
                     top: 20px;
                     right: 20px;
-                    background: white;
+                    background: #2D2D2D;
                     border-radius: 8px;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                     padding: 16px;
@@ -214,6 +229,7 @@ class UIHelper {
                     justify-content: space-between;
                     min-width: 300px;
                     animation: slideIn 0.3s ease;
+                    color: white;
                 }
                 .toast-error { border-left: 4px solid #dc3545; }
                 .toast-success { border-left: 4px solid #28a745; }
@@ -229,6 +245,7 @@ class UIHelper {
                     border: none;
                     cursor: pointer;
                     opacity: 0.6;
+                    color: white;
                 }
                 .toast-close:hover { opacity: 1; }
                 @keyframes slideIn {
@@ -347,7 +364,7 @@ class ValidationUtils {
         }
     }
     
-    static fileExtension(filename, allowedExtensions) {
+    static fileExtension(filename, allowedExtensions = CONFIG.ALLOWED_FILE_EXTENSIONS) {
         if (typeof filename !== 'string' || !Array.isArray(allowedExtensions)) {
             return false;
         }
@@ -357,22 +374,46 @@ class ValidationUtils {
     }
 
     static required(value) {
-        return value && value.toString().trim().length > 0;
+        if (value === undefined || value === null) {
+            return false;
+        }
+        
+        if (typeof value === 'string') {
+            return value.trim().length > 0;
+        }
+        
+        return true;
     }
 
     static minLength(value, min) {
-        return value && value.toString().length >= min;
+        if (value === undefined || value === null) {
+            return false;
+        }
+        
+        return value.toString().length >= min;
     }
 
     static maxLength(value, max) {
-        return value && value.toString().length <= max;
+        if (value === undefined || value === null) {
+            return false;
+        }
+        
+        return value.toString().length <= max;
     }
     
     static fileSize(size, maxSize = CONFIG.MAX_FILE_SIZE) {
+        if (typeof size !== 'number') {
+            return false;
+        }
+        
         return size <= maxSize;
     }
     
     static fileType(type, allowedTypes = CONFIG.ALLOWED_FILE_TYPES) {
+        if (typeof type !== 'string') {
+            return false;
+        }
+        
         return allowedTypes.includes(type);
     }
 
@@ -498,13 +539,9 @@ class SessionManager {
     }
 
     static redirectToLogin() {
-<<<<<<< HEAD
-        if (!window.location.pathname.includes('login.php')) {
-            window.location.href = '/LGU4/login.php';
-=======
-        if (!window.location.pathname.includes('login.html')) {
-            window.location.href = '/login.html';
->>>>>>> a5ee48574ab959bafe1d5a07ba89c68909282e5a
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('login.php')) {
+            window.location.href = '../login.php';
         }
     }
 
@@ -572,15 +609,26 @@ class SessionManager {
     
     // Generate a simple browser fingerprint
     static generateFingerprint() {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        ctx.fillText('fingerprint', 10, 10);
-        
-        const userAgent = navigator.userAgent;
-        const platform = navigator.platform;
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        
-        return btoa(userAgent + platform + timezone + canvas.toDataURL()).substring(0, 16);
+        try {
+            const userAgent = navigator.userAgent || '';
+            const platform = navigator.platform || '';
+            const timezone = Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+            
+            // Create a simple hash
+            let hash = 0;
+            const str = userAgent + platform + timezone;
+            
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            
+            return Math.abs(hash).toString(36).substring(0, 16);
+        } catch (error) {
+            console.error('Error generating fingerprint:', error);
+            return 'default-fingerprint';
+        }
     }
 }
 
@@ -714,6 +762,138 @@ class SearchManager {
     }
 }
 
+// File Upload Handler
+class FileUploadHandler {
+    constructor() {
+        this.maxFileSize = CONFIG.MAX_FILE_SIZE;
+        this.allowedTypes = CONFIG.ALLOWED_FILE_TYPES;
+        this.allowedExtensions = CONFIG.ALLOWED_FILE_EXTENSIONS;
+    }
+
+    validateFile(file) {
+        // Check file size
+        if (!ValidationUtils.fileSize(file.size, this.maxFileSize)) {
+            return { valid: false, error: `File size exceeds ${this.maxFileSize / (1024 * 1024)}MB limit` };
+        }
+
+        // Check file type
+        if (!ValidationUtils.fileType(file.type, this.allowedTypes)) {
+            return { valid: false, error: 'File type not allowed' };
+        }
+
+        // Check file extension
+        if (!ValidationUtils.fileExtension(file.name, this.allowedExtensions)) {
+            return { valid: false, error: 'File extension not allowed' };
+        }
+
+        return { valid: true, error: null };
+    }
+
+    async uploadFile(file, endpoint) {
+        const validation = this.validateFile(file);
+        if (!validation.valid) {
+            UIHelper.showToast(validation.error, 'error');
+            throw new Error(validation.error);
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('File upload error:', error);
+            UIHelper.showToast(`Upload failed: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    previewFile(file, previewElementId) {
+        const previewElement = document.getElementById(previewElementId);
+        if (!previewElement) return;
+
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewElement.innerHTML = `<img src="${e.target.result}" alt="${file.name}" style="max-width: 100%; max-height: 200px;">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewElement.textContent = `File: ${file.name} (${this.formatFileSize(file.size)})`;
+        }
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+}
+
+// Date Utilities
+class DateUtils {
+    static formatDate(date, format = 'YYYY-MM-DD') {
+        if (!date) return '';
+        
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '';
+        
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const seconds = String(d.getSeconds()).padStart(2, '0');
+        
+        return format
+            .replace('YYYY', year)
+            .replace('MM', month)
+            .replace('DD', day)
+            .replace('HH', hours)
+            .replace('mm', minutes)
+            .replace('ss', seconds);
+    }
+
+    static getRelativeTime(date) {
+        if (!date) return '';
+        
+        const now = new Date();
+        const past = new Date(date);
+        const diffInSeconds = Math.floor((now - past) / 1000);
+        
+        if (diffInSeconds < 60) return 'just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+        
+        return this.formatDate(date, 'YYYY-MM-DD');
+    }
+
+    static addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+    }
+
+    static isDateInRange(date, startDate, endDate) {
+        const d = new Date(date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        return d >= start && d <= end;
+    }
+}
+
 // Export for use in other files
 window.Utils = {
     NavigationManager,
@@ -723,6 +903,32 @@ window.Utils = {
     SessionManager,
     WidgetManager,
     SearchManager,
+    FileUploadHandler,
+    DateUtils,
     debounce,
     CONFIG
 };
+
+// Initialize session management when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        // Check session on page load
+        SessionManager.checkSession();
+        
+        // Initialize navigation manager if nav links exist
+        if (document.querySelectorAll('.nav-link').length > 0) {
+            new NavigationManager();
+        }
+        
+        // Initialize widget manager if widgets exist
+        if (document.querySelectorAll('.widget').length > 0) {
+            new WidgetManager();
+        }
+        
+        // Log page load
+        console.log('Utils.js loaded successfully');
+    } catch (error) {
+        console.error('Error initializing utilities:', error);
+        UIHelper.showToast('Error loading utilities. Please refresh the page.', 'error');
+    }
+});
