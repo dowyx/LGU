@@ -115,7 +115,56 @@ function getTrendClass($trend) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>Public Safety Campaign Management</title>
 
-    
+    <style>
+        /* Show Export Report button only where needed */
+        .chart-actions .action-btn-small:last-child {
+            display: inline-flex !important;
+        }
+        
+        /* Chatbot toggle button styling */
+        .chatbot-toggle-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .chatbot-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .chatbot-toggle-btn i {
+            color: white;
+            font-size: 24px;
+        }
+        
+        .chatbot-toggle-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            font-size: 12px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -170,7 +219,7 @@ function getTrendClass($trend) {
                 <li class="nav-item">
                     <a href="models/healthpoliceintegration.php" class="nav-link">
                         <i class="fas fa-link"></i>
-                        <span class="nav-text">Community</span>
+                        <span class="nav-text">Community Integration</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -441,6 +490,9 @@ function getTrendClass($trend) {
                             <button class="action-btn-small" onclick="addNewCampaign()">
                                 <i class="fas fa-plus"></i> New Campaign
                             </button>
+                            <button class="action-btn-small" onclick="openExportModal()" style="margin-left: 10px;">
+                                <i class="fas fa-download"></i> Export Report
+                            </button>
                         </div>
                     </div>
 
@@ -642,10 +694,276 @@ function getTrendClass($trend) {
         </main>
     </div>
 
+    <!-- Chatbot Toggle Button (Floating) -->
+    <button class="chatbot-toggle-btn" id="chatbotToggleBtn">
+        <i class="fas fa-robot"></i>
+        <span class="badge" id="chatbotBadge">0</span>
+    </button>
+
+    <!-- Chatbot Panel (Hidden by default) -->
+    <div class="chatbot-panel" id="chatbotPanel">
+        <div class="chatbot-header">
+            <div class="chatbot-header-title">
+                <i class="fas fa-robot"></i>
+                <span>AI Safety Assistant</span>
+            </div>
+            <button class="chatbot-close" id="closeChatbotBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="message message-ai">
+                <div class="message-content">
+                    👋 Hello! I'm your Public Safety AI Assistant. I can help you with:
+                    • Incident analysis
+                    • Campaign planning
+                    • Report generation
+                    • Safety recommendations
+                    • Emergency procedures
+                    How can I assist you today?
+                </div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+
+        <div class="chatbot-input-area">
+            <div class="quick-questions">
+                <button class="quick-question-btn" onclick="askQuickQuestion('Show active incidents')">Active Incidents</button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('Generate safety report')">Generate Report</button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('Emergency procedures')">Emergency Guide</button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('Campaign suggestions')">Campaign Ideas</button>
+            </div>
+
+            <div class="chatbot-input-container">
+                <input type="text"
+                       class="chatbot-input"
+                       id="chatInput"
+                       placeholder="Ask about incidents, campaigns, or safety procedures...">
+                <button class="chatbot-send-btn" id="sendChatBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Toggle notifications menu
-        document.querySelector('.notifications-btn').addEventListener('click', function() {
+        // Chatbot functionality
+        let isChatbotOpen = false;
+
+        function toggleChatbot() {
+            const panel = document.getElementById('chatbotPanel');
+            isChatbotOpen = !isChatbotOpen;
+            
+            if (isChatbotOpen) {
+                panel.classList.add('open');
+                document.getElementById('chatInput').focus();
+                updateChatbotBadge();
+            } else {
+                panel.classList.remove('open');
+            }
+        }
+
+        function closeChatbot() {
+            const panel = document.getElementById('chatbotPanel');
+            panel.classList.remove('open');
+            isChatbotOpen = false;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Simulate AI response
+            setTimeout(() => {
+                hideTypingIndicator();
+                const response = getAIResponse(message);
+                addMessage(response, 'ai');
+                
+                // Update badge if needed
+                updateChatbotBadge();
+            }, 1000);
+        }
+
+        function addMessage(text, sender) {
+            const messages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${sender}`;
+            
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${text}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            messages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const messages = document.getElementById('chatMessages');
+            let indicator = document.getElementById('typingIndicator');
+            
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'typingIndicator';
+                indicator.className = 'typing-indicator';
+                indicator.innerHTML = `
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span class="typing-text">AI is typing...</span>
+                `;
+            }
+            
+            messages.appendChild(indicator);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            const messages = document.getElementById('chatMessages');
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function getAIResponse(input) {
+            const lowerInput = input.toLowerCase();
+            
+            if (lowerInput.includes('incident') || lowerInput.includes('emergency')) {
+                if (lowerInput.includes('active') || lowerInput.includes('current')) {
+                    return `There are currently <strong>${<?php echo $active_incidents; ?>} active incidents</strong>. The most common type is safety-related incidents. Would you like me to show you detailed incident reports?`;
+                } else if (lowerInput.includes('procedure') || lowerInput.includes('handle')) {
+                    return `📋 <strong>Emergency Procedures</strong> 📋<br><br>
+                           <strong>MEDICAL EMERGENCY:</strong><br>
+                           1. Call 911 immediately<br>
+                           2. Provide first aid<br>
+                           3. Keep patient calm<br>
+                           4. Clear area for responders<br><br>
+                           <strong>FIRE EMERGENCY:</strong><br>
+                           1. Activate fire alarm<br>
+                           2. Evacuate immediately<br>
+                           3. Use extinguisher if safe<br>
+                           4. Report to assembly point`;
+                }
+                return `I can help with incident management. Ask me about:<br>
+                        • Active incidents<br>
+                        • Emergency procedures<br>
+                        • Response coordination<br>
+                        • Incident reporting`;
+            } else if (lowerInput.includes('campaign') || lowerInput.includes('marketing')) {
+                return `You have <strong>${<?php echo $active_campaigns; ?>} active campaigns</strong> running.<br><br>
+                       <strong>Campaign Suggestions:</strong><br>
+                       • Community Safety Workshops<br>
+                       • Digital Awareness Campaign<br>
+                       • School Safety Program<br>
+                       • Emergency Response Training`;
+            } else if (lowerInput.includes('report') || lowerInput.includes('generate')) {
+                return `📊 <strong>Report Generator</strong> 📊<br><br>
+                       I can help create:<br><br>
+                       <strong>Daily Report:</strong><br>
+                       • Incident summary<br>
+                       • Response metrics<br>
+                       • Campaign updates<br><br>
+                       <strong>Weekly Report:</strong><br>
+                       • Trend analysis<br>
+                       • Resource allocation<br>
+                       • Performance review`;
+            } else if (lowerInput.includes('help') || lowerInput.includes('assist')) {
+                return `I can help with:<br>
+                        • Incident analysis<br>
+                        • Campaign planning<br>
+                        • Report generation<br>
+                        • Safety recommendations<br>
+                        • Emergency procedures<br>
+                        • Data visualization<br>
+                        • Risk assessment<br><br>
+                        What would you like to know?`;
+            } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
+                return 'Hello! 👋 How can I assist you with public safety management today?';
+            } else {
+                return `I understand you're asking about "${input}".<br><br>
+                       As your Public Safety Assistant, I can help analyze data, generate reports, or provide safety recommendations.<br><br>
+                       Could you be more specific about what you need?`;
+            }
+        }
+
+        function askQuickQuestion(question) {
+            const input = document.getElementById('chatInput');
+            input.value = question;
+            sendMessage();
+        }
+
+        function updateChatbotBadge() {
+            const badge = document.getElementById('chatbotBadge');
+            if (badge) {
+                // Reset badge when chatbot is opened
+                if (isChatbotOpen) {
+                    badge.textContent = '0';
+                }
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup chatbot toggle button
+            const toggleBtn = document.getElementById('chatbotToggleBtn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleChatbot);
+            }
+            
+            // Setup chatbot close button
+            const closeBtn = document.getElementById('closeChatbotBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeChatbot);
+            }
+            
+            // Setup send button
+            const sendBtn = document.getElementById('sendChatBtn');
+            if (sendBtn) {
+                sendBtn.addEventListener('click', sendMessage);
+            }
+            
+            // Setup enter key in input
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            }
+            
+            // Close chatbot when clicking outside
+            document.addEventListener('click', function(e) {
+                const panel = document.getElementById('chatbotPanel');
+                const toggleBtn = document.getElementById('chatbotToggleBtn');
+                
+                if (panel && panel.classList.contains('open') && 
+                    !panel.contains(e.target) && 
+                    !toggleBtn.contains(e.target)) {
+                    closeChatbot();
+                }
+            });
+
             // Initialize heat map
             initializeHeatMap();
         });
