@@ -490,6 +490,9 @@ function getTrendClass($trend) {
                             <button class="action-btn-small" onclick="addNewCampaign()">
                                 <i class="fas fa-plus"></i> New Campaign
                             </button>
+                            <button class="action-btn-small" onclick="exportCampaignReport()">
+                            <i class="fas fa-file-export"></i> Export Report
+                        </button>
                     </div>
 
                     <!-- Campaign Cards Grid -->
