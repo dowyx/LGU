@@ -7,16 +7,14 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Database connection (adjust path as needed)
-try {
-    require_once '../config/database.php';
-    $pdo = new PDO($dsn, $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
-}
+// Database configuration - Update these with your actual credentials
+$host = 'localhost';
+$dbname = 'lgu4_safety_db'; // Change to your database name
+$username = 'root'; // Default XAMPP username
+$password = ''; // Default XAMPP password (empty)
+$charset = 'utf8mb4';
 
-// Initialize content data arrays with the requested features
+// Initialize variables for data
 $stats = [
     'by_category' => [
         'Campaign Materials' => 42,
@@ -29,20 +27,10 @@ $stats = [
         'approved' => 156,
         'rejected' => 5
     ],
-    'recent' => [
-        ['name' => 'Fire Safety Campaign Poster.jpg', 'created_at' => '2024-01-15', 'size' => '2.4 MB', 'category' => 'Campaign Materials'],
-        ['name' => 'Emergency Response Guide.pdf', 'created_at' => '2024-01-14', 'size' => '1.2 MB', 'category' => 'Safety Promotions'],
-        ['name' => 'Safety Training Video.mp4', 'created_at' => '2024-01-13', 'size' => '850 MB', 'category' => 'Multimedia Library'],
-        ['name' => 'Social Media Template.psd', 'created_at' => '2024-01-12', 'size' => '3.1 MB', 'category' => 'Content Templates']
-    ],
-    'expiring_soon' => [
-        ['name' => 'COVID-19 Safety Poster', 'expiry_date' => '2024-02-15', 'category' => 'Safety Promotions'],
-        ['name' => 'Annual Safety Report 2023', 'expiry_date' => '2024-02-28', 'category' => 'Campaign Materials'],
-        ['name' => 'Fire Drill Schedule', 'expiry_date' => '2024-03-01', 'category' => 'Safety Promotions']
-    ]
+    'recent' => [],
+    'expiring_soon' => []
 ];
 
-// The requested categories
 $categories = [
     ['name' => 'Campaign Materials', 'icon' => 'fa-bullhorn'],
     ['name' => 'Safety Promotions', 'icon' => 'fa-shield-alt'],
@@ -50,49 +38,115 @@ $categories = [
     ['name' => 'Content Templates', 'icon' => 'fa-file-alt']
 ];
 
-// Sample content items
-$contentItems = [
-    [
-        'id' => 1,
-        'name' => 'Fire Safety Campaign Poster.jpg',
-        'category' => 'Campaign Materials',
-        'size' => '2.4 MB',
-        'modified' => 'Jan 15, 2024',
-        'status' => 'approved',
-        'version' => '2.1',
-        'description' => 'Fire safety awareness campaign poster'
-    ],
-    [
-        'id' => 2,
-        'name' => 'Emergency Response Guide.pdf',
-        'category' => 'Safety Promotions',
-        'size' => '1.2 MB',
-        'modified' => 'Jan 14, 2024',
-        'status' => 'pending',
-        'version' => '1.0',
-        'description' => 'Emergency response procedures guide'
-    ],
-    [
-        'id' => 3,
-        'name' => 'Safety Training Video.mp4',
-        'category' => 'Multimedia Library',
-        'size' => '850 MB',
-        'modified' => 'Jan 13, 2024',
-        'status' => 'approved',
-        'version' => '3.2',
-        'description' => 'Safety training video for employees'
-    ],
-    [
-        'id' => 4,
-        'name' => 'Social Media Template.psd',
-        'category' => 'Content Templates',
-        'size' => '3.1 MB',
-        'modified' => 'Jan 12, 2024',
-        'status' => 'approved',
-        'version' => '1.5',
-        'description' => 'Social media post template'
-    ]
-];
+$contentItems = [];
+$pdo = null;
+
+// Try to connect to database - if fails, use mock data
+try {
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Fetch real data if connected
+    // Example queries (you'll need to create these tables first):
+    
+    // Get content items
+    $stmt = $pdo->prepare("SELECT * FROM content_items LIMIT 10");
+    $stmt->execute();
+    $contentItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get recent items
+    $stmt = $pdo->prepare("SELECT * FROM content_items ORDER BY created_at DESC LIMIT 4");
+    $stmt->execute();
+    $stats['recent'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get expiring items
+    $stmt = $pdo->prepare("SELECT * FROM content_items WHERE expiry_date > NOW() AND expiry_date < DATE_ADD(NOW(), INTERVAL 30 DAY) LIMIT 3");
+    $stmt->execute();
+    $stats['expiring_soon'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+} catch (PDOException $e) {
+    // If database connection fails, use mock data
+    error_log("Database connection failed: " . $e->getMessage());
+    
+    // Use mock data
+    $stats['recent'] = [
+        ['id' => 1, 'name' => 'Fire Safety Campaign Poster.jpg', 'created_at' => '2024-01-15', 'size' => '2.4 MB', 'category' => 'Campaign Materials'],
+        ['id' => 2, 'name' => 'Emergency Response Guide.pdf', 'created_at' => '2024-01-14', 'size' => '1.2 MB', 'category' => 'Safety Promotions'],
+        ['id' => 3, 'name' => 'Safety Training Video.mp4', 'created_at' => '2024-01-13', 'size' => '850 MB', 'category' => 'Multimedia Library'],
+        ['id' => 4, 'name' => 'Social Media Template.psd', 'created_at' => '2024-01-12', 'size' => '3.1 MB', 'category' => 'Content Templates']
+    ];
+    
+    $stats['expiring_soon'] = [
+        ['id' => 5, 'name' => 'COVID-19 Safety Poster', 'expiry_date' => '2024-02-15', 'category' => 'Safety Promotions'],
+        ['id' => 6, 'name' => 'Annual Safety Report 2023', 'expiry_date' => '2024-02-28', 'category' => 'Campaign Materials'],
+        ['id' => 7, 'name' => 'Fire Drill Schedule', 'expiry_date' => '2024-03-01', 'category' => 'Safety Promotions']
+    ];
+    
+    // Mock content items
+    $contentItems = [
+        [
+            'id' => 1,
+            'name' => 'Fire Safety Campaign Poster.jpg',
+            'category' => 'Campaign Materials',
+            'size' => '2.4 MB',
+            'modified' => 'Jan 15, 2024',
+            'status' => 'approved',
+            'version' => '2.1',
+            'description' => 'Fire safety awareness campaign poster'
+        ],
+        [
+            'id' => 2,
+            'name' => 'Emergency Response Guide.pdf',
+            'category' => 'Safety Promotions',
+            'size' => '1.2 MB',
+            'modified' => 'Jan 14, 2024',
+            'status' => 'pending',
+            'version' => '1.0',
+            'description' => 'Emergency response procedures guide'
+        ],
+        [
+            'id' => 3,
+            'name' => 'Safety Training Video.mp4',
+            'category' => 'Multimedia Library',
+            'size' => '850 MB',
+            'modified' => 'Jan 13, 2024',
+            'status' => 'approved',
+            'version' => '3.2',
+            'description' => 'Safety training video for employees'
+        ],
+        [
+            'id' => 4,
+            'name' => 'Social Media Template.psd',
+            'category' => 'Content Templates',
+            'size' => '3.1 MB',
+            'modified' => 'Jan 12, 2024',
+            'status' => 'approved',
+            'version' => '1.5',
+            'description' => 'Social media post template'
+        ],
+        [
+            'id' => 5,
+            'name' => 'First Aid Manual.pdf',
+            'category' => 'Safety Promotions',
+            'size' => '5.2 MB',
+            'modified' => 'Jan 11, 2024',
+            'status' => 'approved',
+            'version' => '4.0',
+            'description' => 'Complete first aid procedures manual'
+        ],
+        [
+            'id' => 6,
+            'name' => 'Road Safety Infographic.png',
+            'category' => 'Multimedia Library',
+            'size' => '1.8 MB',
+            'modified' => 'Jan 10, 2024',
+            'status' => 'pending',
+            'version' => '1.2',
+            'description' => 'Road safety statistics infographic'
+        ]
+    ];
+}
 ?>
 
 <!DOCTYPE html>
@@ -421,69 +475,7 @@ $contentItems = [
                     </div>
                 </div>
                 <div id="content-display-area">
-                    <div style="text-align: center; padding: 40px; color: var(--text-gray);">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
-                        <p>No content uploaded yet</p>
-                        <p style="font-size: 14px;">Upload safety content using the buttons above</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Additional Features Section -->
-            <div class="module-grid" style="margin-top: 30px;">
-                <!-- Version Control -->
-                <div class="module-card">
-                    <div class="card-header">
-                        <div class="card-title">Version Control</div>
-                        <div class="card-icon" style="background-color: rgba(52, 152, 219, 0.1);">
-                            <i class="fas fa-code-branch" style="color: #3498db;"></i>
-                        </div>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span>Active Versions</span>
-                            <span>156</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span>Archived Versions</span>
-                            <span>423</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span>Last Version Update</span>
-                            <span>Today</span>
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary" style="width: 100%; margin-top: 15px;" onclick="viewVersionHistory()">
-                        <i class="fas fa-history"></i> View Version History
-                    </button>
-                </div>
-
-                <!-- Usage Analytics -->
-                <div class="module-card">
-                    <div class="card-header">
-                        <div class="card-title">Usage Analytics</div>
-                        <div class="card-icon" style="background-color: rgba(46, 204, 113, 0.1);">
-                            <i class="fas fa-chart-line" style="color: #2ecc71;"></i>
-                        </div>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value">1,247</div>
-                            <div class="stat-label">Total Downloads</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">85%</div>
-                            <div class="stat-label">Reuse Rate</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">42</div>
-                            <div class="stat-label">Downloads Today</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">18</div>
-                            <div class="stat-label">Active Campaigns</div>
-                        </div>
-                    </div>
+                    <!-- Content will be loaded via JavaScript -->
                 </div>
             </div>
         </main>
@@ -492,20 +484,42 @@ $contentItems = [
     <script src="../Scripts/mod2.js"></script>
     
     <script>
-        // Initialize content display with sample data
+        // Sample data for demonstration
+        const sampleContent = <?php echo json_encode($contentItems); ?>;
+        const categories = <?php echo json_encode($categories); ?>;
+        
+        // Initialize content display
         document.addEventListener('DOMContentLoaded', function() {
-            const initialContent = <?php echo json_encode($contentItems); ?>;
-            if (initialContent && initialContent.length > 0) {
-                updateContentDisplay(initialContent);
+            if (sampleContent && sampleContent.length > 0) {
+                updateContentDisplay(sampleContent);
+            } else {
+                showNoContentMessage();
             }
             
             // Add event listeners for filters
             document.getElementById('filterSearch').addEventListener('input', applyFilters);
             document.getElementById('categoryFilter').addEventListener('change', applyFilters);
             document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            
+            // Add search functionality
+            document.getElementById('searchInput').addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    applyFilters();
+                }
+            });
         });
 
-        // Function to update content display
+        function showNoContentMessage() {
+            const displayArea = document.getElementById('content-display-area');
+            displayArea.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--text-gray);">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <p>No content uploaded yet</p>
+                    <p style="font-size: 14px;">Upload safety content using the buttons above</p>
+                </div>
+            `;
+        }
+
         function updateContentDisplay(items) {
             const displayArea = document.getElementById('content-display-area');
             if (!items || items.length === 0) {
@@ -519,22 +533,24 @@ $contentItems = [
                 return;
             }
 
-            let contentHTML = '';
+            let contentHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">';
+            
             items.forEach(item => {
                 const fileType = getFileType(item.name);
                 const fileIcon = getFileIcon(fileType);
                 const statusClass = `status-${item.status}`;
                 const statusText = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+                const statusColor = getStatusColor(item.status);
                 
                 contentHTML += `
                     <div class="content-card" style="
                         background: var(--dark-gray);
                         border-radius: 8px;
                         padding: 15px;
-                        margin-bottom: 15px;
                         transition: all 0.3s ease;
                         border: 1px solid transparent;
-                    ">
+                        cursor: pointer;
+                    " onclick="previewContent(${item.id})">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                             <div style="
                                 width: 40px;
@@ -556,52 +572,54 @@ $contentItems = [
                                     ${escapeHtml(item.name)}
                                 </div>
                                 <div style="font-size: 12px; color: var(--text-gray);">
-                                    v${item.version || '1.0'} • ${item.size} • ${item.category}
+                                    ${item.size} • ${item.category}
                                 </div>
                             </div>
                         </div>
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
                             <div>
-                                <div style="color: var(--text-gray);">Category</div>
-                                <div style="color: white; font-weight: 500;">${escapeHtml(item.category)}</div>
+                                <span style="
+                                    padding: 3px 10px;
+                                    border-radius: 15px;
+                                    font-size: 11px;
+                                    font-weight: 600;
+                                    text-transform: uppercase;
+                                    background: ${statusColor};
+                                    color: white;
+                                ">
+                                    ${statusText}
+                                </span>
                             </div>
-                            <div>
-                                <div style="color: var(--text-gray);">Status</div>
-                                <div>
-                                    <span class="status-badge ${statusClass}" style="
-                                        padding: 3px 10px;
-                                        border-radius: 15px;
-                                        font-size: 11px;
-                                        font-weight: 600;
-                                        text-transform: uppercase;
-                                        background: ${statusClass === 'status-approved' ? '#27ae60' : statusClass === 'status-pending' ? '#f39c12' : '#e74c3c'};
-                                        color: white;
-                                    ">
-                                        ${statusText}
-                                    </span>
-                                </div>
+                            <div style="font-size: 12px; color: var(--text-gray);">
+                                v${item.version || '1.0'}
                             </div>
                         </div>
                         
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button onclick="previewContent(${item.id})" 
-                                    style="flex: 1; min-width: 70px; background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">
-                                <i class="fas fa-eye"></i> View
+                        ${item.description ? `
+                        <div style="margin-top: 10px; font-size: 13px; color: var(--text-gray); line-height: 1.4; max-height: 40px; overflow: hidden;">
+                            ${escapeHtml(item.description)}
+                        </div>
+                        ` : ''}
+                        
+                        <div style="display: flex; gap: 8px; margin-top: 15px;">
+                            <button onclick="event.stopPropagation(); previewContent(${item.id})" 
+                                    style="flex: 1; background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">
+                                <i class="fas fa-eye"></i> Preview
                             </button>
-                            <button onclick="downloadContent(${item.id})" 
-                                    style="flex: 1; min-width: 70px; background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">
+                            <button onclick="event.stopPropagation(); downloadContent(${item.id})" 
+                                    style="flex: 1; background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">
                                 <i class="fas fa-download"></i> Download
                             </button>
                         </div>
                         
                         ${item.status === 'pending' ? `
                         <div style="display: flex; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <button onclick="approveContent(${item.id})" 
+                            <button onclick="event.stopPropagation(); approveContent(${item.id})" 
                                     style="flex: 1; background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.3s ease;">
                                 <i class="fas fa-check"></i> Approve
                             </button>
-                            <button onclick="rejectContent(${item.id})" 
+                            <button onclick="event.stopPropagation(); rejectContent(${item.id})" 
                                     style="flex: 1; background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.3s ease;">
                                 <i class="fas fa-times"></i> Reject
                             </button>
@@ -611,114 +629,115 @@ $contentItems = [
                 `;
             });
             
+            contentHTML += '</div>';
             displayArea.innerHTML = contentHTML;
+            
+            // Add hover effects
+            const cards = displayArea.querySelectorAll('.content-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px)';
+                    this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.3)';
+                    this.style.borderColor = 'var(--accent)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                    this.style.borderColor = 'transparent';
+                });
+            });
         }
 
-        // Helper function to get file type
         function getFileType(filename) {
             const ext = filename.split('.').pop().toLowerCase();
-            if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext)) return 'image';
-            if (['mp4', 'avi', 'mov', 'wmv'].includes(ext)) return 'video';
+            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(ext)) return 'image';
+            if (['mp4', 'avi', 'mov', 'wmv', 'mkv'].includes(ext)) return 'video';
+            if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) return 'audio';
             if (['pdf'].includes(ext)) return 'pdf';
             if (['doc', 'docx'].includes(ext)) return 'word';
             if (['ppt', 'pptx'].includes(ext)) return 'powerpoint';
-            if (['psd', 'ai'].includes(ext)) return 'design';
+            if (['xls', 'xlsx'].includes(ext)) return 'excel';
+            if (['psd', 'ai', 'eps'].includes(ext)) return 'design';
             return 'file';
         }
 
-        // Helper function to get file icon
         function getFileIcon(fileType) {
             switch(fileType) {
                 case 'image': return '<i class="fas fa-image"></i>';
                 case 'video': return '<i class="fas fa-video"></i>';
+                case 'audio': return '<i class="fas fa-volume-up"></i>';
                 case 'pdf': return '<i class="fas fa-file-pdf"></i>';
                 case 'word': return '<i class="fas fa-file-word"></i>';
                 case 'powerpoint': return '<i class="fas fa-file-powerpoint"></i>';
+                case 'excel': return '<i class="fas fa-file-excel"></i>';
                 case 'design': return '<i class="fas fa-paint-brush"></i>';
                 default: return '<i class="fas fa-file-alt"></i>';
             }
         }
 
-        // Helper function to escape HTML
+        function getStatusColor(status) {
+            switch(status) {
+                case 'approved': return '#27ae60';
+                case 'pending': return '#f39c12';
+                case 'rejected': return '#e74c3c';
+                default: return '#95a5a6';
+            }
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        // Function to filter by category
         function filterByCategory(category) {
             document.getElementById('categoryFilter').value = category;
             applyFilters();
         }
 
-        // Function to filter by file type
         function filterByType(type) {
             let searchTerm = '';
             switch(type) {
-                case 'image': searchTerm = 'jpg png gif jpeg'; break;
-                case 'video': searchTerm = 'mp4 mov avi'; break;
-                case 'audio': searchTerm = 'mp3 wav'; break;
+                case 'image': searchTerm = 'jpg png gif jpeg bmp'; break;
+                case 'video': searchTerm = 'mp4 mov avi mkv'; break;
+                case 'audio': searchTerm = 'mp3 wav ogg m4a'; break;
                 case 'infographic': searchTerm = 'infographic'; break;
             }
             document.getElementById('filterSearch').value = searchTerm;
             applyFilters();
         }
 
-        // Function to view all items in a category
         function viewCategory(category) {
             filterByCategory(category);
             document.getElementById('filterSearch').value = '';
             applyFilters();
-            
-            // Scroll to content display area
-            document.getElementById('content-display-area').scrollIntoView({
-                behavior: 'smooth'
-            });
         }
 
-        // Function to upload media
         function uploadMedia(type) {
-            alert(`Opening ${type} upload dialog...\n\nSupported formats: ${type === 'image' ? 'JPG, PNG, GIF, BMP' : 'MP4, AVI, MOV, WMV'}`);
+            alert(`Opening ${type} upload dialog...\n\nRemember to include safety information and proper descriptions.`);
         }
 
-        // Function to use template
         function useTemplate(templateType) {
-            let templateName = '';
-            switch(templateType) {
-                case 'social_media': templateName = 'Social Media Template'; break;
-                case 'email': templateName = 'Email Template'; break;
-                case 'poster': templateName = 'Poster Template'; break;
-            }
-            
-            alert(`Using ${templateName}\n\nThis template will be copied to your workspace. You can now customize it with your safety content.`);
+            alert(`Using ${templateType.replace('_', ' ')} template.\n\nCustomize with your safety content and messages.`);
         }
 
-        // Function to browse templates
         function browseTemplates() {
             filterByCategory('Content Templates');
             document.getElementById('filterSearch').value = 'template';
             applyFilters();
         }
 
-        // Function to create campaign
         function createCampaign() {
-            alert('Opening campaign creation wizard...\n\nYou can create new safety awareness campaigns with this tool.');
+            alert('Opening campaign creation wizard...\n\nCreate new safety awareness campaigns with templates.');
         }
 
-        // Function to view version history
-        function viewVersionHistory() {
-            alert('Opening version history...\n\nView and restore previous versions of safety content.');
-        }
-
-        // Apply filters function
         function applyFilters() {
             const searchTerm = document.getElementById('filterSearch').value.toLowerCase();
             const category = document.getElementById('categoryFilter').value;
             const status = document.getElementById('statusFilter').value;
             
-            const initialContent = <?php echo json_encode($contentItems); ?>;
-            let filtered = initialContent.filter(item => {
+            let filtered = sampleContent.filter(item => {
                 const matchesSearch = !searchTerm || 
                     item.name.toLowerCase().includes(searchTerm) ||
                     (item.description && item.description.toLowerCase().includes(searchTerm));
@@ -730,6 +749,53 @@ $contentItems = [
             });
             
             updateContentDisplay(filtered);
+        }
+
+        // Content action functions
+        function previewContent(id) {
+            const item = sampleContent.find(i => i.id === id);
+            if (item) {
+                alert(`Previewing: ${item.name}\n\nCategory: ${item.category}\nStatus: ${item.status}\nSize: ${item.size}\n\nDescription: ${item.description || 'No description available'}`);
+            }
+        }
+
+        function downloadContent(id) {
+            const item = sampleContent.find(i => i.id === id);
+            if (item) {
+                alert(`Downloading: ${item.name}\n\nThis is a demo. In a real application, the file would start downloading.`);
+            }
+        }
+
+        function approveContent(id) {
+            if (confirm('Are you sure you want to approve this content?')) {
+                alert('Content approved successfully!');
+                // In real app, this would update the database
+            }
+        }
+
+        function rejectContent(id) {
+            if (confirm('Are you sure you want to reject this content?')) {
+                alert('Content rejected and moved to revision queue.');
+                // In real app, this would update the database
+            }
+        }
+
+        // Functions from mod2.js
+        function uploadNewContent() {
+            alert('Opening content upload dialog...\n\nUpload safety materials, campaign content, or multimedia files.');
+        }
+
+        function advancedSearch() {
+            alert('Opening advanced search panel...\n\nSearch by date range, file type, author, or custom criteria.');
+        }
+
+        function openReviewQueue() {
+            const pending = sampleContent.filter(item => item.status === 'pending');
+            if (pending.length > 0) {
+                alert(`Opening review queue...\n\nYou have ${pending.length} items pending approval.`);
+            } else {
+                alert('No items pending review. All content is approved!');
+            }
         }
     </script>
 </body>
