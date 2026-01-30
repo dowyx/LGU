@@ -289,343 +289,7 @@ function getTrendClass($trend) {
                         <div class="widget-icon icon-response">
                             <i class="fas fa-clock"></i>
                         </div>
-                    </div>
-                    <div class="widget-value"><?php echo $avg_response_time; ?>m</div>
-                    <div class="widget-change">
-                        <span class="positive"><i class="fas fa-arrow-down"></i> 1.5m improvement</span>
-                    </div>
-                </div>
-
-                <div class="widget">
-                    <div class="widget-header">
-                        <div class="widget-title">Public Satisfaction</div>
-                        <div class="widget-icon icon-analytics">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                    </div>
-                    <div class="widget-value"><?php echo $public_satisfaction; ?>%</div>
-                    <div class="widget-change">
-                        <span class="positive"><i class="fas fa-arrow-up"></i> 4% from last month</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="charts-section">
-                <!-- Interactive Incidents Matrix -->
-                <div class="chart-container interactive-chart">
-                    <div class="chart-header">
-                        <div class="chart-title">Incidents by Type</div>
-                        <div class="chart-legend">
-                            <div class="legend-item active" data-type="all">
-                                <div class="legend-color" style="background-color: #4A90E2;"></div>
-                                <span>All Types</span>
-                                <span class="badge"><?php echo $active_incidents; ?></span>
-                            </div>
-                        </div>
-                        <div class="chart-filters">
-                            <select id="timeFilter">
-                                <option value="today">Today</option>
-                                <option value="week" selected>This Week</option>
-                                <option value="month">This Month</option>
-                                <option value="quarter">This Quarter</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="interactive-matrix">
-                        <div class="incident-types">
-                            <?php
-                            $incident_icons = [
-                                'emergency' => 'fa-ambulance',
-                                'health' => 'fa-heartbeat',
-                                'safety' => 'fa-shield-alt',
-                                'fire' => 'fa-fire',
-                                'police' => 'fa-badge'
-                            ];
-                            
-                            if (!empty($incident_types_result)) {
-                                $display_incidents = $incident_types_result;
-                            } else {
-                                $display_incidents = [
-                                    ['type' => 'emergency', 'count' => 25, 'trend' => 12],
-                                    ['type' => 'health', 'count' => 18, 'trend' => -5],
-                                    ['type' => 'safety', 'count' => 32, 'trend' => 8],
-                                    ['type' => 'fire', 'count' => 12, 'trend' => 0],
-                                    ['type' => 'police', 'count' => 13, 'trend' => 15]
-                                ];
-                            }
-                            
-                            foreach ($display_incidents as $incident):
-                                $incident_type = $incident['type'] ?? 'unknown';
-                                $incident_count = $incident['count'] ?? 0;
-                                $incident_trend = $incident['trend'] ?? 0;
-                                $icon_class = $incident_icons[$incident_type] ?? 'fa-exclamation-triangle';
-                            ?>
-                            <div class="incident-type-card <?php echo htmlspecialchars($incident_type); ?>" data-type="<?php echo htmlspecialchars($incident_type); ?>" data-count="<?php echo $incident_count; ?>">
-                                <div class="incident-icon">
-                                    <i class="fas <?php echo $icon_class; ?>"></i>
-                                </div>
-                                <div class="incident-info">
-                                    <h4><?php echo ucfirst(htmlspecialchars($incident_type)); ?></h4>
-                                    <div class="incident-count"><?php echo $incident_count; ?></div>
-                                    <div class="incident-trend <?php echo getTrendClass($incident_trend); ?>"><?php echo getTrendIcon($incident_trend); ?> <?php echo abs($incident_trend); ?></div>
-                                </div>
-                                <div class="incident-actions">
-                                    <button class="mini-action-btn view-details" onclick="viewIncidentDetails('<?php echo htmlspecialchars($incident_type); ?>')">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                    <button class="mini-action-btn assign-team" onclick="assignTeam('<?php echo htmlspecialchars($incident_type); ?>')">
-                                        <i class="fas fa-user-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-
-                        <!-- Heat Map Visualization -->
-                        <div class="heat-map-container">
-                            <div class="heat-map-title">
-                                <span>Incident Heat Map</span>
-                                <span class="heat-map-period">This Week</span>
-                            </div>
-                            <div class="heat-map-grid" id="heatMapGrid">
-                                <!-- Will be populated by JavaScript -->
-                            </div>
-                            <div class="heat-map-legend">
-                                <div class="legend-item"><span class="legend-color low"></span> Low (1-5)</div>
-                                <div class="legend-item"><span class="legend-color medium"></span> Medium (6-15)</div>
-                                <div class="legend-item"><span class="legend-color high"></span> High (16+)</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Stats -->
-                    <div class="quick-stats">
-                        <div class="stat-card">
-                            <i class="fas fa-clock"></i>
-                            <div class="stat-info">
-                                <div class="stat-value"><?php echo $avg_response_time; ?>m</div>
-                                <div class="stat-label">Avg Response</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-check-circle"></i>
-                            <div class="stat-info">
-                                <div class="stat-value">94%</div>
-                                <div class="stat-label">Resolved</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-users"></i>
-                            <div class="stat-info">
-                                <div class="stat-value">42</div>
-                                <div class="stat-label">Active Teams</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <div class="stat-info">
-                                <div class="stat-value">18</div>
-                                <div class="stat-label">Zones Covered</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Interactive Campaign Dashboard -->
-                <div class="chart-container interactive-chart">
-                    <div class="chart-header">
-                        <div class="chart-title">Campaign Performance</div>
-                        <div class="chart-legend">
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #4CAF50;"></div>
-                                <span>Active Campaigns</span>
-                                <span class="badge"><?php echo $active_campaigns; ?></span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #FFA726;"></div>
-                                <span>Planned</span>
-                                <span class="badge">5</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #4A90E2;"></div>
-                                <span>Completed</span>
-                                <span class="badge">5</span>
-                            </div>
-                        </div>
-                        <div class="chart-actions">
-                            <button class="action-btn-small" onclick="addNewCampaign()">
-                                <i class="fas fa-plus"></i> New Campaign
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Campaign Cards Grid -->
-                    <div class="campaign-grid">
-                        <?php
-                        if (!empty($campaigns_result)) {
-                            $display_campaigns = $campaigns_result;
-                            if (count($display_campaigns) < 4) {
-                                $default_campaigns = [
-                                    ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92, 'icon' => 'fa-sun'],
-                                    ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'engagement_rate' => 88, 'icon' => 'fa-school'],
-                                    ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 0, 'engagement_rate' => 0, 'icon' => 'fa-home'],
-                                    ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95, 'icon' => 'fa-car']
-                                ];
-                                
-                                foreach ($default_campaigns as $default_campaign) {
-                                    $found = false;
-                                    foreach ($display_campaigns as $campaign) {
-                                        if ($campaign['name'] == $default_campaign['name']) {
-                                            $found = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!$found && count($display_campaigns) < 4) {
-                                        $display_campaigns[] = $default_campaign;
-                                    }
-                                }
-                            }
-                        } else {
-                            $display_campaigns = [
-                                ['id' => 1, 'name' => 'Summer Safety', 'status' => 'active', 'completion_percentage' => 75, 'actual_reach' => 7500, 'engagement_rate' => 92, 'icon' => 'fa-sun'],
-                                ['id' => 2, 'name' => 'School Zone Safety', 'status' => 'active', 'completion_percentage' => 60, 'actual_reach' => 5200, 'engagement_rate' => 88, 'icon' => 'fa-school'],
-                                ['id' => 3, 'name' => 'Home Safety Week', 'status' => 'planned', 'completion_percentage' => 10, 'actual_reach' => 0, 'engagement_rate' => 0, 'icon' => 'fa-home'],
-                                ['id' => 4, 'name' => 'Road Safety Month', 'status' => 'completed', 'completion_percentage' => 100, 'actual_reach' => 12500, 'engagement_rate' => 95, 'icon' => 'fa-car']
-                            ];
-                        }
-                        
-                        $campaign_icons = [
-                            'Summer Safety' => 'fa-sun',
-                            'School Zone Safety' => 'fa-school',
-                            'Home Safety Week' => 'fa-home',
-                            'Road Safety Month' => 'fa-car',
-                            'default' => 'fa-bullhorn'
-                        ];
-                        
-                        foreach ($display_campaigns as $campaign):
-                            $campaign_id = $campaign['id'] ?? uniqid();
-                            $campaign_name = $campaign['name'] ?? 'Unnamed Campaign';
-                            $campaign_status = $campaign['status'] ?? 'planned';
-                            $completion_percentage = $campaign['completion_percentage'] ?? 0;
-                            $actual_reach = $campaign['actual_reach'] ?? 0;
-                            $engagement_rate = $campaign['engagement_rate'] ?? 0;
-                            $campaign_icon = $campaign_icons[$campaign_name] ?? $campaign['icon'] ?? $campaign_icons['default'];
-                        ?>
-                        <div class="campaign-card <?php echo htmlspecialchars($campaign_status); ?>" data-id="<?php echo $campaign_id; ?>">
-                            <div class="campaign-status <?php echo htmlspecialchars($campaign_status); ?>"><?php echo strtoupper(htmlspecialchars($campaign_status)); ?></div>
-                            <div class="campaign-icon">
-                                <i class="fas <?php echo $campaign_icon; ?>"></i>
-                            </div>
-                            <div class="campaign-info">
-                                <h4><?php echo htmlspecialchars($campaign_name); ?></h4>
-                                <div class="campaign-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: <?php echo min(100, max(0, $completion_percentage)); ?>%"></div>
-                                    </div>
-                                    <span class="progress-text"><?php echo min(100, max(0, $completion_percentage)); ?>% Complete</span>
-                                </div>
-                                <div class="campaign-stats">
-                                    <div class="stat">
-                                        <i class="fas fa-eye"></i>
-                                        <span><?php echo number_format($actual_reach); ?></span>
-                                    </div>
-                                    <div class="stat">
-                                        <i class="fas fa-thumbs-up"></i>
-                                        <span><?php echo $campaign_status === 'planned' ? 'N/A' : ($engagement_rate > 0 ? $engagement_rate . '%' : 'N/A'); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="campaign-actions">
-                                <button class="campaign-action-btn" onclick="viewCampaign(<?php echo $campaign_id; ?>)" title="View Details">
-                                    <i class="fas fa-chart-line"></i>
-                                </button>
-                                <button class="campaign-action-btn" onclick="editCampaign(<?php echo $campaign_id; ?>)" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-
-                    <!-- Performance Metrics -->
-                    <div class="performance-metrics">
-                        <div class="metric-row">
-                            <div class="metric">
-                                <div class="metric-label">Total Reach</div>
-                                <div class="metric-value">38,200</div>
-                                <div class="metric-change positive">↑ 12%</div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">Engagement Rate</div>
-                                <div class="metric-value">4.8%</div>
-                                <div class="metric-change positive">↑ 0.5%</div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">Avg Completion</div>
-                                <div class="metric-value">78%</div>
-                                <div class="metric-change neutral">↔ 0%</div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">Cost per Reach</div>
-                                <div class="metric-value"> ₱ 0.42</div>
-                                <div class="metric-change negative">↑  ₱ 0.02</div>
-                            </div>
-                        </div>
-
-                        <!-- Timeline Visualization -->
-                        <div class="campaign-timeline">
-                            <div class="timeline-header">
-                                <h4>Upcoming Campaigns</h4>
-                                <button class="view-all-btn" onclick="viewAllCampaigns()">View All</button>
-                            </div>
-                            <div class="timeline">
-                                <div class="timeline-item upcoming">
-                                    <div class="timeline-date">Oct 15</div>
-                                    <div class="timeline-content">
-                                        <div class="timeline-title">Home Safety Week</div>
-                                        <div class="timeline-desc">Community workshops</div>
-                                    </div>
-                                    <div class="timeline-actions">
-                                        <button class="timeline-action-btn" onclick="remindMe('home-safety')">
-                                            <i class="fas fa-bell"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="timeline-item upcoming">
-                                    <div class="timeline-date">Oct 22</div>
-                                    <div class="timeline-content">
-                                        <div class="timeline-title">Cybersecurity Month</div>
-                                        <div class="timeline-desc">Online safety training</div>
-                                    </div>
-                                    <div class="timeline-actions">
-                                        <button class="timeline-action-btn" onclick="remindMe('cyber')">
-                                            <i class="fas fa-bell"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="timeline-item current">
-                                    <div class="timeline-date">Now</div>
-                                    <div class="timeline-content">
-                                        <div class="timeline-title">Summer Safety</div>
-                                        <div class="timeline-desc">Beach & pool safety</div>
-                                    </div>
-                                    <div class="timeline-actions">
-                                        <button class="timeline-action-btn" onclick="viewLiveStats('summer')">
-                                            <i class="fas fa-chart-line"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="activity-container">
-                <div class="activity-title">Recent Activity</div>
+                    </div>...(truncated 21435 characters)...ivity</div>
                 <ul class="activity-list">
                     <li class="activity-item">
                         <div class="activity-icon icon-alert">
@@ -768,9 +432,19 @@ I can provide quick answers, data analysis, insights, trends, and system guidanc
             if (panel) panel.classList.remove('open');
         }
 
+        function parseMessageText(text) {
+            // Simple markdown parsing for bold
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Replace \n with <br> (but since white-space: pre-line in CSS, it's optional, but for safety)
+            // text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
         function addMessage(text, sender) {
             const container = document.getElementById('chatbotMessages');
             if (!container) return;
+
+            const parsedText = parseMessageText(text);
 
             const div = document.createElement('div');
             div.className = `chatbot-message ${sender}-message`;
@@ -778,10 +452,10 @@ I can provide quick answers, data analysis, insights, trends, and system guidanc
             if (sender === 'bot') {
                 div.innerHTML = `
                     <div class="message-avatar"><i class="fas fa-robot"></i></div>
-                    <div class="message-content"><p>${text}</p></div>`;
+                    <div class="message-content"><p>${parsedText}</p></div>`;
             } else {
                 div.innerHTML = `
-                    <div class="message-content"><p>${text}</p></div>
+                    <div class="message-content"><p>${parsedText}</p></div>
                     <div class="message-avatar"><i class="fas fa-user"></i></div>`;
             }
 
