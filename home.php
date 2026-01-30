@@ -169,18 +169,18 @@ function timeAgo($datetime) {
     <style>
         /* Additional styles */
         :root {
-            --primary: #4A90E2;
-            --secondary: #764ba2;
-            --success: #4CAF50;
-            --warning: #FFA726;
-            --danger: #FF4757;
-            --info: #17a2b8;
-            --dark: #343a40;
-            --light: #f8f9fa;
-            --gray: #6c757d;
-            --border: #e0e0e0;
-            --shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
+    --primary-black: #674EA7;
+    --secondary-black: #B4A7D6;
+    --dark-gray: #8E7CC3;
+    --medium-gray: #D9D2E9;
+    --light-gray: #E0E0E0;
+    --text-gray: #B0B0B0;
+    --white: #FFFFFF;
+    --accent: #4A90E2;
+    --warning: #FFA726;
+    --success: #4CAF50;
+    --danger: #F44336;
+}
         
         * {
             margin: 0;
