@@ -261,25 +261,25 @@ function get_campaign_icon($type) {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/Event-Seminar-Management.php" class="nav-link">
+                    <a href="Models/EventSeminarManagement.php" class="nav-link">
                         <i class="fas fa-calendar-check"></i>
                         <span class="nav-text">Event & Seminar Management</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/Survey-Feedback-Collection.php" class="nav-link">
+                    <a href="Models/SurveyFeedback-Collection.php" class="nav-link">
                         <i class="fas fa-clipboard-check"></i>
                         <span class="nav-text">Survey & Feedback Collection</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/Campaign-Analytics-Reports.php" class="nav-link">
+                    <a href="Models/CampaignAnalytics-Reports.php" class="nav-link">
                         <i class="fas fa-chart-bar"></i>
                         <span class="nav-text">Campaign Analytics & Reports</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="Models/Health-Police-Integration.php" class="nav-link">
+                    <a href="Models/Health-PoliceIntegration.php" class="nav-link">
                         <i class="fas fa-link"></i>
                         <span class="nav-text">Community</span>
                     </a>
