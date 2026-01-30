@@ -243,13 +243,13 @@ function get_event_icon($type) {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Models/ContentRepository.php" class="nav-link">
+                    <a href="../Models/Content-Repository.php" class="nav-link">
                         <i class="fas fa-database"></i>
                         <span class="nav-text">Content Repository</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Models/TargetGroupSegmentation.php" class="nav-link">
+                    <a href="../Models/Target-Group-Segmentation.php" class="nav-link">
                         <i class="fas fa-users"></i>
                         <span class="nav-text">Target Group Segmentation</span>
                     </a>
