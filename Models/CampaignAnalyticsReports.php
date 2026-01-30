@@ -1,4 +1,4 @@
-[file content begin]
+
 <?php
 
 // Start session and check authentication
@@ -1372,4 +1372,3 @@ function get_performance_label($score) {
     </style>
 </body>
 </html>
-[file content end]
