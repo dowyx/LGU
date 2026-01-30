@@ -192,6 +192,11 @@ function getTrendClass($trend) {
                         <input type="text" placeholder="Search incidents, campaigns, reports...">
                     </div>
 
+                    <!-- Chatbot Toggle Button -->
+                    <button id="chatbotToggleBtn" class="chatbot-toggle-btn" title="Ask Claude">
+                        <i class="fas fa-comments"></i>
+                    </button>
+
                     <!-- Notifications Button -->
                     <div class="notifications-dropdown">
                         <button class="notifications-btn">
@@ -641,6 +646,56 @@ function getTrendClass($trend) {
         </main>
     </div>
 
+    <!-- Chatbot Panel -->
+    <div id="chatbotPanel" class="chatbot-panel">
+        <div class="chatbot-header">
+            <div class="chatbot-header-info">
+                <i class="fas fa-robot"></i>
+                <span>Claude Assistant</span>
+            </div>
+            <button id="closeChatbotBtn" class="chatbot-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="chatbotMessages" class="chatbot-messages">
+            <div class="chatbot-message bot-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <p>Hello! I'm Claude, your AI assistant for Public Safety Management. I can help you with:</p>
+                    <ul>
+                        <li>Quick answers about incidents and campaigns</li>
+                        <li>Data analysis and insights</li>
+                        <li>Report generation</li>
+                        <li>System guidance</li>
+                    </ul>
+                    <p>How can I assist you today?</p>
+                </div>
+            </div>
+        </div>
+        <div class="chatbot-quick-questions">
+            <button class="quick-question-btn" onclick="askQuickQuestion('What are the current active incidents?')">
+                <i class="fas fa-exclamation-triangle"></i>
+                Current incidents?
+            </button>
+            <button class="quick-question-btn" onclick="askQuickQuestion('Show me campaign performance summary')">
+                <i class="fas fa-chart-line"></i>
+                Campaign summary?
+            </button>
+            <button class="quick-question-btn" onclick="askQuickQuestion('What is the average response time?')">
+                <i class="fas fa-clock"></i>
+                Response time?
+            </button>
+        </div>
+        <div class="chatbot-input-area">
+            <input type="text" id="chatInput" placeholder="Type your message..." />
+            <button id="sendChatBtn" class="chatbot-send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
     <script>
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -807,8 +862,130 @@ function getTrendClass($trend) {
             alert('Viewing live stats for ' + campaign);
         };
 
-        // Make quick question function available globally
-        window.askQuickQuestion = askQuickQuestion;
+        // ========== CHATBOT FUNCTIONS ==========
+        
+        // Toggle chatbot panel
+        function toggleChatbot() {
+            const panel = document.getElementById('chatbotPanel');
+            if (panel) {
+                panel.classList.toggle('open');
+            }
+        }
+
+        // Close chatbot panel
+        function closeChatbot() {
+            const panel = document.getElementById('chatbotPanel');
+            if (panel) {
+                panel.classList.remove('open');
+            }
+        }
+
+        // Send message function
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const messagesContainer = document.getElementById('chatbotMessages');
+            
+            if (!input || !messagesContainer) return;
+            
+            const message = input.value.trim();
+            if (message === '') return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            
+            // Clear input
+            input.value = '';
+            
+            // Simulate bot response after a short delay
+            setTimeout(() => {
+                const response = generateBotResponse(message);
+                addMessage(response, 'bot');
+            }, 1000);
+        }
+
+        // Add message to chat
+        function addMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            if (!messagesContainer) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chatbot-message ${sender}-message`;
+            
+            if (sender === 'bot') {
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>${text}</p>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <p>${text}</p>
+                    </div>
+                    <div class="message-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Quick question handler
+        window.askQuickQuestion = function(question) {
+            const input = document.getElementById('chatInput');
+            if (input) {
+                input.value = question;
+                sendMessage();
+            }
+        };
+
+        // Generate bot response based on message
+        function generateBotResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Response templates based on keywords
+            if (lowerMessage.includes('incident')) {
+                return `Based on the current data, there are <?php echo $active_incidents; ?> active incidents. ${lowerMessage.includes('emergency') ? '25 are Emergency incidents, ' : ''}${lowerMessage.includes('health') ? '18 are Health-related, ' : ''}${lowerMessage.includes('safety') ? '32 are Safety incidents, ' : ''}${lowerMessage.includes('fire') ? '12 are Fire incidents, ' : ''}${lowerMessage.includes('police') ? '13 are Police incidents. ' : ''}Would you like more details?`;
+            }
+            
+            if (lowerMessage.includes('campaign')) {
+                return `There are <?php echo $active_campaigns; ?> active campaigns running. Top performers include "Summer Safety" at 75% completion and "School Zone Safety" at 60% completion. Would you like to see detailed analytics?`;
+            }
+            
+            if (lowerMessage.includes('response time')) {
+                return `The average response time is <?php echo $avg_response_time; ?> minutes, which shows a 1.5m improvement from last week. This is within our target response window. Emergency incidents are prioritized with faster response times.`;
+            }
+            
+            if (lowerMessage.includes('satisfaction') || lowerMessage.includes('feedback')) {
+                return `Public satisfaction is currently at <?php echo $public_satisfaction; ?>%, showing a 4% increase from last month. This positive trend reflects our improved campaign strategies and faster incident response times.`;
+            }
+            
+            if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
+                return `I can help you with:
+                    <ul>
+                        <li><strong>Incident Analysis:</strong> Get details about active incidents, trends, and responses</li>
+                        <li><strong>Campaign Performance:</strong> Track campaign progress and effectiveness</li>
+                        <li><strong>Data Insights:</strong> Understand response times, satisfaction scores, and patterns</li>
+                        <li><strong>Report Generation:</strong> Create custom reports based on your criteria</li>
+                        <li><strong>System Navigation:</strong> Get help navigating the dashboard</li>
+                    </ul>
+                    Just ask me anything!`;
+            }
+            
+            if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                return `Hello! I'm here to help you manage and analyze public safety data. You can ask me about incidents, campaigns, response times, or any other dashboard metrics. What would you like to know?`;
+            }
+            
+            // Default response
+            return `I understand you're asking about "${message}". While I'm processing your detailed request, you can also explore the dashboard sections for more information. Is there a specific metric or report you'd like me to help you with?`;
+        }
+
+        // ========== END CHATBOT FUNCTIONS ==========
     </script>
 </body>
 </html>
