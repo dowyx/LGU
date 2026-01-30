@@ -694,7 +694,9 @@ function getTrendClass($trend) {
         </main>
     </div>
 
-    <!-- Chatbot Toggle Button (Floating) -->
+    <!-- REMOVE THESE LINES from the body section -->
+<!--
+     Chatbot Toggle Button (Floating) -->
     <button class="chatbot-toggle-btn" id="chatbotToggleBtn">
         <i class="fas fa-robot"></i>
         <span class="badge" id="chatbotBadge">0</span>
@@ -747,85 +749,303 @@ function getTrendClass($trend) {
         </div>
     </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     <script>
-    // Simple chatbot functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
-        const chatbotPanel = document.getElementById('chatbotPanel');
-        const closeChatbotBtn = document.getElementById('closeChatbotBtn');
-        const chatInput = document.getElementById('chatInput');
-        const sendChatBtn = document.getElementById('sendChatBtn');
-        const chatMessages = document.getElementById('chatMessages');
+// Chatbot functionality
+let isChatbotOpen = false;
+
+function toggleChatbot() {
+    const modal = document.getElementById('chatbotModal');
+    isChatbotOpen = !isChatbotOpen;
+    
+    if (isChatbotOpen) {
+        modal.classList.add('open');
+        document.getElementById('chatInput').focus();
+    } else {
+        modal.classList.remove('open');
+    }
+}
+
+function closeChatbot() {
+    const modal = document.getElementById('chatbotModal');
+    modal.classList.remove('open');
+    isChatbotOpen = false;
+}
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message
+    addMessage(message, 'user');
+    input.value = '';
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    // Simulate AI response
+    setTimeout(() => {
+        hideTypingIndicator();
+        const response = getAIResponse(message);
+        addMessage(response, 'ai');
         
-        // Toggle chatbot panel
-        chatbotToggleBtn.addEventListener('click', function() {
-            chatbotPanel.classList.toggle('open');
-        });
-        
-        // Close chatbot panel
-        closeChatbotBtn.addEventListener('click', function() {
-            chatbotPanel.classList.remove('open');
-        });
-        
-        // Send message function
-        function sendMessage() {
-            const message = chatInput.value.trim();
-            if (message === '') return;
-            
-            // Add user message
-            addMessage(message, 'user');
-            
-            // Clear input
-            chatInput.value = '';
-            
-            // Simulate AI response after delay
-            setTimeout(() => {
-                const response = getAIResponse(message);
-                addMessage(response, 'ai');
-                scrollToBottom();
-            }, 1000);
+        // Update badge if needed
+        updateChatbotBadge();
+    }, 1000);
+}
+
+function addMessage(text, sender) {
+    const messages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message message-${sender}`;
+    
+    const now = new Date();
+    const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">${text}</div>
+        <div class="message-time">${timeString}</div>
+    `;
+    
+    messages.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function showTypingIndicator() {
+    const messages = document.getElementById('chatMessages');
+    let indicator = document.getElementById('typingIndicator');
+    
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'typingIndicator';
+        indicator.className = 'typing-indicator';
+        indicator.innerHTML = `
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span class="typing-text">AI is typing...</span>
+        `;
+    }
+    
+    messages.appendChild(indicator);
+    scrollToBottom();
+}
+
+function hideTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) {
+        indicator.remove();
+    }
+}
+
+function scrollToBottom() {
+    const messages = document.getElementById('chatMessages');
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function getAIResponse(input) {
+    const lowerInput = input.toLowerCase();
+    
+    if (lowerInput.includes('incident') || lowerInput.includes('emergency')) {
+        if (lowerInput.includes('active') || lowerInput.includes('current')) {
+            return `There are currently <strong>${<?php echo $active_incidents; ?>} active incidents</strong>. The most common type is safety-related incidents. Would you like me to show you detailed incident reports?`;
+        } else if (lowerInput.includes('procedure') || lowerInput.includes('handle')) {
+            return `📋 <strong>Emergency Procedures</strong> 📋<br><br>
+                   <strong>MEDICAL EMERGENCY:</strong><br>
+                   1. Call 911 immediately<br>
+                   2. Provide first aid<br>
+                   3. Keep patient calm<br>
+                   4. Clear area for responders<br><br>
+                   <strong>FIRE EMERGENCY:</strong><br>
+                   1. Activate fire alarm<br>
+                   2. Evacuate immediately<br>
+                   3. Use extinguisher if safe<br>
+                   4. Report to assembly point`;
         }
-        
-        // Add message to chat
-        function addMessage(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message message-${sender}`;
-            
-            const now = new Date();
-            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            
-            messageDiv.innerHTML = `
-                <div class="message-content">${text}</div>
-                <div class="message-time">${timeString}</div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            scrollToBottom();
+        return `I can help with incident management. Ask me about:<br>
+                • Active incidents<br>
+                • Emergency procedures<br>
+                • Response coordination<br>
+                • Incident reporting`;
+    } else if (lowerInput.includes('campaign') || lowerInput.includes('marketing')) {
+        return `You have <strong>${<?php echo $active_campaigns; ?>} active campaigns</strong> running.<br><br>
+               <strong>Campaign Suggestions:</strong><br>
+               • Community Safety Workshops<br>
+               • Digital Awareness Campaign<br>
+               • School Safety Program<br>
+               • Emergency Response Training`;
+    } else if (lowerInput.includes('report') || lowerInput.includes('generate')) {
+        return `📊 <strong>Report Generator</strong> 📊<br><br>
+               I can help create:<br><br>
+               <strong>Daily Report:</strong><br>
+               • Incident summary<br>
+               • Response metrics<br>
+               • Campaign updates<br><br>
+               <strong>Weekly Report:</strong><br>
+               • Trend analysis<br>
+               • Resource allocation<br>
+               • Performance review`;
+    } else if (lowerInput.includes('help') || lowerInput.includes('assist')) {
+        return `I can help with:<br>
+                • Incident analysis<br>
+                • Campaign planning<br>
+                • Report generation<br>
+                • Safety recommendations<br>
+                • Emergency procedures<br>
+                • Data visualization<br>
+                • Risk assessment<br><br>
+                What would you like to know?`;
+    } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
+        return 'Hello! 👋 How can I assist you with public safety management today?';
+    } else {
+        return `I understand you're asking about "${input}".<br><br>
+               As your Public Safety Assistant, I can help analyze data, generate reports, or provide safety recommendations.<br><br>
+               Could you be more specific about what you need?`;
+    }
+}
+
+function askQuickQuestion(question) {
+    const input = document.getElementById('chatInput');
+    input.value = question;
+    sendMessage();
+}
+
+function updateChatbotBadge() {
+    const badge = document.getElementById('chatbotBadge');
+    if (badge) {
+        // Simulate unread messages
+        const current = parseInt(badge.textContent) || 0;
+        if (!isChatbotOpen && current < 9) {
+            badge.textContent = current + 1;
+        } else if (isChatbotOpen) {
+            badge.textContent = '0';
         }
-        
-        // Scroll to bottom of chat
-        function scrollToBottom() {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        // Get AI response based on input
-        function getAIResponse(input) {
-            const lowerInput = input.toLowerCase();
-            
-            if (lowerInput.includes('incident') || lowerInput.includes('emergency')) {
-                return `There are currently <strong>${<?php echo $active_incidents; ?>} active incidents</strong>. The most common type is safety-related incidents. Would you like me to show you detailed incident reports?`;
-            } else if (lowerInput.includes('campaign') || lowerInput.includes('marketing')) {
-                return `You have <strong>${<?php echo $active_campaigns; ?>} active campaigns</strong> running. The average completion rate is 78% and total reach is 38,200 people. Need help with campaign planning?`;
-            } else if (lowerInput.includes('report') || lowerInput.includes('generate')) {
-                return 'I can help you generate a safety report. Would you like: 1) Weekly incident summary, 2) Campaign performance report, or 3) Public satisfaction analysis?';
-            } else if (lowerInput.includes('help') || lowerInput.includes('assist')) {
-                return 'I can help with: incident analysis, campaign planning, report generation, safety recommendations, emergency procedures, data visualization, and risk assessment. What would you like to know?';
-            } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
-                return 'Hello! 👋 How can I assist you with public safety management today?';
-            } else {
-                return 'I understand you\'re asking about "' + input + '". As your Public Safety Assistant, I can help analyze data, generate reports, or provide safety recommendations. Could you be more specific about what you need?';
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup chatbot close button
+    const closeBtn = document.getElementById('closeChatbotBtn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeChatbot);
+    }
+    
+    // Setup send button
+    const sendBtn = document.querySelector('.chatbot-send-btn');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', sendMessage);
+    }
+    
+    // Setup enter key in input
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
+        });
+    }
+    
+    // Close chatbot when clicking outside
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('chatbotModal');
+        const chatbotIcon = document.querySelector('.ai-chatbot-icon');
+        
+        if (modal && modal.classList.contains('open') && 
+            !modal.contains(e.target) && 
+            !chatbotIcon.contains(e.target)) {
+            closeChatbot();
         }
+    });
+    
+    // Mark all notifications as read
+    window.markAllAsRead = function() {
+        const notifications = document.querySelectorAll('.notification-item.unread');
+        notifications.forEach(notification => {
+            notification.classList.remove('unread');
+        });
+        
+        // Update badge
+        const badge = document.querySelector('.notification-badge');
+        if (badge) {
+            badge.textContent = '0';
+        }
+        
+        // Show success message
+        const notification = document.createElement('div');
+        notification.className = 'notification notification-success';
+        notification.innerHTML = '<div class="notification-content"><i class="fas fa-check-circle"></i><span>All notifications marked as read</span></div>';
+        document.body.appendChild(notification);
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    };
+});
+
+// Placeholder functions for other buttons
+function viewIncidentDetails(type) {
+    alert('Viewing details for ' + type + ' incidents');
+}
+
+function assignTeam(type) {
+    alert('Assigning team to ' + type + ' incidents');
+}
+
+function viewCampaign(id) {
+    alert('Viewing campaign details for ID: ' + id);
+}
+
+function editCampaign(id) {
+    alert('Editing campaign with ID: ' + id);
+}
+
+function addNewCampaign() {
+    alert('Adding new campaign');
+}
+
+function openExportModal() {
+    alert('Opening export modal');
+}
+
+function viewAllCampaigns() {
+    alert('Viewing all campaigns');
+}
+
+function remindMe(campaign) {
+    alert('Setting reminder for ' + campaign);
+}
+
+function viewLiveStats(campaign) {
+    alert('Viewing live stats for ' + campaign);
+}
+</script>
         
         // Quick question function
         function askQuickQuestion(question) {
