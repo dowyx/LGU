@@ -111,6 +111,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $campaign_id = $_POST['campaign_id'] ?? 0;
                     if ($campaign_id > 0) {
+                        // First delete milestones (due to foreign key constraint)
+                        $stmt = $pdo->prepare("DELETE FROM campaign_milestones WHERE campaign_id = ?");
+                        $stmt->execute([$campaign_id]);
+                        
+                        // Then delete campaign
                         $stmt = $pdo->prepare("
                             DELETE FROM campaigns 
                             WHERE id = ? AND created_by = ?
@@ -128,14 +133,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch campaigns data
 try {
-    $stmt = $pdo->prepare("
-        SELECT id, name, description, type, status, start_date, end_date, 
-               budget, target_audience, created_at, updated_at
-        FROM campaigns 
-        WHERE created_by = ? OR ? IN ('admin', 'manager')
-        ORDER BY created_at DESC
-    ");
-    $stmt->execute([$user_id, $user_role]);
+    // Check if user is admin or manager
+    $is_admin_or_manager = in_array($user_role, ['admin', 'manager']);
+    
+    if ($is_admin_or_manager) {
+        $stmt = $pdo->prepare("
+            SELECT id, name, description, type, status, start_date, end_date, 
+                   budget, target_audience, created_at, updated_at
+            FROM campaigns 
+            ORDER BY created_at DESC
+        ");
+        $stmt->execute();
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT id, name, description, type, status, start_date, end_date, 
+                   budget, target_audience, created_at, updated_at
+            FROM campaigns 
+            WHERE created_by = ?
+            ORDER BY created_at DESC
+        ");
+        $stmt->execute([$user_id]);
+    }
+    
     $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Fetch milestones for campaigns
@@ -211,76 +230,68 @@ function get_campaign_icon($type) {
 </head>
 <body>
     <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h1>Public Safety</h1>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a href="/LGU4/home.php" class="nav-link">
-                <a href="../home.php" class="nav-link">
-                    <i class="fas fa-home"></i>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/Module-1.php" class="nav-link active">
-                <a href="Module-1.php" class="nav-link active">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="nav-text">Campaign Planning & Calendar</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/Content-Repository.php" class="nav-link">
-                <a href="Content-Repository.html" class="nav-link">
-                    <i class="fas fa-database"></i>
-                    <span class="nav-text">Content Repository</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/Target-Group-Segmentation.php" class="nav-link">
-                <a href="Target-Group-Segmentation.html" class="nav-link">
-                    <i class="fas fa-users"></i>
-                    <span class="nav-text">Target Group Segmentation</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/EventSeminarManagement.php" class="nav-link">
-                <a href="Event-Seminar-Management.html" class="nav-link">
-                    <i class="fas fa-calendar-check"></i>
-                    <span class="nav-text">Event & Seminar Management</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/SurveyFeedbackCollection.php" class="nav-link">
-                <a href="Survey-Feedback-Collection.html" class="nav-link">
-                    <i class="fas fa-clipboard-check"></i>
-                    <span class="nav-text">Survey & Feedback Collection</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                    <a href="Models/CampaignAnalyticsReports.php" class="nav-link">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Public Safety</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../home.php" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="Module-1.php" class="nav-link active">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="nav-text">Campaign Planning & Calendar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="Content-Repository.php" class="nav-link">
+                        <i class="fas fa-database"></i>
+                        <span class="nav-text">Content Repository</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="Target-Group-Segmentation.php" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-text">Target Group Segmentation</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="Event-Seminar-Management.php" class="nav-link">
+                        <i class="fas fa-calendar-check"></i>
+                        <span class="nav-text">Event & Seminar Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="Survey-Feedback-Collection.php" class="nav-link">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span class="nav-text">Survey & Feedback Collection</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="Campaign-Analytics-Reports.php" class="nav-link">
                         <i class="fas fa-chart-bar"></i>
                         <span class="nav-text">Campaign Analytics & Reports</span>
                     </a>
                 </li>
-            <li class="nav-item">
-                <a href="/LGU4/Models/HealthPoliceIntegration.php" class="nav-link">
-                <a href="Health-Police-Integration.html" class="nav-link">
-                    <i class="fas fa-link"></i>
-                    <span class="nav-text">Community</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="../logout.php" class="nav-link">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="nav-text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+                <li class="nav-item">
+                    <a href="Health-Police-Integration.php" class="nav-link">
+                        <i class="fas fa-link"></i>
+                        <span class="nav-text">Community</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../logout.php" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="nav-text">Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -425,10 +436,13 @@ function get_campaign_icon($type) {
                         </div>
                     </div>
                     <ul class="campaign-list">
-                        <?php if (empty($campaigns)): ?>
-                        <li class="no-data">No campaigns found. Create your first campaign!</li>
+                        <?php 
+                        $active_campaigns_display = array_filter($campaigns, fn($c) => $c['status'] === 'active');
+                        if (empty($active_campaigns_display)): 
+                        ?>
+                        <li class="no-data">No active campaigns found</li>
                         <?php else: ?>
-                            <?php foreach (array_filter($campaigns, fn($c) => $c['status'] === 'active') as $campaign): ?>
+                            <?php foreach ($active_campaigns_display as $campaign): ?>
                             <li class="campaign-item">
                                 <div class="campaign-info">
                                     <h4><?php echo htmlspecialchars($campaign['name']); ?></h4>
@@ -479,7 +493,7 @@ function get_campaign_icon($type) {
                         </div>
                         <div class="stat-item">
                             <div class="stat-value"><?php echo $active_campaigns; ?></div>
-                            <div class="stat-label">Teams Involved</div>
+                            <div class="stat-label">Active Campaigns</div>
                         </div>
                     </div>
                 </div>
@@ -605,7 +619,7 @@ function get_campaign_icon($type) {
                     <input type="hidden" id="campaignId" name="id">
 
                     <div class="form-group">
-                        <label for="campaignName">Campaign Name</label>
+                        <label for="campaignName">Campaign Name <span class="required">*</span></label>
                         <input type="text" id="campaignName" name="name" required
                                placeholder="Enter campaign name" class="form-input">
                     </div>
@@ -618,11 +632,11 @@ function get_campaign_icon($type) {
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="startDate">Start Date</label>
+                            <label for="startDate">Start Date <span class="required">*</span></label>
                             <input type="date" id="startDate" name="startDate" required class="form-input">
                         </div>
                         <div class="form-group">
-                            <label for="endDate">End Date</label>
+                            <label for="endDate">End Date <span class="required">*</span></label>
                             <input type="date" id="endDate" name="endDate" required class="form-input">
                         </div>
                     </div>
@@ -727,6 +741,16 @@ function get_campaign_icon($type) {
             document.getElementById('campaignId').value = '';
             document.querySelector('input[name="action"]').value = 'create_campaign';
             document.getElementById('deleteCampaignBtn').style.display = 'none';
+            
+            // Set default dates (today and 30 days from now)
+            const today = new Date().toISOString().split('T')[0];
+            const nextMonth = new Date();
+            nextMonth.setDate(nextMonth.getDate() + 30);
+            const nextMonthStr = nextMonth.toISOString().split('T')[0];
+            
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = nextMonthStr;
+            
             campaignModal.style.display = 'flex';
         }
         
@@ -751,6 +775,8 @@ function get_campaign_icon($type) {
                     .map(m => `${m.name}:${m.target_date}`)
                     .join(', ');
                 document.getElementById('milestones').value = milestoneText;
+            } else {
+                document.getElementById('milestones').value = '';
             }
             
             document.querySelector('input[name="action"]').value = 'update_campaign';
@@ -792,12 +818,16 @@ function get_campaign_icon($type) {
             
             const template = templates[type];
             if (template) {
-                document.getElementById('campaignName').value = template.name;
-                document.getElementById('campaignDescription').value = template.description;
-                document.getElementById('campaignType').value = template.type;
-                document.getElementById('targetAudience').value = template.targetAudience;
-                document.getElementById('milestones').value = template.milestones;
-                createNewCampaign();
+                createNewCampaign(); // Reset form first
+                
+                // Set template values after a short delay to ensure form is reset
+                setTimeout(() => {
+                    document.getElementById('campaignName').value = template.name;
+                    document.getElementById('campaignDescription').value = template.description;
+                    document.getElementById('campaignType').value = template.type;
+                    document.getElementById('targetAudience').value = template.targetAudience;
+                    document.getElementById('milestones').value = template.milestones;
+                }, 50);
             }
         }
         
@@ -842,6 +872,18 @@ function get_campaign_icon($type) {
             }
             if (e.target === confirmModal) {
                 confirmModal.style.display = 'none';
+            }
+        });
+        
+        // Form validation
+        campaignForm.addEventListener('submit', function(e) {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            
+            if (endDate < startDate) {
+                e.preventDefault();
+                alert('End date must be after start date');
+                return false;
             }
         });
     </script>
