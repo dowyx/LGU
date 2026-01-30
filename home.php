@@ -110,7 +110,7 @@ function getTrendClass($trend) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/home.css">
-    <!-- <link rel="stylesheet" href="styles/chatbot.css"> -->
+    <link rel="stylesheet" href="styles/chatbot.css">
     <link rel="stylesheet" href="styles/userprofile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>Public Safety Campaign Management</title>
@@ -219,7 +219,7 @@ function getTrendClass($trend) {
                 <li class="nav-item">
                     <a href="models/healthpoliceintegration.php" class="nav-link">
                         <i class="fas fa-link"></i>
-                        <span class="nav-text">Community</span>
+                        <span class="nav-text">Community Integration</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -490,9 +490,7 @@ function getTrendClass($trend) {
                             <button class="action-btn-small" onclick="addNewCampaign()">
                                 <i class="fas fa-plus"></i> New Campaign
                             </button>
-                            <button class="action-btn-small" onclick="exportCampaignReport()">
-                            <i class="fas fa-file-export"></i> Export Report
-                        </button>
+                        </div>
                     </div>
 
                     <!-- Campaign Cards Grid -->
@@ -1089,6 +1087,5 @@ function getTrendClass($trend) {
         // Make quick question function available globally
         window.askQuickQuestion = askQuickQuestion;
     </script>
-    <script src="scripts/home.js"></script>
 </body>
 </html>
