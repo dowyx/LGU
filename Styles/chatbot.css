@@ -178,6 +178,8 @@
     border-radius: 20px;
     background: rgba(74, 144, 226, 0.1);
     transition: all 0.2s;
+    position: relative;
+    cursor: pointer;
 }
 
 .chatbot-link:hover {
@@ -192,6 +194,22 @@
 .chatbot-text {
     font-size: 14px;
     font-weight: 500;
+}
+
+.chatbot-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    font-size: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
 }
 
 /* Typing indicator styles */
@@ -244,4 +262,52 @@
     text-align: right;
     margin-top: 4px;
     color: #999;
+}
+
+/* Notification styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 999999;
+    animation: slideInRight 0.3s ease;
+    border-left: 4px solid #4CAF50;
+}
+
+.notification-success {
+    border-left-color: #4CAF50;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-content i {
+    color: #4CAF50;
+    font-size: 18px;
+}
+
+.notification-content span {
+    font-size: 14px;
+    color: #333;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
