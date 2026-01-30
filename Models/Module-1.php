@@ -10,88 +10,113 @@ if (!isset($_SESSION['user_id'])) {
 require_once '../config/database.php';
 
 // Get user data
-$user_name = $_SESSION['user_name'] ?? 'User';
-$user_role = $_SESSION['user_role'] ?? 'Safety Manager';
-$user_id = $_SESSION['user_id'];
+$user_id = (int)$_SESSION['user_id'];
+$user_name = htmlspecialchars($_SESSION['user_name'] ?? 'User');
+$user_role = $_SESSION['user_role'] ?? 'staff';
+$is_admin_or_manager = in_array($user_role, ['admin', 'manager']);
 
-// Initialize variables
+// CSRF protection
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Initialize messages
 $success_message = '';
 $error_message = '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'create_campaign':
-            case 'update_campaign':
-                try {
-                    $campaign_id = $_POST['id'] ?? null;
-                    $name = trim($_POST['name'] ?? '');
-                    $description = trim($_POST['description'] ?? '');
-                    $start_date = $_POST['startDate'] ?? '';
-                    $end_date = $_POST['endDate'] ?? '';
-                    $type = $_POST['type'] ?? 'safety';
-                    $status = $_POST['status'] ?? 'draft';
-                    $budget = floatval($_POST['budget'] ?? 0);
-                    $target_audience = trim($_POST['targetAudience'] ?? '');
-                    $milestones = trim($_POST['milestones'] ?? '');
-                    
-                    // Validate required fields
-                    if (empty($name) || empty($start_date) || empty($end_date)) {
-                        throw new Exception('Please fill in all required fields');
-                    }
-                    
-                    if (strtotime($end_date) < strtotime($start_date)) {
-                        throw new Exception('End date must be after start date');
-                    }
-                    
-                    if ($campaign_id) {
-                        // Update existing campaign
-                        $stmt = $pdo->prepare("
-                            UPDATE campaigns 
-                            SET name = ?, description = ?, type = ?, status = ?, 
-                                start_date = ?, end_date = ?, budget = ?, target_audience = ?,
-                                updated_at = CURRENT_TIMESTAMP
-                            WHERE id = ? AND created_by = ?
-                        ");
-                        $stmt->execute([
-                            $name, $description, $type, $status, 
-                            $start_date, $end_date, $budget, $target_audience,
-                            $campaign_id, $user_id
-                        ]);
-                        $success_message = 'Campaign updated successfully!';
-                    } else {
-                        // Create new campaign
-                        $stmt = $pdo->prepare("
-                            INSERT INTO campaigns 
-                            (name, description, type, status, start_date, end_date, 
-                             budget, target_audience, created_by)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ");
-                        $stmt->execute([
-                            $name, $description, $type, $status, 
-                            $start_date, $end_date, $budget, $target_audience, $user_id
-                        ]);
-                        $campaign_id = $pdo->lastInsertId();
-                        $success_message = 'Campaign created successfully!';
-                    }
-                    
-                    // Handle milestones if provided
-                    if (!empty($milestones)) {
-                        // Delete existing milestones for this campaign
-                        $stmt = $pdo->prepare("DELETE FROM campaign_milestones WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        // Parse and insert new milestones
-                        $milestone_pairs = explode(',', $milestones);
-                        foreach ($milestone_pairs as $pair) {
-                            $pair = trim($pair);
-                            if (!empty($pair) && strpos($pair, ':') !== false) {
-                                list($milestone_name, $milestone_date) = explode(':', $pair, 2);
-                                $milestone_name = trim($milestone_name);
-                                $milestone_date = trim($milestone_date);
-                                
-                                if (!empty($milestone_name) && !empty($milestone_date)) {
+    // CSRF check
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $error_message = 'Invalid CSRF token. Please refresh and try again.';
+    } else {
+        if (isset($_POST['action'])) {
+            switch ($_POST['action']) {
+                case 'create_campaign':
+                case 'update_campaign':
+                    try {
+                        $campaign_id = !empty($_POST['id']) ? (int)$_POST['id'] : null;
+                        $name = trim($_POST['name'] ?? '');
+                        $description = trim($_POST['description'] ?? '');
+                        $start_date = trim($_POST['startDate'] ?? '');
+                        $end_date = trim($_POST['endDate'] ?? '');
+                        $type = $_POST['type'] ?? 'safety';
+                        $status = $_POST['status'] ?? 'draft';
+                        $budget = floatval($_POST['budget'] ?? 0);
+                        $target_audience = trim($_POST['targetAudience'] ?? '');
+                        $milestones_input = trim($_POST['milestones'] ?? '');
+
+                        // Validation
+                        if (empty($name) || empty($start_date) || empty($end_date)) {
+                            throw new Exception('Name, start date, and end date are required.');
+                        }
+
+                        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_date)) {
+                            throw new Exception('Invalid date format. Use YYYY-MM-DD.');
+                        }
+
+                        if (strtotime($end_date) < strtotime($start_date)) {
+                            throw new Exception('End date must be after start date.');
+                        }
+
+                        if ($budget < 0) {
+                            throw new Exception('Budget cannot be negative.');
+                        }
+
+                        $pdo->beginTransaction();
+
+                        if ($campaign_id) {
+                            // Update - check ownership
+                            $stmt = $pdo->prepare("SELECT id FROM campaigns WHERE id = ? AND (created_by = ? OR ? IN ('admin','manager'))");
+                            $stmt->execute([$campaign_id, $user_id, $user_role]);
+                            if (!$stmt->fetch()) {
+                                throw new Exception('You do not have permission to edit this campaign.');
+                            }
+
+                            $stmt = $pdo->prepare("
+                                UPDATE campaigns 
+                                SET name = ?, description = ?, type = ?, status = ?, 
+                                    start_date = ?, end_date = ?, budget = ?, target_audience = ?,
+                                    updated_at = CURRENT_TIMESTAMP
+                                WHERE id = ?
+                            ");
+                            $stmt->execute([
+                                $name, $description, $type, $status, 
+                                $start_date, $end_date, $budget, $target_audience,
+                                $campaign_id
+                            ]);
+                            $success_message = 'Campaign updated successfully!';
+                        } else {
+                            // Create new
+                            $stmt = $pdo->prepare("
+                                INSERT INTO campaigns 
+                                (name, description, type, status, start_date, end_date, 
+                                 budget, target_audience, created_by)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ");
+                            $stmt->execute([
+                                $name, $description, $type, $status, 
+                                $start_date, $end_date, $budget, $target_audience, $user_id
+                            ]);
+                            $campaign_id = $pdo->lastInsertId();
+                            $success_message = 'Campaign created successfully!';
+                        }
+
+                        // Handle milestones (one per line format recommended)
+                        if (!empty($milestones_input)) {
+                            // Clear existing milestones
+                            $stmt = $pdo->prepare("DELETE FROM campaign_milestones WHERE campaign_id = ?");
+                            $stmt->execute([$campaign_id]);
+
+                            $lines = explode("\n", $milestones_input);
+                            foreach ($lines as $line) {
+                                $line = trim($line);
+                                if (empty($line)) continue;
+
+                                if (preg_match('/^(.+?):\s*(\d{4}-\d{2}-\d{2})$/', $line, $matches)) {
+                                    $milestone_name = trim($matches[1]);
+                                    $milestone_date = trim($matches[2]);
+
                                     $stmt = $pdo->prepare("
                                         INSERT INTO campaign_milestones (campaign_id, name, target_date)
                                         VALUES (?, ?, ?)
@@ -100,64 +125,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 }
                             }
                         }
+
+                        $pdo->commit();
+                    } catch (Exception $e) {
+                        $pdo->rollBack();
+                        $error_message = $e->getMessage();
                     }
-                    
-                } catch (Exception $e) {
-                    $error_message = $e->getMessage();
-                }
-                break;
-                
-            case 'delete_campaign':
-                try {
-                    $campaign_id = $_POST['campaign_id'] ?? 0;
-                    if ($campaign_id > 0) {
-                        // First delete milestones (due to foreign key constraint)
-                        $stmt = $pdo->prepare("DELETE FROM campaign_milestones WHERE campaign_id = ?");
-                        $stmt->execute([$campaign_id]);
-                        
-                        // Then delete campaign
+                    break;
+
+                case 'delete_campaign':
+                    try {
+                        $campaign_id = (int)($_POST['campaign_id'] ?? 0);
+                        if ($campaign_id <= 0) {
+                            throw new Exception('Invalid campaign ID');
+                        }
+
+                        $pdo->beginTransaction();
+
+                        // Permission check
                         $stmt = $pdo->prepare("
-                            DELETE FROM campaigns 
-                            WHERE id = ? AND created_by = ?
+                            SELECT id FROM campaigns 
+                            WHERE id = ? AND (created_by = ? OR ? IN ('admin','manager'))
                         ");
-                        $stmt->execute([$campaign_id, $user_id]);
-                        $success_message = 'Campaign deleted successfully!';
+                        $stmt->execute([$campaign_id, $user_id, $user_role]);
+                        if (!$stmt->fetch()) {
+                            throw new Exception('You do not have permission to delete this campaign.');
+                        }
+
+                        // Delete from all related child tables
+                        $child_tables = [
+                            'campaign_milestones'           => 'campaign_id',
+                            'campaign_resources'            => 'campaign_id',
+                            'campaign_team_members'         => 'campaign_id',
+                            'campaign_documents'            => 'campaign_id',
+                            'campaign_activities'           => 'campaign_id',
+                            'campaign_category_assignments' => 'campaign_id',
+                            // Add any other child tables here
+                        ];
+
+                        foreach ($child_tables as $table => $column) {
+                            $stmt = $pdo->prepare("DELETE FROM $table WHERE $column = ?");
+                            $stmt->execute([$campaign_id]);
+                        }
+
+                        // Delete the campaign
+                        $stmt = $pdo->prepare("DELETE FROM campaigns WHERE id = ?");
+                        $stmt->execute([$campaign_id]);
+
+                        $pdo->commit();
+                        $success_message = 'Campaign and all related data deleted successfully!';
+                    } catch (Exception $e) {
+                        $pdo->rollBack();
+                        $error_message = 'Error deleting campaign: ' . $e->getMessage();
                     }
-                } catch (Exception $e) {
-                    $error_message = 'Error deleting campaign: ' . $e->getMessage();
-                }
-                break;
+                    break;
+            }
         }
     }
+
+    // Refresh CSRF token after successful POST
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Fetch campaigns data
+// Fetch campaigns
 try {
-    // Check if user is admin or manager
-    $is_admin_or_manager = in_array($user_role, ['admin', 'manager']);
-    
-    if ($is_admin_or_manager) {
-        $stmt = $pdo->prepare("
-            SELECT id, name, description, type, status, start_date, end_date, 
-                   budget, target_audience, created_at, updated_at
-            FROM campaigns 
-            ORDER BY created_at DESC
-        ");
-        $stmt->execute();
-    } else {
-        $stmt = $pdo->prepare("
-            SELECT id, name, description, type, status, start_date, end_date, 
-                   budget, target_audience, created_at, updated_at
-            FROM campaigns 
-            WHERE created_by = ?
-            ORDER BY created_at DESC
-        ");
-        $stmt->execute([$user_id]);
+    $query = "
+        SELECT id, name, description, type, status, start_date, end_date, 
+               budget, target_audience, created_at, updated_at
+        FROM campaigns
+    ";
+    $params = [];
+
+    if (!$is_admin_or_manager) {
+        $query .= " WHERE created_by = ?";
+        $params[] = $user_id;
     }
-    
+
+    $query .= " ORDER BY created_at DESC";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
     $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Fetch milestones for campaigns
+
+    // Fetch milestones
     $campaign_milestones = [];
     if (!empty($campaigns)) {
         $campaign_ids = array_column($campaigns, 'id');
@@ -170,19 +220,19 @@ try {
         ");
         $stmt->execute($campaign_ids);
         $milestones_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        foreach ($milestones_data as $milestone) {
-            $campaign_milestones[$milestone['campaign_id']][] = $milestone;
+
+        foreach ($milestones_data as $m) {
+            $campaign_milestones[$m['campaign_id']][] = $m;
         }
     }
-    
-    // Calculate statistics
+
+    // Statistics
     $total_campaigns = count($campaigns);
     $active_campaigns = count(array_filter($campaigns, fn($c) => $c['status'] === 'active'));
     $completed_campaigns = count(array_filter($campaigns, fn($c) => $c['status'] === 'completed'));
     $total_budget = array_sum(array_column($campaigns, 'budget'));
     $on_schedule_percent = $total_campaigns > 0 ? round(($completed_campaigns / $total_campaigns) * 100) : 0;
-    
+
 } catch (PDOException $e) {
     $campaigns = [];
     $campaign_milestones = [];
@@ -191,32 +241,36 @@ try {
     $completed_campaigns = 0;
     $total_budget = 0;
     $on_schedule_percent = 0;
-    error_log("Error fetching campaigns: " . $e->getMessage());
+    $error_message = 'Database error: ' . $e->getMessage();
+    error_log("Campaigns fetch error: " . $e->getMessage());
 }
 
 // Helper functions
 function format_currency($amount) {
-    return '₱' . number_format($amount, 2);
+    return '₱' . number_format((float)$amount, 2);
 }
 
 function get_status_class($status) {
-    switch ($status) {
-        case 'active': return 'status-active';
-        case 'completed': return 'status-completed';
-        case 'upcoming': return 'status-upcoming';
-        case 'draft': return 'status-draft';
-        default: return 'status-default';
-    }
+    $map = [
+        'active'    => 'status-active',
+        'completed' => 'status-completed',
+        'upcoming'  => 'status-upcoming',
+        'draft'     => 'status-draft',
+    ];
+    return $map[$status] ?? 'status-default';
 }
 
 function get_campaign_icon($type) {
-    switch ($type) {
-        case 'safety': return 'fa-shield-alt';
-        case 'health': return 'fa-heartbeat';
-        case 'emergency': return 'fa-exclamation-triangle';
-        case 'vaccination': return 'fa-syringe';
-        default: return 'fa-bullhorn';
-    }
+    $map = [
+        'safety'      => 'fa-shield-alt',
+        'health'      => 'fa-heartbeat',
+        'emergency'   => 'fa-exclamation-triangle',
+        'vaccination' => 'fa-syringe',
+        'awareness'   => 'fa-bullhorn',
+        'education'   => 'fa-graduation-cap',
+        'enforcement' => 'fa-gavel',
+    ];
+    return $map[$type] ?? 'fa-bullhorn';
 }
 ?>
 <!DOCTYPE html>
