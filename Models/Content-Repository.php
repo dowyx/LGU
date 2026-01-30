@@ -215,6 +215,12 @@ try {
                         <span class="nav-text">Community</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="../logout.php" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="nav-text">Logout</span>
+                    </a>
+                </li>
             </ul>
         </aside>
 
