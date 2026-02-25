@@ -53,11 +53,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize dashboard components
         initializeDashboard(apiHandler);
         initializeSearch();
-        initializeNotifications();
+        initializeNotifications(); // Make sure this function exists
         initializeExport();
         initializeQuickActions();
         initializeActivityFeed();
         initializeUserProfile();
+        
+        // IMPORTANT: Initialize navigation for proper link handling
+        initializeNavigation();
 
         // Setup global error handling (already set, but ensure)
         setupErrorHandling();
@@ -92,19 +95,49 @@ function initializeUserProfile() {
     }
 }
 
-// Initialize navigation
+// FIXED: Initialize navigation - doesn't block normal navigation, just enhances it
 function initializeNavigation() {
-    document.querySelectorAll('nav a, .navigation-link').forEach(link => {
+    // Log current location for debugging
+    console.log('Current URL:', window.location.href);
+    console.log('Current path:', window.location.pathname);
+    
+    // Handle smooth scrolling for anchor links only
+    document.querySelectorAll('nav a[href^="#"], .navigation-link[href^="#"]').forEach(link => {
         link.addEventListener('click', function(e) {
+            e.preventDefault();
             const target = this.getAttribute('href');
-            if (target && target.startsWith('#')) {
-                e.preventDefault();
-                const targetElement = document.querySelector(target);
-                if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth' });
-                }
+            const targetElement = document.querySelector(target);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth' });
             }
         });
+    });
+    
+    // Add active class based on current URL
+    const currentPath = window.location.pathname;
+    const currentFile = currentPath.split('/').pop(); // Get filename
+    
+    document.querySelectorAll('.nav-link').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href) {
+            // Extract filename from href
+            const hrefFile = href.split('/').pop();
+            
+            // Log for debugging
+            console.log('Link href:', href, '| File:', hrefFile, '| Current:', currentFile);
+            
+            // Check if this link matches current page
+            if (hrefFile === currentFile) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+            
+            // Also check if href ends with current path
+            if (currentPath.endsWith(href) || currentPath.endsWith('/' + href)) {
+                link.classList.add('active');
+            }
+        }
     });
 }
 
@@ -261,6 +294,29 @@ function initializeActivityFeed() {
     console.log('Initializing activity feed');
 }
 
+// ADDED: Initialize notifications dropdown
+function initializeNotifications() {
+    const notificationBtn = document.querySelector('.notifications-btn');
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('notificationsMenu');
+            if (menu) {
+                menu.classList.toggle('show');
+            }
+        });
+        
+        // Close notifications when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('notificationsMenu');
+            const btn = document.querySelector('.notifications-btn');
+            if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.remove('show');
+            }
+        });
+    }
+}
+
 // Add custom styles dynamically (consider moving to CSS file)
 function addCustomStyles() {
     const style = document.createElement('style');
@@ -270,6 +326,23 @@ function addCustomStyles() {
         .notification.success { background: #4CAF50; color: white; }
         .notification.error { background: #f44336; color: white; }
         .notification.info { background: #2196F3; color: white; }
+        
+        /* Notifications dropdown styles */
+        .notifications-dropdown { position: relative; }
+        .notifications-menu { 
+            display: none; 
+            position: absolute; 
+            right: 0; 
+            top: 100%; 
+            width: 300px; 
+            background: var(--secondary-black); 
+            border: 1px solid var(--medium-gray); 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+            z-index: 1000; 
+        }
+        .notifications-menu.show { display: block; }
+        .notification-item.unread { background: rgba(74, 144, 226, 0.1); }
     `;
     document.head.appendChild(style);
 }
