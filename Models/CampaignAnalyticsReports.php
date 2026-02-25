@@ -355,7 +355,7 @@ function get_performance_label($score) {
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../Models/Module-1.php" class="nav-link">
+                    <a href="../Models/Module-1.php" class="nav-link active">
                         <i class="fas fa-calendar-alt"></i>
                         <span class="nav-text">Campaign Planning & Calendar</span>
                     </a>
