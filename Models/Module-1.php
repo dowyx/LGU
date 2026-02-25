@@ -289,9 +289,9 @@ function get_campaign_icon($type) {
             <div class="logo">
                 <h1>Public Safety</h1>
             </div>
-            <ul class="nav-menu">
+             <ul class="nav-menu">
     <li class="nav-item">
-        <a href="../home.php" class="nav-link">
+        <a href="../home.php" class="nav-link active">
             <i class="fas fa-home"></i>
             <span class="nav-text">Dashboard</span>
         </a>
@@ -327,7 +327,7 @@ function get_campaign_icon($type) {
         </a>
     </li>
     <li class="nav-item">
-        <a href="CampaignAnalyticsReports.php" class="nav-link active">
+        <a href="CampaignAnalyticsReports.php" class="nav-link">
             <i class="fas fa-chart-bar"></i>
             <span class="nav-text">Campaign Analytics & Reports</span>
         </a>

@@ -312,56 +312,62 @@ $channels = $segModel->getCommunicationChannels();
             <div class="logo">
                 <h1>Public Safety</h1>
             </div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="../home.php" class="nav-link">
-                        <i class="fas fa-home"></i>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="./Modules/Module-1.php" class="nav-link">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span class="nav-text">Campaign Planning & Calendar</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../Models/Content-Repository.php" class="nav-link">
-                        <i class="fas fa-database"></i>
-                        <span class="nav-text">Content Repository</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../Models/Target-Group-Segmentation.php" class="nav-link active">
-                        <i class="fas fa-users"></i>
-                        <span class="nav-text">Target Group Segmentation</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../Models/EventSeminarManagement.php" class="nav-link">
-                        <i class="fas fa-calendar-check"></i>
-                        <span class="nav-text">Event & Seminar Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../Models/SurveyFeedbackCollection.php" class="nav-link">
-                        <i class="fas fa-clipboard-check"></i>
-                        <span class="nav-text">Survey & Feedback Collection</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../Models/CampaignAnalyticsReports.php" class="nav-link">
-                        <i class="fas fa-chart-bar"></i>
-                        <span class="nav-text">Campaign Analytics & Reports</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../Models/HealthPoliceIntegration.php" class="nav-link">
-                        <i class="fas fa-link"></i>
-                        <span class="nav-text">Community</span>
-                    </a>
-                </li>
-            </ul>
+             <ul class="nav-menu">
+    <li class="nav-item">
+        <a href="../home.php" class="nav-link active">
+            <i class="fas fa-home"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="Module-1.php" class="nav-link">
+            <i class="fas fa-calendar-alt"></i>
+            <span class="nav-text">Campaign Planning & Calendar</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="ContentRepository.php" class="nav-link">
+            <i class="fas fa-database"></i>
+            <span class="nav-text">Content Repository</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="TargetGroupSegmentation.php" class="nav-link">
+            <i class="fas fa-users"></i>
+            <span class="nav-text">Target Group Segmentation</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="EventSeminarManagement.php" class="nav-link">
+            <i class="fas fa-calendar-check"></i>
+            <span class="nav-text">Event & Seminar Management</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="SurveyFeedbackCollection.php" class="nav-link">
+            <i class="fas fa-clipboard-check"></i>
+            <span class="nav-text">Survey & Feedback Collection</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="CampaignAnalyticsReports.php" class="nav-link">
+            <i class="fas fa-chart-bar"></i>
+            <span class="nav-text">Campaign Analytics & Reports</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="HealthPoliceIntegration.php" class="nav-link">
+            <i class="fas fa-link"></i>
+            <span class="nav-text">Community</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="../logout.php" class="nav-link">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-text">Logout</span>
+        </a>
+    </li>
+</ul>
         </aside>
 
         <!-- Main Content -->
