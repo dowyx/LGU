@@ -373,7 +373,7 @@ function getTrendClass($trend) {
         </a>
     </li>
     <li class="nav-item">
-        <a href="Modules/Module-1.php" class="nav-link">
+        <a href="Models/Module-1.php" class="nav-link">
             <i class="fas fa-calendar-alt"></i>
             <span class="nav-text">Campaign Planning & Calendar</span>
         </a>
