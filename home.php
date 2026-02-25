@@ -367,7 +367,7 @@ function getTrendClass($trend) {
             </div>
             <ul class="nav-menu">
     <li class="nav-item">
-        <a href="home.php" class="nav-link">
+        <a href="home.php" class="nav-link active">
             <i class="fas fa-home"></i>
             <span class="nav-text">Dashboard</span>
         </a>
@@ -385,7 +385,7 @@ function getTrendClass($trend) {
         </a>
     </li>
     <li class="nav-item">
-        <a href="Models/Target-Group-Segmentation.php" class="nav-link active">
+        <a href="Models/Target-Group-Segmentation.php" class="nav-link">
             <i class="fas fa-users"></i>
             <span class="nav-text">Target Group Segmentation</span>
         </a>
